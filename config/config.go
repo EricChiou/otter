@@ -5,19 +5,19 @@ import (
 	"reflect"
 )
 
-// ConfigKey config data keys, ConfigKey values need to match the config.ini keys.
-var ConfigKey = config{
-	ServerPort:      "SERVER_PORT",
-	SSLCertFilePath: "SSL_CERT_FILE_PATH",
-	SSLKeyFilePath:  "SSL_KEY_FILE_PATH",
-	MySQLAddr:       "MYSQL_ADDR",
-	MySQLPort:       "MYSQL_PORT",
-	MySQLUserName:   "MYSQL_USERNAME",
-	MySQLPassword:   "MYSQL_PASSWORD",
-	MySQLDBNAME:     "MYSQL_DBNAME",
-	JWTKey:          "JWT_KEY",
-	JWTExpire:       "JWT_EXPIRE",
-	ENV:             "ENV",
+// Config config struct
+type config struct {
+	ServerPort      string `key:"SERVER_PORT"`
+	SSLCertFilePath string `key:"SSL_CERT_FILE_PATH"`
+	SSLKeyFilePath  string `key:"SSL_KEY_FILE_PATH"`
+	MySQLAddr       string `key:"MYSQL_ADDR"`
+	MySQLPort       string `key:"MYSQL_PORT"`
+	MySQLUserName   string `key:"MYSQL_USERNAME"`
+	MySQLPassword   string `key:"MYSQL_PASSWORD"`
+	MySQLDBNAME     string `key:"MYSQL_DBNAME"`
+	JWTKey          string `key:"JWT_KEY"`
+	JWTExpire       string `key:"JWT_EXPIRE"`
+	ENV             string `key:"ENV"`
 }
 
 // Config config data
@@ -30,10 +30,10 @@ func LoadConfig(configFilePath string) error {
 		return err
 	}
 
-	keys := reflect.TypeOf(ConfigKey)
-	values := reflect.ValueOf(ConfigKey)
+	keys := reflect.TypeOf(Config)
+	values := reflect.ValueOf(&Config).Elem()
 	for i := 0; i < keys.NumField(); i++ {
-		Config.setCfg(keys.Field(i).Name, keyValue[values.Field(i).Interface().(string)])
+		values.Field(i).SetString(keyValue[keys.Field(i).Tag.Get("key")])
 	}
 	return nil
 }
