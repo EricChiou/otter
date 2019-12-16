@@ -5,7 +5,7 @@ import (
 
 	"otter/routes"
 	"otter/config"
-	"otter/db"
+	"otter/db/mysql"
 	"otter/router"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -17,7 +17,7 @@ func main() {
 		panic(err)
 	}
 
-	err = db.InitMySQL(
+	err = mysql.Init(
 		config.Config.MySQLAddr,
 		config.Config.MySQLPort,
 		config.Config.MySQLUserName,
@@ -27,7 +27,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer db.CloseMySQL()
+	defer mysql.Close()
 
 	// set headers
 	router.SetHeader("Access-Control-Allow-Origin", "*")
