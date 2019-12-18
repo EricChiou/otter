@@ -10,5 +10,5 @@ func Encrypt(pwd string, lenght ...int) string {
 	if len(lenght) > 0 {
 		return sha3.Encrypt(pwd, lenght[0])
 	}
-	return sha3.Encrypt(pwd, cons.Setting.Sha3Len)
+	return sha3.Encrypt(pwd, cons.Sha3Len)
 }

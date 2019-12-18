@@ -1,18 +1,20 @@
 package routes
 
 import (
-	user "otter/api/user/delivery"
+	user "otter/api/user/controller"
 	"otter/router"
 )
+
+var groupName string = "/user"
 
 // InitUserAPI init user api
 func InitUserAPI() {
 	// Get
-	router.Get("/user/signIn", user.SignIn)
+	router.Get(groupName+"/signIn", user.SignIn)
 
 	// Post
-	router.Post("/user", user.Update)
+	router.Post(groupName, user.Update)
 
 	// Put
-	router.Put("/user/signUp", user.SignUp)
+	router.Put(groupName+"/signUp", user.SignUp)
 }

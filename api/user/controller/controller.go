@@ -1,11 +1,11 @@
-package delivery
+package controller
 
 import (
 	"encoding/json"
 	"fmt"
 
 	"otter/api/user"
-	"otter/api/user/repository"
+	"otter/api/user/dao"
 	cons "otter/constants"
 	"otter/interceptor"
 	"otter/router"
@@ -13,7 +13,8 @@ import (
 	check "otter/service/checkparam"
 )
 
-var dao user.Dao = repository.NewDao()
+// Dao operate database
+var Dao user.Dao = dao.NewDao()
 
 // SignUp user sign up controller
 func SignUp(context *router.Context) {
@@ -34,7 +35,7 @@ func SignUp(context *router.Context) {
 		return
 	}
 
-	apiResult, err := dao.SignUp(signUpData)
+	apiResult, err := Dao.SignUp(signUpData)
 	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, err))
 }
 
@@ -55,7 +56,7 @@ func SignIn(context *router.Context) {
 		return
 	}
 
-	response, apiResult, err := dao.SignIn(signInData)
+	response, apiResult, err := Dao.SignIn(signInData)
 	fmt.Fprintf(ctx, api.Result(ctx, apiResult, response, err))
 }
 
@@ -84,6 +85,6 @@ func Update(context *router.Context) {
 		return
 	}
 
-	apiResult, err := dao.Update(payload, updateData)
+	apiResult, err := Dao.Update(payload, updateData)
 	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, err))
 }
