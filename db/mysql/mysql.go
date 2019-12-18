@@ -31,3 +31,98 @@ func ErrMsgHandler(err error) string {
 		return cons.APIResultDBError
 	}
 }
+
+// Insert insert data
+func Insert(tx *sql.Tx, table string, kv map[string]interface{}) (sql.Result, error) {
+	keys := ""
+	values := ""
+	var args []interface{}
+	for k, v := range kv {
+		keys += ", " + k
+		values += ", ?"
+		args = append(args, v)
+	}
+	if len(keys) > 2 {
+		keys = keys[2:]
+		values = values[2:]
+	}
+
+	return tx.Exec("INSERT INTO "+table+"( "+keys+" ) values( "+values+" )", args...)
+}
+
+// Update upadte data
+func Update(tx *sql.Tx, table string, setKV map[string]interface{}, whereKV map[string]interface{}) (sql.Result, error) {
+	var args []interface{}
+
+	set := ""
+	for k, v := range setKV {
+		set += ", " + k + "=?"
+		args = append(args, v)
+	}
+	if len(set) > 2 {
+		set = set[2:]
+	}
+
+	where := ""
+	for k, v := range whereKV {
+		where += "AND " + k + "=?"
+		args = append(args, v)
+	}
+	if len(where) > 4 {
+		where = where[4:]
+	}
+
+	return tx.Exec("UPDATE "+table+" SET "+set+" WHERE "+where, args...)
+}
+
+// Query query data
+func Query(tx *sql.Tx, table string, column []string, whereKV map[string]interface{}) (*sql.Rows, error) {
+	var args []interface{}
+
+	columns := ""
+	for _, key := range column {
+		columns += ", " + key
+	}
+	if len(columns) > 2 {
+		columns = columns[2:]
+	} else {
+		columns = "*"
+	}
+
+	where := ""
+	for k, v := range whereKV {
+		where += " AND " + k + "=?"
+		args = append(args, v)
+	}
+	if len(where) > 5 {
+		where = " WHERE " + where[5:]
+	}
+
+	return tx.Query("SELECT "+columns+" FROM "+table+where, args...)
+}
+
+// QueryRow query one data
+func QueryRow(tx *sql.Tx, table string, column []string, whereKV map[string]interface{}) *sql.Row {
+	var args []interface{}
+
+	columns := ""
+	for _, key := range column {
+		columns += ", " + key
+	}
+	if len(columns) > 2 {
+		columns = columns[2:]
+	} else {
+		columns = "*"
+	}
+
+	where := ""
+	for k, v := range whereKV {
+		where += " AND " + k + "=?"
+		args = append(args, v)
+	}
+	if len(where) > 5 {
+		where = " WHERE " + where[5:]
+	}
+
+	return tx.QueryRow("SELECT "+columns+" FROM "+table+where, args...)
+}

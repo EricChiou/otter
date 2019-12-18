@@ -28,7 +28,14 @@ func (dao *UserDao) SignUp(signUp user.SignUpReq) (string, error) {
 
 	// encrypt password
 	encryptPwd := sha3.Encrypt(signUp.Pwd)
-	_, err = tx.Exec("INSERT INTO user( email, pwd, name ) values( ?, ?, ? )", signUp.Email, encryptPwd, signUp.Name)
+
+	var user entity.User
+	kv := map[string]interface{}{
+		user.EmailCol(): signUp.Email,
+		user.PwdCol():   encryptPwd,
+		user.NameCol():  signUp.Name,
+	}
+	_, err = mysql.Insert(tx, user.Table(), kv)
 	if err != nil {
 		return mysql.ErrMsgHandler(err), err
 	}
@@ -38,11 +45,27 @@ func (dao *UserDao) SignUp(signUp user.SignUpReq) (string, error) {
 
 // SignIn dao
 func (dao *UserDao) SignIn(signIn user.SignInReq) (user.SignInRes, string, error) {
+	tx, err := mysql.DB.Begin()
+	defer tx.Commit()
+
 	var userData entity.User
 	var response user.SignInRes
 
-	row := mysql.DB.QueryRow("SELECT id, email, pwd, name, identity FROM user WHERE email=? AND active=?", signIn.Email, true)
-	err := row.Scan(&userData.ID, &userData.Email, &userData.Pwd, &userData.Name, &userData.Identity)
+	// row := mysql.DB.QueryRow("SELECT id, email, pwd, name, identity FROM user WHERE email=? AND active=?", signIn.Email, true)
+	var userEntity entity.User
+	column := []string{
+		userEntity.IDCol(),
+		userEntity.EmailCol(),
+		userEntity.PwdCol(),
+		userEntity.NameCol(),
+		userEntity.IdentityCol(),
+	}
+	where := map[string]interface{}{
+		userEntity.EmailCol():  signIn.Email,
+		userEntity.ActiveCol(): true,
+	}
+	row := mysql.QueryRow(tx, userEntity.Table(), column, where)
+	err = row.Scan(&userData.ID, &userData.Email, &userData.Pwd, &userData.Name, &userData.Identity)
 	if err != nil {
 		return response, cons.APIResultDataError, err
 	}
@@ -66,20 +89,19 @@ func (dao *UserDao) Update(payload jwt.Payload, updateData user.UpdateReq) (stri
 		return cons.APIResultDBError, err
 	}
 
-	sql := ""
-	var args []interface{}
+	var userEntity entity.User
+	set := map[string]interface{}{}
 	if len(updateData.Name) != 0 {
-		sql += ", name=?"
-		args = append(args, updateData.Name)
+		set[userEntity.NameCol()] = updateData.Name
 	}
 	if len(updateData.Pwd) != 0 {
-		sql += ", pwd=?"
-		args = append(args, sha3.Encrypt(updateData.Pwd))
+		set[userEntity.PwdCol()] = sha3.Encrypt(updateData.Pwd)
 	}
-	sql = sql[1:]
-	args = append(args, payload.ID)
+	where := map[string]interface{}{
+		userEntity.IDCol(): payload.ID,
+	}
 
-	_, err = tx.Exec("UPDATE user SET"+sql+" WHERE id=?", args...)
+	_, err = mysql.Update(tx, userEntity.Table(), set, where)
 	if err != nil {
 		return mysql.ErrMsgHandler(err), err
 	}
