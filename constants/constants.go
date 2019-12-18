@@ -1,26 +1,26 @@
 package constants
 
-// Setting setting
-var Setting = setting{
-	Sha3Len:     256,
-	TokenPrefix: "Bearer ",
-}
+// setting
+const (
+	Sha3Len     int    = 256
+	TokenPrefix string = "Bearer "
+)
 
-// APIResult api result type
-var APIResult = apiResult{
-	Success:          "success",
-	FormatError:      "formatError",
-	PermissionDenied: "permissionDenied",
-	DBError:          "dbError",
-	ServerError:      "serverError",
-	Duplicate:        "duplicate",
-	DataError:        "dataError",
-	TokenError:       "tokenError",
-}
+// API result
+const (
+	APIResultSuccess          string = "success"
+	APIResultFormatError      string = "formatError"
+	APIResultPermissionDenied string = "permissionDenied"
+	APIResultDBError          string = "dbError"
+	APIResultServerError      string = "serverError"
+	APIResultDuplicate        string = "duplicate"
+	APIResultDataError        string = "dataError"
+	APIResultTokenError       string = "tokenError"
+)
 
-// JWTAlg jwt alg type
-var JWTAlg = jwtAlg{
-	HS256: "HS256",
-	HS384: "HS384",
-	HS512: "HS512",
-}
+// jwt alg type
+const (
+	JWTHS256 string = "HS256"
+	JWTHS384 string = "HS384"
+	JWTHS512 string = "HS512"
+)

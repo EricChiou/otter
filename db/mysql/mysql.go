@@ -26,8 +26,8 @@ func Close() {
 // ErrMsgHandler error message handler
 func ErrMsgHandler(err error) string {
 	if strings.Contains(err.Error(), "Duplicate") {
-		return cons.APIResult.Duplicate
+		return cons.APIResultDuplicate
 	} else {
-		return cons.APIResult.DBError
+		return cons.APIResultDBError
 	}
 }

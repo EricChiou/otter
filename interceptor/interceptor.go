@@ -11,11 +11,11 @@ import (
 func Interceptor(ctx *fasthttp.RequestCtx) (jwt.Payload, bool) {
 	var payload jwt.Payload
 	auth := string(ctx.Request.Header.Peek("Authorization"))
-	if len(auth) < len(cons.Setting.TokenPrefix) {
+	if len(auth) < len(cons.TokenPrefix) {
 		return payload, false
 	}
 
-	payload, result := jwt.Verify(auth[len(cons.Setting.TokenPrefix):])
+	payload, result := jwt.Verify(auth[len(cons.TokenPrefix):])
 	if !result {
 		return payload, false
 	}

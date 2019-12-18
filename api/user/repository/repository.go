@@ -23,7 +23,7 @@ func (dao *UserDao) SignUp(signUp user.SignUpReq) (string, error) {
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
-		return cons.APIResult.DBError, err
+		return cons.APIResultDBError, err
 	}
 
 	// encrypt password
@@ -33,7 +33,7 @@ func (dao *UserDao) SignUp(signUp user.SignUpReq) (string, error) {
 		return mysql.ErrMsgHandler(err), err
 	}
 
-	return cons.APIResult.Success, nil
+	return cons.APIResultSuccess, nil
 }
 
 // SignIn dao
@@ -44,18 +44,18 @@ func (dao *UserDao) SignIn(signIn user.SignInReq) (user.SignInRes, string, error
 	row := mysql.DB.QueryRow("SELECT id, email, pwd, name, identity FROM user WHERE email=? AND active=?", signIn.Email, true)
 	err := row.Scan(&userData.ID, &userData.Email, &userData.Pwd, &userData.Name, &userData.Identity)
 	if err != nil {
-		return response, cons.APIResult.DataError, err
+		return response, cons.APIResultDataError, err
 	}
 
 	if userData.Pwd != sha3.Encrypt(signIn.Pwd) {
-		return response, cons.APIResult.DataError, nil
+		return response, cons.APIResultDataError, nil
 	}
 
 	token, _ := jwt.Generate(userData.ID, userData.Email, userData.Name, userData.Identity)
 	response = user.SignInRes{
 		Token: token,
 	}
-	return response, cons.APIResult.Success, nil
+	return response, cons.APIResultSuccess, nil
 }
 
 // Update dao
@@ -63,22 +63,26 @@ func (dao *UserDao) Update(payload jwt.Payload, updateData user.UpdateReq) (stri
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
-		return cons.APIResult.DBError, err
+		return cons.APIResultDBError, err
 	}
 
 	sql := ""
+	var args []interface{}
 	if len(updateData.Name) != 0 {
-		sql += ", name='" + updateData.Name + "'"
+		sql += ", name=?"
+		args = append(args, updateData.Name)
 	}
 	if len(updateData.Pwd) != 0 {
-		sql += ", pwd='" + sha3.Encrypt(updateData.Pwd) + "'"
+		sql += ", pwd=?"
+		args = append(args, sha3.Encrypt(updateData.Pwd))
 	}
 	sql = sql[1:]
+	args = append(args, payload.ID)
 
-	_, err = tx.Exec("UPDATE user SET"+sql+" WHERE id=?", payload.ID)
+	_, err = tx.Exec("UPDATE user SET"+sql+" WHERE id=?", args...)
 	if err != nil {
 		return mysql.ErrMsgHandler(err), err
 	}
 
-	return cons.APIResult.Success, nil
+	return cons.APIResultSuccess, nil
 }

@@ -23,14 +23,14 @@ func SignUp(context *router.Context) {
 	var signUpData user.SignUpReq
 	err := json.Unmarshal(ctx.PostBody(), &signUpData)
 	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResult.FormatError, nil, err))
+		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, err))
 		return
 	}
 
 	// check data
 	result := check.Check(signUpData.Email, signUpData.Pwd, signUpData.Name)
 	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResult.FormatError, nil, nil))
+		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, nil))
 		return
 	}
 
@@ -51,7 +51,7 @@ func SignIn(context *router.Context) {
 	// check data
 	result := check.Check(signInData.Email, signInData.Pwd)
 	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResult.FormatError, nil, nil))
+		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, nil))
 		return
 	}
 
@@ -66,20 +66,21 @@ func Update(context *router.Context) {
 	// check jwt
 	payload, result := interceptor.Interceptor(ctx)
 	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResult.TokenError, nil, nil))
+		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultTokenError, nil, nil))
+		return
 	}
 
 	// check body format
 	var updateData user.UpdateReq
 	err := json.Unmarshal(ctx.PostBody(), &updateData)
 	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResult.FormatError, nil, err))
+		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, err))
 		return
 	}
 
 	// check data
 	if len(updateData.Name) == 0 && len(updateData.Pwd) == 0 {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResult.FormatError, nil, nil))
+		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, nil))
 		return
 	}
 
