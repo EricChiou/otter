@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"otter/api/user"
 	"otter/api/user/dao"
@@ -87,4 +88,30 @@ func Update(context *router.Context) {
 
 	apiResult, err := Dao.Update(payload, updateData)
 	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, err))
+}
+
+// List get user list
+func List(context *router.Context) {
+	ctx := context.Ctx
+
+	// check jwt
+	_, result := interceptor.Interceptor(ctx)
+	if !result {
+		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultTokenError, nil, nil))
+		return
+	}
+
+	// check body format
+	page, err := strconv.Atoi(string(ctx.QueryArgs().Peek("page")))
+	if err != nil {
+		page = 1
+	}
+	limit, _ := strconv.Atoi(string(ctx.QueryArgs().Peek("limit")))
+	if err != nil {
+		limit = 10
+	}
+	active := string(ctx.QueryArgs().Peek("active"))
+
+	list, apiResult, err := Dao.List(page, limit, (active == "true"))
+	fmt.Fprintf(ctx, api.Result(ctx, apiResult, list, err))
 }

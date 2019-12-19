@@ -35,3 +35,18 @@ type UpdateReq struct {
 	Name string `json:"name"`
 	Pwd  string `json:"pwd"`
 }
+
+// ListRes get user list response
+type ListRes struct {
+	Records []ListData `json:"records"`
+	Total   int        `json:"total"`
+}
+
+// ListData user list data struct
+type ListData struct {
+	ID       int    `json:"id"`
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Identity string `json:"identity"`
+	Active   bool   `json:"active"`
+}

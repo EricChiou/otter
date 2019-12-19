@@ -11,6 +11,7 @@ var groupName string = "/user"
 func InitUserAPI() {
 	// Get
 	router.Get(groupName+"/signIn", user.SignIn)
+	router.Get(groupName, user.List)
 
 	// Post
 	router.Post(groupName, user.Update)

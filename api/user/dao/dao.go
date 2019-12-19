@@ -48,10 +48,9 @@ func (dao *UserDao) SignIn(signIn user.SignInReq) (user.SignInRes, string, error
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 
-	var userData entity.User
+	var userData user.User
 	var response user.SignInRes
 
-	// row := mysql.DB.QueryRow("SELECT id, email, pwd, name, identity FROM user WHERE email=? AND active=?", signIn.Email, true)
 	var userEntity entity.User
 	column := []string{
 		userEntity.IDCol(),
@@ -107,4 +106,51 @@ func (dao *UserDao) Update(payload jwt.Payload, updateData user.UpdateReq) (stri
 	}
 
 	return cons.APIResultSuccess, nil
+}
+
+// List dao
+func (dao *UserDao) List(page, limit int, active bool) (user.ListRes, string, error) {
+	var list user.ListRes
+	tx, err := mysql.DB.Begin()
+	defer tx.Commit()
+	if err != nil {
+		return list, cons.APIResultDBError, err
+	}
+
+	var userEntity entity.User
+	orderBy := userEntity.IDCol()
+	column := []string{
+		userEntity.IDCol(),
+		userEntity.EmailCol(),
+		userEntity.NameCol(),
+		userEntity.IdentityCol(),
+		userEntity.ActiveCol(),
+	}
+	where := map[string]interface{}{}
+	if active {
+		where[userEntity.ActiveCol()] = true
+	}
+	rows, err := mysql.Paging(tx, userEntity.Table(), userEntity.PK(), column, where, orderBy, page, limit)
+	defer rows.Close()
+	if err != nil {
+		return list, mysql.ErrMsgHandler(err), err
+	}
+
+	for rows.Next() {
+		var data user.ListData
+		err = rows.Scan(&data.ID, &data.Email, &data.Name, &data.Identity, &data.Active)
+		if err != nil {
+			return list, mysql.ErrMsgHandler(err), err
+		}
+		list.Records = append(list.Records, data)
+	}
+
+	var total int
+	err = tx.QueryRow("SELECT COUNT(*) FROM " + userEntity.Table()).Scan(&total)
+	if err != nil {
+		return list, mysql.ErrMsgHandler(err), err
+	}
+	list.Total = total
+
+	return list, cons.APIResultSuccess, nil
 }

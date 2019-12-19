@@ -44,6 +44,8 @@ func Insert(tx *sql.Tx, table string, kv map[string]interface{}) (sql.Result, er
 	}
 	if len(keys) > 2 {
 		keys = keys[2:]
+	}
+	if len(values) > 2 {
 		values = values[2:]
 	}
 
@@ -53,7 +55,6 @@ func Insert(tx *sql.Tx, table string, kv map[string]interface{}) (sql.Result, er
 // Update upadte data
 func Update(tx *sql.Tx, table string, setKV map[string]interface{}, whereKV map[string]interface{}) (sql.Result, error) {
 	var args []interface{}
-
 	set := ""
 	for k, v := range setKV {
 		set += ", " + k + "=?"
@@ -62,41 +63,24 @@ func Update(tx *sql.Tx, table string, setKV map[string]interface{}, whereKV map[
 	if len(set) > 2 {
 		set = set[2:]
 	}
+	where, args := whereString(whereKV, args)
 
-	where := ""
-	for k, v := range whereKV {
-		where += "AND " + k + "=?"
-		args = append(args, v)
-	}
-	if len(where) > 4 {
-		where = where[4:]
-	}
+	return tx.Exec("UPDATE "+table+" SET "+set+where, args...)
+}
 
-	return tx.Exec("UPDATE "+table+" SET "+set+" WHERE "+where, args...)
+// Delete delete data
+func Delete(tx *sql.Tx, table string, whereKV map[string]interface{}) (sql.Result, error) {
+	var args []interface{}
+	where, args := whereString(whereKV, args)
+
+	return tx.Exec("DELETE FROM "+table+where, args...)
 }
 
 // Query query data
 func Query(tx *sql.Tx, table string, column []string, whereKV map[string]interface{}) (*sql.Rows, error) {
 	var args []interface{}
-
-	columns := ""
-	for _, key := range column {
-		columns += ", " + key
-	}
-	if len(columns) > 2 {
-		columns = columns[2:]
-	} else {
-		columns = "*"
-	}
-
-	where := ""
-	for k, v := range whereKV {
-		where += " AND " + k + "=?"
-		args = append(args, v)
-	}
-	if len(where) > 5 {
-		where = " WHERE " + where[5:]
-	}
+	columns := columnString(column)
+	where, args := whereString(whereKV, args)
 
 	return tx.Query("SELECT "+columns+" FROM "+table+where, args...)
 }
@@ -104,7 +88,36 @@ func Query(tx *sql.Tx, table string, column []string, whereKV map[string]interfa
 // QueryRow query one data
 func QueryRow(tx *sql.Tx, table string, column []string, whereKV map[string]interface{}) *sql.Row {
 	var args []interface{}
+	columns := columnString(column)
+	where, args := whereString(whereKV, args)
 
+	return tx.QueryRow("SELECT "+columns+" FROM "+table+where, args...)
+}
+
+// Paging paging data
+func Paging(tx *sql.Tx, table, pk string, column []string, whereKV map[string]interface{}, orderBy string, page, limit int) (*sql.Rows, error) {
+	var args []interface{}
+	columns := columnString(column)
+	where, args := whereString(whereKV, args)
+	args = append(args, (page-1)*limit, limit)
+
+	return tx.Query("SELECT "+columns+" FROM "+table+" JOIN ( SELECT "+pk+" FROM "+table+where+" ORDER BY "+orderBy+" LIMIT ?, ? ) t USING ("+pk+")", args...)
+}
+
+func whereString(whereKV map[string]interface{}, args []interface{}) (string, []interface{}) {
+	where := ""
+	for k, v := range whereKV {
+		where += " AND " + k + "=?"
+		args = append(args, v)
+	}
+	if len(where) > 5 {
+		where = " WHERE " + where[5:]
+	}
+
+	return where, args
+}
+
+func columnString(column []string) string {
 	columns := ""
 	for _, key := range column {
 		columns += ", " + key
@@ -115,14 +128,5 @@ func QueryRow(tx *sql.Tx, table string, column []string, whereKV map[string]inte
 		columns = "*"
 	}
 
-	where := ""
-	for k, v := range whereKV {
-		where += " AND " + k + "=?"
-		args = append(args, v)
-	}
-	if len(where) > 5 {
-		where = " WHERE " + where[5:]
-	}
-
-	return tx.QueryRow("SELECT "+columns+" FROM "+table+where, args...)
+	return columns
 }

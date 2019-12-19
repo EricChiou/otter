@@ -17,6 +17,11 @@ func (user *User) Table() string {
 	return "user"
 }
 
+// PK get table pk column name
+func (user *User) PK() string {
+	return "id"
+}
+
 // IDCol get ID column name
 func (user *User) IDCol() string {
 	return "id"
