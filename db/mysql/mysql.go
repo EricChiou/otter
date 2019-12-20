@@ -101,7 +101,14 @@ func Paging(tx *sql.Tx, table, pk string, column []string, whereKV map[string]in
 	where, args := whereString(whereKV, args)
 	args = append(args, (page-1)*limit, limit)
 
-	return tx.Query("SELECT "+columns+" FROM "+table+" JOIN ( SELECT "+pk+" FROM "+table+where+" ORDER BY "+orderBy+" LIMIT ?, ? ) t USING ("+pk+")", args...)
+	return tx.Query(
+		"SELECT "+columns+
+			" FROM "+table+
+			" JOIN "+
+			"( SELECT "+pk+" FROM "+table+where+" ORDER BY "+orderBy+" LIMIT ?, ? ) t"+
+			" USING ("+pk+")",
+		args...,
+	)
 }
 
 func whereString(whereKV map[string]interface{}, args []interface{}) (string, []interface{}) {

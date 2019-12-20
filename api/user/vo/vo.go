@@ -1,4 +1,4 @@
-package user
+package vo
 
 // User table struct
 type User struct {

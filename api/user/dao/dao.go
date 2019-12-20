@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"otter/api/user"
+	"otter/api/user/vo"
 	cons "otter/constants"
 	"otter/db/mysql"
 	"otter/entity"
@@ -14,12 +14,12 @@ type UserDao struct {
 }
 
 // NewDao new a user dao
-func NewDao() user.Dao {
+func NewDao() Dao {
 	return &UserDao{}
 }
 
 // SignUp dao
-func (dao *UserDao) SignUp(signUp user.SignUpReq) (string, error) {
+func (dao *UserDao) SignUp(signUp vo.SignUpReq) (string, error) {
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -31,9 +31,9 @@ func (dao *UserDao) SignUp(signUp user.SignUpReq) (string, error) {
 
 	var user entity.User
 	kv := map[string]interface{}{
-		user.EmailCol(): signUp.Email,
-		user.PwdCol():   encryptPwd,
-		user.NameCol():  signUp.Name,
+		user.Col.Email(): signUp.Email,
+		user.Col.Pwd():   encryptPwd,
+		user.Col.Name():  signUp.Name,
 	}
 	_, err = mysql.Insert(tx, user.Table(), kv)
 	if err != nil {
@@ -44,26 +44,26 @@ func (dao *UserDao) SignUp(signUp user.SignUpReq) (string, error) {
 }
 
 // SignIn dao
-func (dao *UserDao) SignIn(signIn user.SignInReq) (user.SignInRes, string, error) {
+func (dao *UserDao) SignIn(signIn vo.SignInReq) (vo.SignInRes, string, error) {
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 
-	var userData user.User
-	var response user.SignInRes
+	var userData vo.User
+	var response vo.SignInRes
 
-	var userEntity entity.User
+	var user entity.User
 	column := []string{
-		userEntity.IDCol(),
-		userEntity.EmailCol(),
-		userEntity.PwdCol(),
-		userEntity.NameCol(),
-		userEntity.IdentityCol(),
+		user.Col.ID(),
+		user.Col.Email(),
+		user.Col.Pwd(),
+		user.Col.Name(),
+		user.Col.Identity(),
 	}
 	where := map[string]interface{}{
-		userEntity.EmailCol():  signIn.Email,
-		userEntity.ActiveCol(): true,
+		user.Col.Email():  signIn.Email,
+		user.Col.Active(): true,
 	}
-	row := mysql.QueryRow(tx, userEntity.Table(), column, where)
+	row := mysql.QueryRow(tx, user.Table(), column, where)
 	err = row.Scan(&userData.ID, &userData.Email, &userData.Pwd, &userData.Name, &userData.Identity)
 	if err != nil {
 		return response, cons.APIResultDataError, err
@@ -74,33 +74,33 @@ func (dao *UserDao) SignIn(signIn user.SignInReq) (user.SignInRes, string, error
 	}
 
 	token, _ := jwt.Generate(userData.ID, userData.Email, userData.Name, userData.Identity)
-	response = user.SignInRes{
+	response = vo.SignInRes{
 		Token: token,
 	}
 	return response, cons.APIResultSuccess, nil
 }
 
 // Update dao
-func (dao *UserDao) Update(payload jwt.Payload, updateData user.UpdateReq) (string, error) {
+func (dao *UserDao) Update(payload jwt.Payload, updateData vo.UpdateReq) (string, error) {
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
 		return cons.APIResultDBError, err
 	}
 
-	var userEntity entity.User
+	var user entity.User
 	set := map[string]interface{}{}
 	if len(updateData.Name) != 0 {
-		set[userEntity.NameCol()] = updateData.Name
+		set[user.Col.Name()] = updateData.Name
 	}
 	if len(updateData.Pwd) != 0 {
-		set[userEntity.PwdCol()] = sha3.Encrypt(updateData.Pwd)
+		set[user.Col.Pwd()] = sha3.Encrypt(updateData.Pwd)
 	}
 	where := map[string]interface{}{
-		userEntity.IDCol(): payload.ID,
+		user.Col.ID(): payload.ID,
 	}
 
-	_, err = mysql.Update(tx, userEntity.Table(), set, where)
+	_, err = mysql.Update(tx, user.Table(), set, where)
 	if err != nil {
 		return mysql.ErrMsgHandler(err), err
 	}
@@ -109,35 +109,35 @@ func (dao *UserDao) Update(payload jwt.Payload, updateData user.UpdateReq) (stri
 }
 
 // List dao
-func (dao *UserDao) List(page, limit int, active bool) (user.ListRes, string, error) {
-	var list user.ListRes
+func (dao *UserDao) List(page, limit int, active bool) (vo.ListRes, string, error) {
+	var list vo.ListRes
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
 		return list, cons.APIResultDBError, err
 	}
 
-	var userEntity entity.User
-	orderBy := userEntity.IDCol()
+	var user entity.User
+	orderBy := user.Col.ID()
 	column := []string{
-		userEntity.IDCol(),
-		userEntity.EmailCol(),
-		userEntity.NameCol(),
-		userEntity.IdentityCol(),
-		userEntity.ActiveCol(),
+		user.Col.ID(),
+		user.Col.Email(),
+		user.Col.Name(),
+		user.Col.Identity(),
+		user.Col.Active(),
 	}
 	where := map[string]interface{}{}
 	if active {
-		where[userEntity.ActiveCol()] = true
+		where[user.Col.Active()] = true
 	}
-	rows, err := mysql.Paging(tx, userEntity.Table(), userEntity.PK(), column, where, orderBy, page, limit)
+	rows, err := mysql.Paging(tx, user.Table(), user.Col.PK(), column, where, orderBy, page, limit)
 	defer rows.Close()
 	if err != nil {
 		return list, mysql.ErrMsgHandler(err), err
 	}
 
 	for rows.Next() {
-		var data user.ListData
+		var data vo.ListData
 		err = rows.Scan(&data.ID, &data.Email, &data.Name, &data.Identity, &data.Active)
 		if err != nil {
 			return list, mysql.ErrMsgHandler(err), err
@@ -146,7 +146,7 @@ func (dao *UserDao) List(page, limit int, active bool) (user.ListRes, string, er
 	}
 
 	var total int
-	err = tx.QueryRow("SELECT COUNT(*) FROM " + userEntity.Table()).Scan(&total)
+	err = tx.QueryRow("SELECT COUNT(*) FROM " + user.Table()).Scan(&total)
 	if err != nil {
 		return list, mysql.ErrMsgHandler(err), err
 	}

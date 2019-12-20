@@ -2,6 +2,7 @@ package entity
 
 // User table struct
 type User struct {
+	Col         UserCol
 	ID          int    `json:"id"`
 	Email       string `json:"email"`
 	Pwd         string `json:"pwd"`
@@ -17,47 +18,50 @@ func (user *User) Table() string {
 	return "user"
 }
 
+// UserCol get user table column name
+type UserCol struct{}
+
 // PK get table pk column name
-func (user *User) PK() string {
+func (user *UserCol) PK() string {
 	return "id"
 }
 
-// IDCol get ID column name
-func (user *User) IDCol() string {
+// ID get ID column name
+func (user *UserCol) ID() string {
 	return "id"
 }
 
-// EmailCol get Email column name
-func (user *User) EmailCol() string {
+// Email get Email column name
+func (user *UserCol) Email() string {
 	return "email"
 }
 
-// PwdCol get Pwd column name
-func (user *User) PwdCol() string {
+// Pwd get Pwd column name
+func (user *UserCol) Pwd() string {
 	return "pwd"
 }
 
-// NameCol get Name column name
-func (user *User) NameCol() string {
+// Name get Name column name
+func (user *UserCol) Name() string {
 	return "name"
 }
 
-// IdentityCol get Identity column name
-func (user *User) IdentityCol() string {
+// Identity get Identity column name
+func (user *UserCol) Identity() string {
 	return "identity"
 }
 
-// ActiveCol get Active column name
-func (user *User) ActiveCol() string {
+// Active get Active column name
+func (user *UserCol) Active() string {
 	return "active"
 }
 
-// CreatedDateCol get CreatedDate column name
-func (user *User) CreatedDateCol() string {
+// CreatedDate get CreatedDate column name
+func (user *UserCol) CreatedDate() string {
 	return "created_date"
 }
 
-// UpdatedDateCol get UpdatedDate column name
-func (user *User) UpdatedDateCol() string {
+// UpdatedDate get UpdatedDate column name
+func (user *UserCol) UpdatedDate() string {
 	return "updated_date"
 }

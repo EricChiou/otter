@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"otter/api/user"
 	"otter/api/user/dao"
+	"otter/api/user/vo"
 	cons "otter/constants"
 	"otter/interceptor"
 	"otter/router"
@@ -15,14 +15,14 @@ import (
 )
 
 // Dao operate database
-var Dao user.Dao = dao.NewDao()
+var Dao dao.Dao = dao.NewDao()
 
 // SignUp user sign up controller
 func SignUp(context *router.Context) {
 	ctx := context.Ctx
 
 	// check body format
-	var signUpData user.SignUpReq
+	var signUpData vo.SignUpReq
 	err := json.Unmarshal(ctx.PostBody(), &signUpData)
 	if err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, err))
@@ -45,7 +45,7 @@ func SignIn(context *router.Context) {
 	ctx := context.Ctx
 
 	// check body format
-	signInData := user.SignInReq{
+	signInData := vo.SignInReq{
 		Email: string(ctx.QueryArgs().Peek("email")),
 		Pwd:   string(ctx.QueryArgs().Peek("pwd")),
 	}
@@ -73,7 +73,7 @@ func Update(context *router.Context) {
 	}
 
 	// check body format
-	var updateData user.UpdateReq
+	var updateData vo.UpdateReq
 	err := json.Unmarshal(ctx.PostBody(), &updateData)
 	if err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, err))
