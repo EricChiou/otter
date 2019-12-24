@@ -3,16 +3,18 @@ package main
 import (
 	"log"
 
-	"otter/routes"
+	"otter/acl"
 	"otter/config"
+	cons "otter/constants"
 	"otter/db/mysql"
 	"otter/router"
+	"otter/routes"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
-	err := config.LoadConfig("./config.ini")
+	err := config.LoadConfig(cons.ConfigFilePath)
 	if err != nil {
 		panic(err)
 	}
@@ -28,6 +30,11 @@ func main() {
 		panic(err)
 	}
 	defer mysql.Close()
+
+	// init acl
+	if err = acl.Init(); err != nil {
+		panic(err)
+	}
 
 	// set headers
 	router.SetHeader("Access-Control-Allow-Origin", "*")

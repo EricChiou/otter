@@ -1,6 +1,7 @@
 package interceptor
 
 import (
+	"otter/acl"
 	cons "otter/constants"
 	"otter/service/jwt"
 
@@ -8,17 +9,22 @@ import (
 )
 
 // Interceptor check jwt
-func Interceptor(ctx *fasthttp.RequestCtx) (jwt.Payload, bool) {
+func Interceptor(ctx *fasthttp.RequestCtx, aclCode ...string) (jwt.Payload, bool, string) {
 	var payload jwt.Payload
 	auth := string(ctx.Request.Header.Peek("Authorization"))
 	if len(auth) < len(cons.TokenPrefix) {
-		return payload, false
+		return payload, false, cons.APIResultTokenError
 	}
 
 	payload, result := jwt.Verify(auth[len(cons.TokenPrefix):])
 	if !result {
-		return payload, false
+		return payload, false, cons.APIResultTokenError
 	}
 
-	return payload, true
+	// check permission
+	for _, code := range aclCode {
+		return payload, acl.Check(code, payload.Role), cons.APIResultPermissionDenied
+	}
+
+	return payload, true, ""
 }

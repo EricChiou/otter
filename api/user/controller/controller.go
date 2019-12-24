@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"otter/acl"
 	"otter/api/user/dao"
 	"otter/api/user/vo"
 	cons "otter/constants"
@@ -65,18 +66,22 @@ func SignIn(context *router.Context) {
 func Update(context *router.Context) {
 	ctx := context.Ctx
 
-	// check jwt
-	payload, result := interceptor.Interceptor(ctx)
-	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultTokenError, nil, nil))
-		return
-	}
-
 	// check body format
 	var updateData vo.UpdateReq
 	err := json.Unmarshal(ctx.PostBody(), &updateData)
 	if err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, err))
+		return
+	}
+
+	// check jwt and acl
+	var aclCode []string
+	if updateData.ID != 0 {
+		aclCode = append(aclCode, acl.UpdateUserInfo)
+	}
+	payload, result, reason := interceptor.Interceptor(ctx, aclCode...)
+	if !result {
+		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
 		return
 	}
 
@@ -95,9 +100,9 @@ func List(context *router.Context) {
 	ctx := context.Ctx
 
 	// check jwt
-	_, result := interceptor.Interceptor(ctx)
+	_, result, reason := interceptor.Interceptor(ctx)
 	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultTokenError, nil, nil))
+		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
 		return
 	}
 

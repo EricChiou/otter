@@ -7,7 +7,7 @@ type User struct {
 	Email       string `json:"email"`
 	Pwd         string `json:"pwd"`
 	Name        string `json:"name"`
-	Identity    string `json:"identity"`
+	Role        string `json:"role"`
 	Active      bool   `json:"active"`
 	CreatedDate string `json:"creatDate"`
 	UpdatedDate string `json:"updateDate"`
@@ -46,9 +46,9 @@ func (user *UserCol) Name() string {
 	return "name"
 }
 
-// Identity get Identity column name
-func (user *UserCol) Identity() string {
-	return "identity"
+// Role get role column name
+func (user *UserCol) Role() string {
+	return "role"
 }
 
 // Active get Active column name

@@ -1,10 +1,10 @@
 package dao
 
 import (
+	"otter/api/user/entity"
 	"otter/api/user/vo"
 	cons "otter/constants"
 	"otter/db/mysql"
-	"otter/entity"
 	"otter/service/jwt"
 	"otter/service/sha3"
 )
@@ -48,32 +48,30 @@ func (dao *UserDao) SignIn(signIn vo.SignInReq) (vo.SignInRes, string, error) {
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 
-	var userData vo.User
 	var response vo.SignInRes
-
 	var user entity.User
 	column := []string{
 		user.Col.ID(),
 		user.Col.Email(),
 		user.Col.Pwd(),
 		user.Col.Name(),
-		user.Col.Identity(),
+		user.Col.Role(),
 	}
 	where := map[string]interface{}{
 		user.Col.Email():  signIn.Email,
 		user.Col.Active(): true,
 	}
 	row := mysql.QueryRow(tx, user.Table(), column, where)
-	err = row.Scan(&userData.ID, &userData.Email, &userData.Pwd, &userData.Name, &userData.Identity)
+	err = row.Scan(&user.ID, &user.Email, &user.Pwd, &user.Name, &user.Role)
 	if err != nil {
 		return response, cons.APIResultDataError, err
 	}
 
-	if userData.Pwd != sha3.Encrypt(signIn.Pwd) {
+	if user.Pwd != sha3.Encrypt(signIn.Pwd) {
 		return response, cons.APIResultDataError, nil
 	}
 
-	token, _ := jwt.Generate(userData.ID, userData.Email, userData.Name, userData.Identity)
+	token, _ := jwt.Generate(user.ID, user.Email, user.Name, user.Role)
 	response = vo.SignInRes{
 		Token: token,
 	}
@@ -96,8 +94,11 @@ func (dao *UserDao) Update(payload jwt.Payload, updateData vo.UpdateReq) (string
 	if len(updateData.Pwd) != 0 {
 		set[user.Col.Pwd()] = sha3.Encrypt(updateData.Pwd)
 	}
-	where := map[string]interface{}{
-		user.Col.ID(): payload.ID,
+	var where map[string]interface{} = make(map[string]interface{})
+	if updateData.ID != 0 {
+		where[user.Col.ID()] = updateData.ID
+	} else {
+		where[user.Col.ID()] = payload.ID
 	}
 
 	_, err = mysql.Update(tx, user.Table(), set, where)
@@ -123,7 +124,7 @@ func (dao *UserDao) List(page, limit int, active bool) (vo.ListRes, string, erro
 		user.Col.ID(),
 		user.Col.Email(),
 		user.Col.Name(),
-		user.Col.Identity(),
+		user.Col.Role(),
 		user.Col.Active(),
 	}
 	where := map[string]interface{}{}

@@ -2,8 +2,9 @@ package constants
 
 // setting
 const (
-	Sha3Len     int    = 256
-	TokenPrefix string = "Bearer "
+	Sha3Len        int    = 256
+	TokenPrefix    string = "Bearer "
+	ConfigFilePath string = "./config.ini"
 )
 
 // API result

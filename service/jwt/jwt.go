@@ -12,26 +12,26 @@ import (
 
 // Payload jwt payload struct
 type Payload struct {
-	ID       int    `json:"id"`
-	Email    string `json:"email"`
-	Name     string `json:"name"`
-	Identity string `json:"identity"`
-	Exp      int64  `json:"exp"`
+	ID    int    `json:"id"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	Role  string `json:"role"`
+	Exp   int64  `json:"exp"`
 }
 
 // Generate generate jwt
-func Generate(userID int, email, name, identity string) (string, error) {
+func Generate(userID int, email, name, role string) (string, error) {
 	jwtExpire, err := strconv.Atoi(config.Config.JWTExpire)
 	if err != nil {
 		jwtExpire = 1
 	}
 
 	payload := Payload{
-		ID:       userID,
-		Email:    email,
-		Name:     name,
-		Identity: identity,
-		Exp:      time.Now().Unix() + int64(jwtExpire*86400),
+		ID:    userID,
+		Email: email,
+		Name:  name,
+		Role:  role,
+		Exp:   time.Now().Unix() + int64(jwtExpire*86400),
 	}
 	return jwt.GenerateJWT(payload, cons.JWTHS256, config.Config.JWTKey)
 }
