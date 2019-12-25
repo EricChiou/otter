@@ -11,7 +11,7 @@ import (
 // Interceptor check jwt
 func Interceptor(ctx *fasthttp.RequestCtx, aclCode ...string) (jwt.Payload, bool, string) {
 	var payload jwt.Payload
-	auth := string(ctx.Request.Header.Peek("Authorization"))
+	auth := string(ctx.Request.Header.Peek(cons.TokenHeader))
 	if len(auth) < len(cons.TokenPrefix) {
 		return payload, false, cons.APIResultTokenError
 	}

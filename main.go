@@ -31,8 +31,8 @@ func main() {
 	}
 	defer mysql.Close()
 
-	// init acl
-	if err = acl.Init(); err != nil {
+	// load acl
+	if err = acl.Load(); err != nil {
 		panic(err)
 	}
 

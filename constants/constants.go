@@ -3,6 +3,7 @@ package constants
 // setting
 const (
 	Sha3Len        int    = 256
+	TokenHeader    string = "Authorization"
 	TokenPrefix    string = "Bearer "
 	ConfigFilePath string = "./config.ini"
 )

@@ -1,8 +1,31 @@
 package entity
 
+const (
+	// Table user table name
+	Table string = "user"
+
+	// PK user table pk column name
+	PK string = "id"
+	// ID user table id column name
+	ID string = "id"
+	// Email user table email column name
+	Email string = "email"
+	// Pwd user table pwd column name
+	Pwd string = "pwd"
+	// Name user table name column name
+	Name string = "name"
+	// Role user table role column name
+	Role string = "role"
+	// Active user table active column name
+	Active string = "active"
+	// CreatedDate user table created date column name
+	CreatedDate string = "created_date"
+	// UpdatedDate user table updated date column name
+	UpdatedDate string = "updated_date"
+)
+
 // User table struct
 type User struct {
-	Col         UserCol
 	ID          int    `json:"id"`
 	Email       string `json:"email"`
 	Pwd         string `json:"pwd"`
@@ -11,57 +34,4 @@ type User struct {
 	Active      bool   `json:"active"`
 	CreatedDate string `json:"creatDate"`
 	UpdatedDate string `json:"updateDate"`
-}
-
-// Table get table name
-func (user *User) Table() string {
-	return "user"
-}
-
-// UserCol get user table column name
-type UserCol struct{}
-
-// PK get table pk column name
-func (user *UserCol) PK() string {
-	return "id"
-}
-
-// ID get ID column name
-func (user *UserCol) ID() string {
-	return "id"
-}
-
-// Email get Email column name
-func (user *UserCol) Email() string {
-	return "email"
-}
-
-// Pwd get Pwd column name
-func (user *UserCol) Pwd() string {
-	return "pwd"
-}
-
-// Name get Name column name
-func (user *UserCol) Name() string {
-	return "name"
-}
-
-// Role get role column name
-func (user *UserCol) Role() string {
-	return "role"
-}
-
-// Active get Active column name
-func (user *UserCol) Active() string {
-	return "active"
-}
-
-// CreatedDate get CreatedDate column name
-func (user *UserCol) CreatedDate() string {
-	return "created_date"
-}
-
-// UpdatedDate get UpdatedDate column name
-func (user *UserCol) UpdatedDate() string {
-	return "updated_date"
 }

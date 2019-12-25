@@ -14,8 +14,8 @@ const (
 
 var roleACL map[string][]string = make(map[string][]string)
 
-// Init inital permission setting
-func Init() error {
+// Load loading permission setting
+func Load() error {
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -23,8 +23,8 @@ func Init() error {
 	}
 
 	var roleacl entity.RoleACL
-	column := []string{roleacl.Col.RoleCode(), roleacl.Col.ACLCode()}
-	rows, err := mysql.Query(tx, roleacl.Table(), column, make(map[string]interface{}))
+	column := []string{entity.RoleCode, entity.ACLCode}
+	rows, err := mysql.Query(tx, entity.Table, column, make(map[string]interface{}))
 	if err != nil {
 		return err
 	}
