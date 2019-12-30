@@ -1,38 +1,38 @@
 package user
 
-// SignUpReq user sign up request data struct
-type SignUpReq struct {
+// SignUpReqVo user sign up request data vo
+type SignUpReqVo struct {
 	Email string `json:"email"`
 	Pwd   string `json:"pwd"`
 	Name  string `json:"name"`
 }
 
-// SignInReq user sign in request data struct
-type SignInReq struct {
+// SignInReqVo user sign in request data vo
+type SignInReqVo struct {
 	Email string `json:"email"`
 	Pwd   string `json:"pwd"`
 }
 
-// SignInRes user sign in response data struct
-type SignInRes struct {
+// SignInResVo user sign in response data vo
+type SignInResVo struct {
 	Token string `json:"token"`
 }
 
-// UpdateReq update user request data struct
-type UpdateReq struct {
+// UpdateReqVo update user request data vo
+type UpdateReqVo struct {
 	Name string `json:"name"`
 	Pwd  string `json:"pwd"`
 	ID   int    `json:"id"`
 }
 
-// ListRes get user list response
-type ListRes struct {
-	Records []ListData `json:"records"`
-	Total   int        `json:"total"`
+// ListResVo get user list response vo
+type ListResVo struct {
+	Records []ListDataVo `json:"records"`
+	Total   int          `json:"total"`
 }
 
-// ListData user list data struct
-type ListData struct {
+// ListDataVo user list data vo
+type ListDataVo struct {
 	ID       int    `json:"id"`
 	Email    string `json:"email"`
 	Name     string `json:"name"`

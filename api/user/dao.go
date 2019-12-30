@@ -8,10 +8,10 @@ import (
 )
 
 // Dao user dao
-type Dao struct {}
+type Dao struct{}
 
 // SignUp dao
-func (dao *Dao) SignUp(signUp SignUpReq) (string, error) {
+func (dao *Dao) SignUp(signUp SignUpReqVo) (string, error) {
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -35,11 +35,11 @@ func (dao *Dao) SignUp(signUp SignUpReq) (string, error) {
 }
 
 // SignIn dao
-func (dao *Dao) SignIn(signIn SignInReq) (SignInRes, string, error) {
+func (dao *Dao) SignIn(signIn SignInReqVo) (SignInResVo, string, error) {
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 
-	var response SignInRes
+	var response SignInResVo
 	var entity Entity
 	column := []string{
 		ID,
@@ -63,14 +63,14 @@ func (dao *Dao) SignIn(signIn SignInReq) (SignInRes, string, error) {
 	}
 
 	token, _ := jwt.Generate(entity.ID, entity.Email, entity.Name, entity.Role)
-	response = SignInRes{
+	response = SignInResVo{
 		Token: token,
 	}
 	return response, cons.APIResultSuccess, nil
 }
 
 // Update dao
-func (dao *Dao) Update(payload jwt.Payload, updateData UpdateReq) (string, error) {
+func (dao *Dao) Update(payload jwt.Payload, updateData UpdateReqVo) (string, error) {
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -100,8 +100,8 @@ func (dao *Dao) Update(payload jwt.Payload, updateData UpdateReq) (string, error
 }
 
 // List dao
-func (dao *Dao) List(page, limit int, active bool) (ListRes, string, error) {
-	var list ListRes
+func (dao *Dao) List(page, limit int, active bool) (ListResVo, string, error) {
+	var list ListResVo
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -127,7 +127,7 @@ func (dao *Dao) List(page, limit int, active bool) (ListRes, string, error) {
 	}
 
 	for rows.Next() {
-		var data ListData
+		var data ListDataVo
 		err = rows.Scan(&data.ID, &data.Email, &data.Name, &data.Identity, &data.Active)
 		if err != nil {
 			return list, mysql.ErrMsgHandler(err), err

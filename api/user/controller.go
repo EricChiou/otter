@@ -20,7 +20,7 @@ func SignUp(context *router.Context) {
 	ctx := context.Ctx
 
 	// check body format
-	var signUpData SignUpReq
+	var signUpData SignUpReqVo
 	err := json.Unmarshal(ctx.PostBody(), &signUpData)
 	if err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, err))
@@ -43,7 +43,7 @@ func SignIn(context *router.Context) {
 	ctx := context.Ctx
 
 	// check body format
-	signInData := SignInReq{
+	signInData := SignInReqVo{
 		Email: string(ctx.QueryArgs().Peek("email")),
 		Pwd:   string(ctx.QueryArgs().Peek("pwd")),
 	}
@@ -64,7 +64,7 @@ func Update(context *router.Context) {
 	ctx := context.Ctx
 
 	// check body format
-	var updateData UpdateReq
+	var updateData UpdateReqVo
 	err := json.Unmarshal(ctx.PostBody(), &updateData)
 	if err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, err))
