@@ -1,7 +1,7 @@
 package routes
 
 import (
-	user "otter/api/user/controller"
+	"otter/api/user"
 	"otter/router"
 )
 

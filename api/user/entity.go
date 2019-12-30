@@ -1,4 +1,4 @@
-package entity
+package user
 
 const (
 	// Table user table name
@@ -24,8 +24,8 @@ const (
 	UpdatedDate string = "updated_date"
 )
 
-// User table struct
-type User struct {
+// Entity table struct
+type Entity struct {
 	ID          int    `json:"id"`
 	Email       string `json:"email"`
 	Pwd         string `json:"pwd"`

@@ -1,4 +1,4 @@
-package controller
+package user
 
 import (
 	"encoding/json"
@@ -6,8 +6,6 @@ import (
 	"strconv"
 
 	"otter/acl"
-	"otter/api/user/dao"
-	"otter/api/user/vo"
 	cons "otter/constants"
 	"otter/interceptor"
 	"otter/router"
@@ -15,15 +13,14 @@ import (
 	check "otter/service/checkparam"
 )
 
-// Dao operate database
-var Dao dao.Dao = dao.NewDao()
+var dao Dao
 
 // SignUp user sign up controller
 func SignUp(context *router.Context) {
 	ctx := context.Ctx
 
 	// check body format
-	var signUpData vo.SignUpReq
+	var signUpData SignUpReq
 	err := json.Unmarshal(ctx.PostBody(), &signUpData)
 	if err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, err))
@@ -37,7 +34,7 @@ func SignUp(context *router.Context) {
 		return
 	}
 
-	apiResult, err := Dao.SignUp(signUpData)
+	apiResult, err := dao.SignUp(signUpData)
 	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, err))
 }
 
@@ -46,7 +43,7 @@ func SignIn(context *router.Context) {
 	ctx := context.Ctx
 
 	// check body format
-	signInData := vo.SignInReq{
+	signInData := SignInReq{
 		Email: string(ctx.QueryArgs().Peek("email")),
 		Pwd:   string(ctx.QueryArgs().Peek("pwd")),
 	}
@@ -58,7 +55,7 @@ func SignIn(context *router.Context) {
 		return
 	}
 
-	response, apiResult, err := Dao.SignIn(signInData)
+	response, apiResult, err := dao.SignIn(signInData)
 	fmt.Fprintf(ctx, api.Result(ctx, apiResult, response, err))
 }
 
@@ -67,7 +64,7 @@ func Update(context *router.Context) {
 	ctx := context.Ctx
 
 	// check body format
-	var updateData vo.UpdateReq
+	var updateData UpdateReq
 	err := json.Unmarshal(ctx.PostBody(), &updateData)
 	if err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, err))
@@ -91,7 +88,7 @@ func Update(context *router.Context) {
 		return
 	}
 
-	apiResult, err := Dao.Update(payload, updateData)
+	apiResult, err := dao.Update(payload, updateData)
 	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, err))
 }
 
@@ -117,6 +114,6 @@ func List(context *router.Context) {
 	}
 	active := string(ctx.QueryArgs().Peek("active"))
 
-	list, apiResult, err := Dao.List(page, limit, (active == "true"))
+	list, apiResult, err := dao.List(page, limit, (active == "true"))
 	fmt.Fprintf(ctx, api.Result(ctx, apiResult, list, err))
 }

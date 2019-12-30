@@ -24,8 +24,8 @@ const (
 	UpdatedDate string = "updated_date"
 )
 
-// ACL table struct
-type ACL struct {
+// Entity table struct
+type Entity struct {
 	Code        string `json:"code"`
 	Name        string `json:"name"`
 	Type        string `json:"type"`

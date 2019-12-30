@@ -1,4 +1,4 @@
-package entity
+package roleacl
 
 // PK role_acl table pk column name
 var PK []string = []string{"role_code", "acl_code"}
@@ -17,8 +17,8 @@ const (
 	UpdatedDate string = "updated_date"
 )
 
-// RoleACL table struct
-type RoleACL struct {
+// Entity table struct
+type Entity struct {
 	RoleCode    string `json:"roleCode"`
 	ACLCode     string `json:"aclCode"`
 	CreatedDate string `json:"creatDate"`

@@ -23,7 +23,7 @@ const (
 )
 
 // Role table struct
-type Role struct {
+type Entity struct {
 	Code        string `json:"code"`
 	Name        string `json:"name"`
 	Lv          int    `json:"lv"`

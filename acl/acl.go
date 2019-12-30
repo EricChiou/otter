@@ -1,7 +1,7 @@
 package acl
 
 import (
-	"otter/api/roleacl/entity"
+	"otter/api/roleacl"
 	"otter/db/mysql"
 )
 
@@ -22,22 +22,22 @@ func Load() error {
 		return err
 	}
 
-	var roleacl entity.RoleACL
-	column := []string{entity.RoleCode, entity.ACLCode}
-	rows, err := mysql.Query(tx, entity.Table, column, make(map[string]interface{}))
+	var entity roleacl.Entity
+	column := []string{roleacl.RoleCode, roleacl.ACLCode}
+	rows, err := mysql.Query(tx, roleacl.Table, column, make(map[string]interface{}))
 	if err != nil {
 		return err
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&roleacl.RoleCode, &roleacl.ACLCode)
+		err = rows.Scan(&entity.RoleCode, &entity.ACLCode)
 		if err != nil {
 			return err
 		}
-		if roleACL[roleacl.RoleCode] == nil {
-			roleACL[roleacl.RoleCode] = []string{roleacl.ACLCode}
+		if roleACL[entity.RoleCode] == nil {
+			roleACL[entity.RoleCode] = []string{entity.ACLCode}
 		} else {
-			roleACL[roleacl.RoleCode] = append(roleACL[roleacl.RoleCode], roleacl.ACLCode)
+			roleACL[entity.RoleCode] = append(roleACL[entity.RoleCode], entity.ACLCode)
 		}
 	}
 

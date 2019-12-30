@@ -1,4 +1,4 @@
-package vo
+package user
 
 // SignUpReq user sign up request data struct
 type SignUpReq struct {
