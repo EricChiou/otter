@@ -23,7 +23,7 @@ func Load() error {
 	}
 
 	var entity roleacl.Entity
-	column := []string{roleacl.RoleCode, roleacl.ACLCode}
+	column := []string{roleacl.Col.RoleCode, roleacl.Col.ACLCode}
 	rows, err := mysql.Query(tx, roleacl.Table, column, make(map[string]interface{}))
 	if err != nil {
 		return err

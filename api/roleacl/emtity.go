@@ -1,26 +1,29 @@
 package roleacl
 
-// PK role_acl table pk column name
-var PK []string = []string{"role_code", "acl_code"}
+// Table role_acl table name
+const Table string = "role_acl"
 
-const (
-	// Table role_acl table name
-	Table string = "role_acl"
+// Col role_acl table column name
+var Col col = col{
+	PK:          []string{"role_code", "acl_code"},
+	RoleCode:    "role_code",
+	ACLCode:     "acl_code",
+	CreatedDate: "created_date",
+	UpdatedDate: "updated_date",
+}
 
-	// RoleCode role_acl table role code column name
-	RoleCode string = "role_code"
-	// ACLCode role_acl table acl code column name
-	ACLCode string = "acl_code"
-	// CreatedDate role_acl table created date column name
-	CreatedDate string = "created_date"
-	// UpdatedDate role_acl table updated date column name
-	UpdatedDate string = "updated_date"
-)
-
-// Entity table struct
+// Entity role_acl table entity
 type Entity struct {
 	RoleCode    string `json:"roleCode"`
 	ACLCode     string `json:"aclCode"`
 	CreatedDate string `json:"creatDate"`
 	UpdatedDate string `json:"updateDate"`
+}
+
+type col struct {
+	PK          []string
+	RoleCode    string
+	ACLCode     string
+	CreatedDate string
+	UpdatedDate string
 }

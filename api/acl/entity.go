@@ -1,30 +1,22 @@
 package entity
 
-const (
-	// Table acl table name
-	Table string = "acl"
+// Table acl table name
+const Table string = "acl"
 
-	// PK acl table pk column name
-	PK string = "code"
-	// Code acl table code column name
-	Code string = "code"
-	// Name acl table name column name
-	Name string = "name"
-	// Type acl table type column name
-	Type string = "type"
-	// Lv acl table lv column name
-	Lv string = "lv"
-	// SortNo acl table sort no column name
-	SortNo string = "sort_no"
-	// Enable acl table enable column name
-	Enable string = "enable"
-	// CreatedDate acl table created date column name
-	CreatedDate string = "created_date"
-	// UpdatedDate acl table updated date column name
-	UpdatedDate string = "updated_date"
-)
+// Col acl table column name
+var Col col = col{
+	PK:          "code",
+	Code:        "code",
+	Name:        "name",
+	Type:        "type",
+	Lv:          "lv",
+	SortNo:      "sort_no",
+	Enable:      "enable",
+	CreatedDate: "created_date",
+	UpdatedDate: "updated_date",
+}
 
-// Entity table struct
+// Entity acl table entity
 type Entity struct {
 	Code        string `json:"code"`
 	Name        string `json:"name"`
@@ -34,4 +26,16 @@ type Entity struct {
 	Enable      bool   `json:"enable"`
 	CreatedDate string `json:"creatDate"`
 	UpdatedDate string `json:"updateDate"`
+}
+
+type col struct {
+	PK          string
+	Code        string
+	Name        string
+	Type        string
+	Lv          string
+	SortNo      string
+	Enable      string
+	CreatedDate string
+	UpdatedDate string
 }

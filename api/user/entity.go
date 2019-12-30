@@ -1,30 +1,22 @@
 package user
 
-const (
-	// Table user table name
-	Table string = "user"
+// Table user table name
+const Table string = "user"
 
-	// PK user table pk column name
-	PK string = "id"
-	// ID user table id column name
-	ID string = "id"
-	// Email user table email column name
-	Email string = "email"
-	// Pwd user table pwd column name
-	Pwd string = "pwd"
-	// Name user table name column name
-	Name string = "name"
-	// Role user table role column name
-	Role string = "role"
-	// Active user table active column name
-	Active string = "active"
-	// CreatedDate user table created date column name
-	CreatedDate string = "created_date"
-	// UpdatedDate user table updated date column name
-	UpdatedDate string = "updated_date"
-)
+// Col user table column name
+var Col col = col{
+	PK:          "id",
+	ID:          "id",
+	Email:       "email",
+	Pwd:         "pwd",
+	Name:        "name",
+	Role:        "role",
+	Active:      "active",
+	CreatedDate: "created_date",
+	UpdatedDate: "updated_date",
+}
 
-// Entity table struct
+// Entity user table entity
 type Entity struct {
 	ID          int    `json:"id"`
 	Email       string `json:"email"`
@@ -34,4 +26,16 @@ type Entity struct {
 	Active      bool   `json:"active"`
 	CreatedDate string `json:"creatDate"`
 	UpdatedDate string `json:"updateDate"`
+}
+
+type col struct {
+	PK          string
+	ID          string
+	Email       string
+	Pwd         string
+	Name        string
+	Role        string
+	Active      string
+	CreatedDate string
+	UpdatedDate string
 }

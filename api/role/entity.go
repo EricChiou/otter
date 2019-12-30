@@ -1,28 +1,21 @@
 package entity
 
-const (
-	// Table role table name
-	Table string = "role"
+// Table role table name
+const Table string = "role"
 
-	// PK role table pk column name
-	PK string = "code"
-	// Code role table code column name
-	Code string = "code"
-	// Name role table name column name
-	Name string = "name"
-	// Lv role table lv column name
-	Lv string = "lv"
-	// SortNo role table sort no column name
-	SortNo string = "sort_no"
-	// Enable role table enable column name
-	Enable string = "enable"
-	// CreatedDate role table created date column name
-	CreatedDate string = "created_date"
-	// UpdatedDate role table updated date column name
-	UpdatedDate string = "updated_date"
-)
+// Col role table column name
+var Col col = col{
+	PK:          "code",
+	Code:        "code",
+	Name:        "name",
+	Lv:          "lv",
+	SortNo:      "sort_no",
+	Enable:      "enable",
+	CreatedDate: "created_date",
+	UpdatedDate: "updated_date",
+}
 
-// Role table struct
+// Entity role table entity
 type Entity struct {
 	Code        string `json:"code"`
 	Name        string `json:"name"`
@@ -31,4 +24,15 @@ type Entity struct {
 	Enable      bool   `json:"enable"`
 	CreatedDate string `json:"creatDate"`
 	UpdatedDate string `json:"updateDate"`
+}
+
+type col struct {
+	PK          string
+	Code        string
+	Name        string
+	Lv          string
+	SortNo      string
+	Enable      string
+	CreatedDate string
+	UpdatedDate string
 }

@@ -22,9 +22,9 @@ func (dao *Dao) SignUp(signUp SignUpReqVo) (string, error) {
 	encryptPwd := sha3.Encrypt(signUp.Pwd)
 
 	kv := map[string]interface{}{
-		Email: signUp.Email,
-		Pwd:   encryptPwd,
-		Name:  signUp.Name,
+		Col.Email: signUp.Email,
+		Col.Pwd:   encryptPwd,
+		Col.Name:  signUp.Name,
 	}
 	_, err = mysql.Insert(tx, Table, kv)
 	if err != nil {
@@ -42,15 +42,15 @@ func (dao *Dao) SignIn(signIn SignInReqVo) (SignInResVo, string, error) {
 	var response SignInResVo
 	var entity Entity
 	column := []string{
-		ID,
-		Email,
-		Pwd,
-		Name,
-		Role,
+		Col.ID,
+		Col.Email,
+		Col.Pwd,
+		Col.Name,
+		Col.Role,
 	}
 	where := map[string]interface{}{
-		Email:  signIn.Email,
-		Active: true,
+		Col.Email:  signIn.Email,
+		Col.Active: true,
 	}
 	row := mysql.QueryRow(tx, Table, column, where)
 	err = row.Scan(&entity.ID, &entity.Email, &entity.Pwd, &entity.Name, &entity.Role)
@@ -79,16 +79,16 @@ func (dao *Dao) Update(payload jwt.Payload, updateData UpdateReqVo) (string, err
 
 	set := map[string]interface{}{}
 	if len(updateData.Name) != 0 {
-		set[Name] = updateData.Name
+		set[Col.Name] = updateData.Name
 	}
 	if len(updateData.Pwd) != 0 {
-		set[Pwd] = sha3.Encrypt(updateData.Pwd)
+		set[Col.Pwd] = sha3.Encrypt(updateData.Pwd)
 	}
 	var where map[string]interface{} = make(map[string]interface{})
 	if updateData.ID != 0 {
-		where[ID] = updateData.ID
+		where[Col.ID] = updateData.ID
 	} else {
-		where[ID] = payload.ID
+		where[Col.ID] = payload.ID
 	}
 
 	_, err = mysql.Update(tx, Table, set, where)
@@ -108,19 +108,19 @@ func (dao *Dao) List(page, limit int, active bool) (ListResVo, string, error) {
 		return list, cons.APIResultDBError, err
 	}
 
-	orderBy := ID
+	orderBy := Col.ID
 	column := []string{
-		ID,
-		Email,
-		Name,
-		Role,
-		Active,
+		Col.ID,
+		Col.Email,
+		Col.Name,
+		Col.Role,
+		Col.Active,
 	}
 	where := map[string]interface{}{}
 	if active {
-		where[Active] = true
+		where[Col.Active] = true
 	}
-	rows, err := mysql.Paging(tx, Table, PK, column, where, orderBy, page, limit)
+	rows, err := mysql.Paging(tx, Table, Col.PK, column, where, orderBy, page, limit)
 	defer rows.Close()
 	if err != nil {
 		return list, mysql.ErrMsgHandler(err), err
