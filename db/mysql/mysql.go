@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"strings"
 
+	"otter/config"
 	cons "otter/constants"
 )
 
@@ -11,7 +12,13 @@ import (
 var DB *sql.DB
 
 // Init connect MySQL
-func Init(addr, port, userName, password, dbName string) (err error) {
+func Init() (err error) {
+	userName := config.Conf.MySQLUserName
+	password := config.Conf.MySQLPassword
+	addr := config.Conf.MySQLAddr
+	port := config.Conf.MySQLPort
+	dbName := config.Conf.MySQLDBNAME
+
 	DB, err = sql.Open("mysql", userName+":"+password+"@tcp("+addr+":"+port+")/"+dbName)
 	return err
 }

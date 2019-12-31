@@ -21,17 +21,17 @@ type config struct {
 }
 
 // Config config data
-var Config = config{}
+var Conf = config{}
 
 // LoadConfig load config
-func LoadConfig(configFilePath string) error {
+func Load(configFilePath string) error {
 	keyValue, err := conf.LoadConfigFile(configFilePath)
 	if err != nil {
 		return err
 	}
 
-	keys := reflect.TypeOf(Config)
-	values := reflect.ValueOf(&Config).Elem()
+	keys := reflect.TypeOf(Conf)
+	values := reflect.ValueOf(&Conf).Elem()
 	for i := 0; i < keys.NumField(); i++ {
 		values.Field(i).SetString(keyValue[keys.Field(i).Tag.Get("key")])
 	}

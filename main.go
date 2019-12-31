@@ -14,25 +14,19 @@ import (
 )
 
 func main() {
-	err := config.LoadConfig(cons.ConfigFilePath)
-	if err != nil {
+	// load config
+	if err := config.Load(cons.ConfigFilePath); err != nil {
 		panic(err)
 	}
 
-	err = mysql.Init(
-		config.Config.MySQLAddr,
-		config.Config.MySQLPort,
-		config.Config.MySQLUserName,
-		config.Config.MySQLPassword,
-		config.Config.MySQLDBNAME,
-	)
-	if err != nil {
+	// init db
+	if err := mysql.Init(); err != nil {
 		panic(err)
 	}
 	defer mysql.Close()
 
 	// load acl
-	if err = acl.Load(); err != nil {
+	if err := acl.Load(); err != nil {
 		panic(err)
 	}
 
@@ -42,15 +36,14 @@ func main() {
 	router.SetHeader("Access-Control-Allow-Headers", "Content-Type")
 
 	// init api
-	routes.InitUserAPI()
+	routes.Init()
 
-	port := ":" + config.Config.ServerPort
 	// start http server
-	if err = router.ListenAndServe(port); err != nil {
+	if err := router.ListenAndServe(config.Conf.ServerPort); err != nil {
 		panic(err)
 	}
 	// start https server
-	// if err = router.ListenAndServeTLS(port, config.Config.SSLCertFilePath, config.Config.SSLKeyFilePath); err != nil {
+	// if err = router.ListenAndServeTLS(config.Conf.ServerPort, config.Conf.SSLCertFilePath, config.Conf.SSLKeyFilePath); err != nil {
 	// 	panic(err)
 	// }
 
