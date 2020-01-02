@@ -11,7 +11,7 @@ import (
 type Dao struct{}
 
 // SignUp dao
-func (dao *Dao) SignUp(signUp SignUpReqVo) (string, error) {
+func (dao *Dao) SignUp(signUp SignUpReqVo) (string, interface{}) {
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -35,7 +35,7 @@ func (dao *Dao) SignUp(signUp SignUpReqVo) (string, error) {
 }
 
 // SignIn dao
-func (dao *Dao) SignIn(signIn SignInReqVo) (SignInResVo, string, error) {
+func (dao *Dao) SignIn(signIn SignInReqVo) (SignInResVo, string, interface{}) {
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 
@@ -70,7 +70,7 @@ func (dao *Dao) SignIn(signIn SignInReqVo) (SignInResVo, string, error) {
 }
 
 // Update dao
-func (dao *Dao) Update(payload jwt.Payload, updateData UpdateReqVo) (string, error) {
+func (dao *Dao) Update(payload jwt.Payload, updateData UpdateReqVo) (string, interface{}) {
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -100,7 +100,7 @@ func (dao *Dao) Update(payload jwt.Payload, updateData UpdateReqVo) (string, err
 }
 
 // List dao
-func (dao *Dao) List(page, limit int, active bool) (ListResVo, string, error) {
+func (dao *Dao) List(page, limit int, active bool) (ListResVo, string, interface{}) {
 	var list ListResVo
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()

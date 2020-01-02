@@ -34,8 +34,8 @@ func SignUp(context *router.Context) {
 		return
 	}
 
-	apiResult, err := dao.SignUp(signUpData)
-	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, err))
+	apiResult, trace := dao.SignUp(signUpData)
+	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, trace))
 }
 
 // SignIn user sign in controller
@@ -55,8 +55,8 @@ func SignIn(context *router.Context) {
 		return
 	}
 
-	response, apiResult, err := dao.SignIn(signInData)
-	fmt.Fprintf(ctx, api.Result(ctx, apiResult, response, err))
+	response, apiResult, trace := dao.SignIn(signInData)
+	fmt.Fprintf(ctx, api.Result(ctx, apiResult, response, trace))
 }
 
 // Update user data
@@ -88,8 +88,8 @@ func Update(context *router.Context) {
 		return
 	}
 
-	apiResult, err := dao.Update(payload, updateData)
-	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, err))
+	apiResult, trace := dao.Update(payload, updateData)
+	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, trace))
 }
 
 // List get user list
@@ -114,6 +114,6 @@ func List(context *router.Context) {
 	}
 	active := string(ctx.QueryArgs().Peek("active"))
 
-	list, apiResult, err := dao.List(page, limit, (active == "true"))
-	fmt.Fprintf(ctx, api.Result(ctx, apiResult, list, err))
+	list, apiResult, trace := dao.List(page, limit, (active == "true"))
+	fmt.Fprintf(ctx, api.Result(ctx, apiResult, list, trace))
 }
