@@ -6,6 +6,12 @@ import (
 )
 
 const (
+	// AddCodemap acl code
+	AddCodemap string = "addCodemap"
+	// UpdateCodemap acl code
+	UpdateCodemap string = "updateCodemap"
+	// DeleteCodemap acl code
+	DeleteCodemap string = "deleteCodemap"
 	// UpdateUserInfo acl code
 	UpdateUserInfo string = "updateUserInfo"
 	// DeleteUser acl code
@@ -21,6 +27,9 @@ func Load() error {
 	if err != nil {
 		return err
 	}
+
+	// reset roleACL
+	roleACL = make(map[string][]string)
 
 	var entity roleacl.Entity
 	column := []string{roleacl.Col.RoleCode, roleacl.Col.ACLCode}

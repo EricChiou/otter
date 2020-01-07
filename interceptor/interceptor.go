@@ -11,19 +11,22 @@ import (
 // Interceptor check jwt
 func Interceptor(ctx *fasthttp.RequestCtx, aclCode ...string) (jwt.Payload, bool, string) {
 	var payload jwt.Payload
+	var result bool
+
 	auth := string(ctx.Request.Header.Peek(cons.TokenHeader))
-	if len(auth) < len(cons.TokenPrefix) {
-		return payload, false, cons.APIResultTokenError
+	if result = (len(auth) >= len(cons.TokenPrefix)); !result {
+		return payload, false, cons.RSTokenError
 	}
 
-	payload, result := jwt.Verify(auth[len(cons.TokenPrefix):])
-	if !result {
-		return payload, false, cons.APIResultTokenError
+	if payload, result = jwt.Verify(auth[len(cons.TokenPrefix):]); !result {
+		return payload, false, cons.RSTokenError
 	}
 
 	// check permission
 	for _, code := range aclCode {
-		return payload, acl.Check(code, payload.Role), cons.APIResultPermissionDenied
+		if result = acl.Check(code, payload.Role); !result {
+			return payload, false, cons.RSPermissionDenied
+		}
 	}
 
 	return payload, true, ""

@@ -2,6 +2,7 @@ package constants
 
 // setting
 const (
+	ServerName     string = "Calico & MooMoo"
 	Sha3Len        int    = 256
 	TokenHeader    string = "Authorization"
 	TokenPrefix    string = "Bearer "
@@ -10,14 +11,14 @@ const (
 
 // API result
 const (
-	APIResultSuccess          string = "success"
-	APIResultFormatError      string = "formatError"
-	APIResultPermissionDenied string = "permissionDenied"
-	APIResultDBError          string = "dbError"
-	APIResultServerError      string = "serverError"
-	APIResultDuplicate        string = "duplicate"
-	APIResultDataError        string = "dataError"
-	APIResultTokenError       string = "tokenError"
+	RSSuccess          string = "success"
+	RSFormatError      string = "formatError"
+	RSPermissionDenied string = "permissionDenied"
+	RSDBError          string = "dbError"
+	RSServerError      string = "serverError"
+	RSDuplicate        string = "duplicate"
+	RSDataError        string = "dataError"
+	RSTokenError       string = "tokenError"
 )
 
 // jwt alg type

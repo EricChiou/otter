@@ -33,9 +33,9 @@ func Close() {
 // ErrMsgHandler error message handler
 func ErrMsgHandler(err error) string {
 	if strings.Contains(err.Error(), "Duplicate") {
-		return cons.APIResultDuplicate
+		return cons.RSDuplicate
 	} else {
-		return cons.APIResultDBError
+		return cons.RSDBError
 	}
 }
 
@@ -70,7 +70,7 @@ func Update(tx *sql.Tx, table string, setKV map[string]interface{}, whereKV map[
 	if len(set) > 2 {
 		set = set[2:]
 	}
-	where, args := whereString(whereKV, args)
+	where, args := WhereString(whereKV, args)
 
 	return tx.Exec("UPDATE "+table+" SET "+set+where, args...)
 }
@@ -78,7 +78,7 @@ func Update(tx *sql.Tx, table string, setKV map[string]interface{}, whereKV map[
 // Delete delete data
 func Delete(tx *sql.Tx, table string, whereKV map[string]interface{}) (sql.Result, error) {
 	var args []interface{}
-	where, args := whereString(whereKV, args)
+	where, args := WhereString(whereKV, args)
 
 	return tx.Exec("DELETE FROM "+table+where, args...)
 }
@@ -87,7 +87,7 @@ func Delete(tx *sql.Tx, table string, whereKV map[string]interface{}) (sql.Resul
 func Query(tx *sql.Tx, table string, column []string, whereKV map[string]interface{}) (*sql.Rows, error) {
 	var args []interface{}
 	columns := columnString(column)
-	where, args := whereString(whereKV, args)
+	where, args := WhereString(whereKV, args)
 
 	return tx.Query("SELECT "+columns+" FROM "+table+where, args...)
 }
@@ -96,7 +96,7 @@ func Query(tx *sql.Tx, table string, column []string, whereKV map[string]interfa
 func QueryRow(tx *sql.Tx, table string, column []string, whereKV map[string]interface{}) *sql.Row {
 	var args []interface{}
 	columns := columnString(column)
-	where, args := whereString(whereKV, args)
+	where, args := WhereString(whereKV, args)
 
 	return tx.QueryRow("SELECT "+columns+" FROM "+table+where, args...)
 }
@@ -105,7 +105,7 @@ func QueryRow(tx *sql.Tx, table string, column []string, whereKV map[string]inte
 func Paging(tx *sql.Tx, table, pk string, column []string, whereKV map[string]interface{}, orderBy string, page, limit int) (*sql.Rows, error) {
 	var args []interface{}
 	columns := columnString(column)
-	where, args := whereString(whereKV, args)
+	where, args := WhereString(whereKV, args)
 	args = append(args, (page-1)*limit, limit)
 
 	return tx.Query(
@@ -118,7 +118,8 @@ func Paging(tx *sql.Tx, table, pk string, column []string, whereKV map[string]in
 	)
 }
 
-func whereString(whereKV map[string]interface{}, args []interface{}) (string, []interface{}) {
+// WhereString get db where string
+func WhereString(whereKV map[string]interface{}, args []interface{}) (string, []interface{}) {
 	where := ""
 	for k, v := range whereKV {
 		where += " AND " + k + "=?"

@@ -1,14 +1,15 @@
-package role
+package codemap
 
-// Table role table name
-const Table string = "role"
+// Table codemap table name
+const Table string = "codemap"
 
 // Col role table column name
 var Col col = col{
-	PK:          "code",
+	PK:          "id",
+	ID:          "id",
+	Type:        "type",
 	Code:        "code",
 	Name:        "name",
-	Lv:          "lv",
 	SortNo:      "sort_no",
 	Enable:      "enable",
 	CreatedDate: "created_date",
@@ -17,9 +18,10 @@ var Col col = col{
 
 // Entity role table entity
 type Entity struct {
+	ID          int    `json:"id"`
+	Type        string `json:"type"`
 	Code        string `json:"code"`
 	Name        string `json:"name"`
-	Lv          int    `json:"lv"`
 	SortNo      int    `json:"sortNo"`
 	Enable      bool   `json:"enable"`
 	CreatedDate string `json:"creatDate"`
@@ -28,9 +30,10 @@ type Entity struct {
 
 type col struct {
 	PK          string
+	ID          string
+	Type        string
 	Code        string
 	Name        string
-	Lv          string
 	SortNo      string
 	Enable      string
 	CreatedDate string

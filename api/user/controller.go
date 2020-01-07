@@ -23,14 +23,14 @@ func SignUp(context *router.Context) {
 	var signUpData SignUpReqVo
 	err := json.Unmarshal(ctx.PostBody(), &signUpData)
 	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, err))
+		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
 		return
 	}
 
 	// check data
 	result := check.Check(signUpData.Email, signUpData.Pwd, signUpData.Name)
 	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, nil))
+		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, nil))
 		return
 	}
 
@@ -51,7 +51,7 @@ func SignIn(context *router.Context) {
 	// check data
 	result := check.Check(signInData.Email, signInData.Pwd)
 	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, nil))
+		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, nil))
 		return
 	}
 
@@ -67,7 +67,14 @@ func Update(context *router.Context) {
 	var updateData UpdateReqVo
 	err := json.Unmarshal(ctx.PostBody(), &updateData)
 	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, err))
+		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
+		return
+	}
+
+	// check data
+	result := check.Check(updateData.Name, updateData.Pwd)
+	if !result {
+		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, nil))
 		return
 	}
 
@@ -79,12 +86,6 @@ func Update(context *router.Context) {
 	payload, result, reason := interceptor.Interceptor(ctx, aclCode...)
 	if !result {
 		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
-		return
-	}
-
-	// check data
-	if len(updateData.Name) == 0 && len(updateData.Pwd) == 0 {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.APIResultFormatError, nil, nil))
 		return
 	}
 
@@ -108,7 +109,7 @@ func List(context *router.Context) {
 	if err != nil {
 		page = 1
 	}
-	limit, _ := strconv.Atoi(string(ctx.QueryArgs().Peek("limit")))
+	limit, err := strconv.Atoi(string(ctx.QueryArgs().Peek("limit")))
 	if err != nil {
 		limit = 10
 	}

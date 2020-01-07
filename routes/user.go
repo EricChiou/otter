@@ -5,13 +5,13 @@ import (
 	"otter/router"
 )
 
-var groupName string = "/user"
-
 // InitUserAPI init user api
 func InitUserAPI() {
+	groupName := "/user"
+
 	// Get
 	router.Get(groupName+"/signIn", user.SignIn)
-	router.Get(groupName, user.List)
+	router.Get(groupName+"/list", user.List)
 
 	// Post
 	router.Post(groupName, user.Update)

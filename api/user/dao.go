@@ -15,7 +15,7 @@ func (dao *Dao) SignUp(signUp SignUpReqVo) (string, interface{}) {
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
-		return cons.APIResultDBError, err
+		return cons.RSDBError, err
 	}
 
 	// encrypt password
@@ -31,7 +31,7 @@ func (dao *Dao) SignUp(signUp SignUpReqVo) (string, interface{}) {
 		return mysql.ErrMsgHandler(err), err
 	}
 
-	return cons.APIResultSuccess, nil
+	return cons.RSSuccess, nil
 }
 
 // SignIn dao
@@ -55,18 +55,18 @@ func (dao *Dao) SignIn(signIn SignInReqVo) (SignInResVo, string, interface{}) {
 	row := mysql.QueryRow(tx, Table, column, where)
 	err = row.Scan(&entity.ID, &entity.Email, &entity.Pwd, &entity.Name, &entity.Role)
 	if err != nil {
-		return response, cons.APIResultDataError, err
+		return response, cons.RSDataError, err
 	}
 
 	if entity.Pwd != sha3.Encrypt(signIn.Pwd) {
-		return response, cons.APIResultDataError, nil
+		return response, cons.RSDataError, nil
 	}
 
 	token, _ := jwt.Generate(entity.ID, entity.Email, entity.Name, entity.Role)
 	response = SignInResVo{
 		Token: token,
 	}
-	return response, cons.APIResultSuccess, nil
+	return response, cons.RSSuccess, nil
 }
 
 // Update dao
@@ -74,7 +74,7 @@ func (dao *Dao) Update(payload jwt.Payload, updateData UpdateReqVo) (string, int
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
-		return cons.APIResultDBError, err
+		return cons.RSDBError, err
 	}
 
 	set := map[string]interface{}{}
@@ -96,7 +96,7 @@ func (dao *Dao) Update(payload jwt.Payload, updateData UpdateReqVo) (string, int
 		return mysql.ErrMsgHandler(err), err
 	}
 
-	return cons.APIResultSuccess, nil
+	return cons.RSSuccess, nil
 }
 
 // List dao
@@ -105,10 +105,9 @@ func (dao *Dao) List(page, limit int, active bool) (ListResVo, string, interface
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
-		return list, cons.APIResultDBError, err
+		return list, cons.RSDBError, err
 	}
 
-	orderBy := Col.ID
 	column := []string{
 		Col.ID,
 		Col.Email,
@@ -120,6 +119,7 @@ func (dao *Dao) List(page, limit int, active bool) (ListResVo, string, interface
 	if active {
 		where[Col.Active] = true
 	}
+	orderBy := Col.ID
 	rows, err := mysql.Paging(tx, Table, Col.PK, column, where, orderBy, page, limit)
 	defer rows.Close()
 	if err != nil {
@@ -142,5 +142,5 @@ func (dao *Dao) List(page, limit int, active bool) (ListResVo, string, interface
 	}
 	list.Total = total
 
-	return list, cons.APIResultSuccess, nil
+	return list, cons.RSSuccess, nil
 }
