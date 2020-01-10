@@ -1,6 +1,7 @@
 package user
 
 import (
+	"otter/api/common"
 	cons "otter/constants"
 	"otter/db/mysql"
 	"otter/service/jwt"
@@ -100,8 +101,12 @@ func (dao *Dao) Update(payload jwt.Payload, updateData UpdateReqVo) (string, int
 }
 
 // List dao
-func (dao *Dao) List(page, limit int, active bool) (ListResVo, string, interface{}) {
-	var list ListResVo
+func (dao *Dao) List(page, limit int, active bool) (common.PageRespVo, string, interface{}) {
+	list := common.PageRespVo{
+		Records: []interface{}{},
+		Page:    page,
+		Limit:   limit,
+	}
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -120,7 +125,7 @@ func (dao *Dao) List(page, limit int, active bool) (ListResVo, string, interface
 		where[Col.Active] = true
 	}
 	orderBy := Col.ID
-	rows, err := mysql.Paging(tx, Table, Col.PK, column, where, orderBy, page, limit)
+	rows, err := mysql.Page(tx, Table, Col.PK, column, where, orderBy, page, limit)
 	defer rows.Close()
 	if err != nil {
 		return list, mysql.ErrMsgHandler(err), err

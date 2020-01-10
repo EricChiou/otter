@@ -25,12 +25,6 @@ type UpdateReqVo struct {
 	ID   int    `json:"id"`
 }
 
-// ListResVo get user list response vo
-type ListResVo struct {
-	Records []ListDataVo `json:"records"`
-	Total   int          `json:"total"`
-}
-
 // ListDataVo user list data vo
 type ListDataVo struct {
 	ID       int    `json:"id"`

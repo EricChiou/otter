@@ -1,10 +1,9 @@
 package codemap
 
 import (
+	"otter/api/common"
 	cons "otter/constants"
 	"otter/db/mysql"
-	// "otter/service/jwt"
-	// "otter/service/sha3"
 )
 
 // Dao codemap dao
@@ -78,8 +77,12 @@ func (dao *Dao) Delete(deleteReqVo DeleteReqVo) (string, interface{}) {
 }
 
 // List get codemap list
-func (dao *Dao) List(page, limit int, typ string, enble bool) (ListResVo, string, interface{}) {
-	var list ListResVo
+func (dao *Dao) List(page, limit int, typ string, enble bool) (common.PageRespVo, string, interface{}) {
+	list := common.PageRespVo{
+		Records: []interface{}{},
+		Page:    page,
+		Limit:   limit,
+	}
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -102,7 +105,7 @@ func (dao *Dao) List(page, limit int, typ string, enble bool) (ListResVo, string
 		where[Col.Enable] = true
 	}
 	orderBy := Col.SortNo
-	rows, err := mysql.Paging(tx, Table, Col.PK, column, where, orderBy, page, limit)
+	rows, err := mysql.Page(tx, Table, PK, column, where, orderBy, page, limit)
 	defer rows.Close()
 	if err != nil {
 		return list, mysql.ErrMsgHandler(err), err

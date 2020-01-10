@@ -3,6 +3,18 @@ package user
 // Table user table name
 const Table string = "user"
 
+// Entity user table entity
+type Entity struct {
+	ID          int    `json:"id"`
+	Email       string `json:"email"`
+	Pwd         string `json:"pwd"`
+	Name        string `json:"name"`
+	Role        string `json:"role"`
+	Active      bool   `json:"active"`
+	CreatedDate string `json:"creatDate"`
+	UpdatedDate string `json:"updateDate"`
+}
+
 // Col user table column name
 var Col col = col{
 	PK:          "id",
@@ -14,18 +26,6 @@ var Col col = col{
 	Active:      "active",
 	CreatedDate: "created_date",
 	UpdatedDate: "updated_date",
-}
-
-// Entity user table entity
-type Entity struct {
-	ID          int    `json:"id"`
-	Email       string `json:"email"`
-	Pwd         string `json:"pwd"`
-	Name        string `json:"name"`
-	Role        string `json:"role"`
-	Active      bool   `json:"active"`
-	CreatedDate string `json:"creatDate"`
-	UpdatedDate string `json:"updateDate"`
 }
 
 type col struct {

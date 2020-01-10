@@ -3,18 +3,8 @@ package codemap
 // Table codemap table name
 const Table string = "codemap"
 
-// Col role table column name
-var Col col = col{
-	PK:          "id",
-	ID:          "id",
-	Type:        "type",
-	Code:        "code",
-	Name:        "name",
-	SortNo:      "sort_no",
-	Enable:      "enable",
-	CreatedDate: "created_date",
-	UpdatedDate: "updated_date",
-}
+// PK codemap table pk column name
+const PK string = "id"
 
 // Entity role table entity
 type Entity struct {
@@ -28,8 +18,19 @@ type Entity struct {
 	UpdatedDate string `json:"updateDate"`
 }
 
+// Col role table column name
+var Col col = col{
+	ID:          "id",
+	Type:        "type",
+	Code:        "code",
+	Name:        "name",
+	SortNo:      "sort_no",
+	Enable:      "enable",
+	CreatedDate: "created_date",
+	UpdatedDate: "updated_date",
+}
+
 type col struct {
-	PK          string
 	ID          string
 	Type        string
 	Code        string

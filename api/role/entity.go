@@ -3,20 +3,12 @@ package role
 // Table role table name
 const Table string = "role"
 
-// Col role table column name
-var Col col = col{
-	PK:          "code",
-	Code:        "code",
-	Name:        "name",
-	Lv:          "lv",
-	SortNo:      "sort_no",
-	Enable:      "enable",
-	CreatedDate: "created_date",
-	UpdatedDate: "updated_date",
-}
+// PK role table pk column name
+const PK string = "id"
 
 // Entity role table entity
 type Entity struct {
+	ID          int    `json:"id"`
 	Code        string `json:"code"`
 	Name        string `json:"name"`
 	Lv          int    `json:"lv"`
@@ -26,8 +18,20 @@ type Entity struct {
 	UpdatedDate string `json:"updateDate"`
 }
 
+// Col role table column name
+var Col col = col{
+	ID:          "id",
+	Code:        "code",
+	Name:        "name",
+	Lv:          "lv",
+	SortNo:      "sort_no",
+	Enable:      "enable",
+	CreatedDate: "created_date",
+	UpdatedDate: "updated_date",
+}
+
 type col struct {
-	PK          string
+	ID          string
 	Code        string
 	Name        string
 	Lv          string

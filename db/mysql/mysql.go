@@ -101,8 +101,8 @@ func QueryRow(tx *sql.Tx, table string, column []string, whereKV map[string]inte
 	return tx.QueryRow("SELECT "+columns+" FROM "+table+where, args...)
 }
 
-// Paging paging data
-func Paging(tx *sql.Tx, table, pk string, column []string, whereKV map[string]interface{}, orderBy string, page, limit int) (*sql.Rows, error) {
+// Page paging data
+func Page(tx *sql.Tx, table, pk string, column []string, whereKV map[string]interface{}, orderBy string, page, limit int) (*sql.Rows, error) {
 	var args []interface{}
 	columns := columnString(column)
 	where, args := WhereString(whereKV, args)
