@@ -6,9 +6,6 @@ import (
 	"otter/service/dataHandler"
 )
 
-// Table user table name
-// const Table string = "user"
-
 // Entity user table entity
 type Entity struct {
 	ID          int    `json:"id" db:"id"`
