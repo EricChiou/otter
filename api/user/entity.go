@@ -1,41 +1,45 @@
 package user
 
+import (
+	"reflect"
+
+	"otter/service/dataHandler"
+)
+
 // Table user table name
-const Table string = "user"
+// const Table string = "user"
 
 // Entity user table entity
 type Entity struct {
-	ID          int    `json:"id"`
-	Email       string `json:"email"`
-	Pwd         string `json:"pwd"`
-	Name        string `json:"name"`
-	Role        string `json:"role"`
-	Active      bool   `json:"active"`
-	CreatedDate string `json:"creatDate"`
-	UpdatedDate string `json:"updateDate"`
+	ID          int    `json:"id" db:"id"`
+	Email       string `json:"email" db:"email"`
+	Pwd         string `json:"pwd" db:"pwd"`
+	Name        string `json:"name" db:"name"`
+	Role        string `json:"role" db:"role"`
+	Active      bool   `json:"active" db:"active"`
+	CreatedDate string `json:"creatDate" db:"created_date"`
+	UpdatedDate string `json:"updateDate" db:"updated_date"`
 }
 
-// Col user table column name
-var Col col = col{
-	PK:          "id",
-	ID:          "id",
-	Email:       "email",
-	Pwd:         "pwd",
-	Name:        "name",
-	Role:        "role",
-	Active:      "active",
-	CreatedDate: "created_date",
-	UpdatedDate: "updated_date",
+// Table user table name
+func (entity *Entity) Table() string {
+	return "user"
 }
 
-type col struct {
-	PK          string
-	ID          string
-	Email       string
-	Pwd         string
-	Name        string
-	Role        string
-	Active      string
-	CreatedDate string
-	UpdatedDate string
+// PK user table pk column name
+func (entity *Entity) PK() string {
+	return "id"
+}
+
+// Col get entity column name
+func (entity *Entity) Col(key string) string {
+	s, ok := reflect.TypeOf(entity).Elem().FieldByName(key)
+	if ok {
+		col := s.Tag.Get("db")
+		if len(col) > 0 {
+			return col
+		}
+	}
+
+	return dataHandler.Camel2Snake(key)
 }

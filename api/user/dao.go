@@ -22,12 +22,13 @@ func (dao *Dao) SignUp(signUp SignUpReqVo) (string, interface{}) {
 	// encrypt password
 	encryptPwd := sha3.Encrypt(signUp.Pwd)
 
+	var entity Entity
 	kv := map[string]interface{}{
-		Col.Email: signUp.Email,
-		Col.Pwd:   encryptPwd,
-		Col.Name:  signUp.Name,
+		entity.Col("Email"): signUp.Email,
+		entity.Col("Pwd"):   encryptPwd,
+		entity.Col("Name"):  signUp.Name,
 	}
-	_, err = mysql.Insert(tx, Table, kv)
+	_, err = mysql.Insert(tx, entity.Table(), kv)
 	if err != nil {
 		return mysql.ErrMsgHandler(err), err
 	}
@@ -43,17 +44,17 @@ func (dao *Dao) SignIn(signIn SignInReqVo) (SignInResVo, string, interface{}) {
 	var response SignInResVo
 	var entity Entity
 	column := []string{
-		Col.ID,
-		Col.Email,
-		Col.Pwd,
-		Col.Name,
-		Col.Role,
+		entity.Col("ID"),
+		entity.Col("Email"),
+		entity.Col("Pwd"),
+		entity.Col("Name"),
+		entity.Col("Role"),
 	}
 	where := map[string]interface{}{
-		Col.Email:  signIn.Email,
-		Col.Active: true,
+		entity.Col("Email"):  signIn.Email,
+		entity.Col("Active"): true,
 	}
-	row := mysql.QueryRow(tx, Table, column, where)
+	row := mysql.QueryRow(tx, entity.Table(), column, where)
 	err = row.Scan(&entity.ID, &entity.Email, &entity.Pwd, &entity.Name, &entity.Role)
 	if err != nil {
 		return response, cons.RSDataError, err
@@ -78,21 +79,22 @@ func (dao *Dao) Update(payload jwt.Payload, updateData UpdateReqVo) (string, int
 		return cons.RSDBError, err
 	}
 
+	var entity Entity
 	set := map[string]interface{}{}
 	if len(updateData.Name) != 0 {
-		set[Col.Name] = updateData.Name
+		set[entity.Col("Name")] = updateData.Name
 	}
 	if len(updateData.Pwd) != 0 {
-		set[Col.Pwd] = sha3.Encrypt(updateData.Pwd)
+		set[entity.Col("Pwd")] = sha3.Encrypt(updateData.Pwd)
 	}
 	var where map[string]interface{} = make(map[string]interface{})
 	if updateData.ID != 0 {
-		where[Col.ID] = updateData.ID
+		where[entity.Col("ID")] = updateData.ID
 	} else {
-		where[Col.ID] = payload.ID
+		where[entity.Col("ID")] = payload.ID
 	}
 
-	_, err = mysql.Update(tx, Table, set, where)
+	_, err = mysql.Update(tx, entity.Table(), set, where)
 	if err != nil {
 		return mysql.ErrMsgHandler(err), err
 	}
@@ -113,19 +115,20 @@ func (dao *Dao) List(page, limit int, active bool) (common.PageRespVo, string, i
 		return list, cons.RSDBError, err
 	}
 
+	var entity Entity
 	column := []string{
-		Col.ID,
-		Col.Email,
-		Col.Name,
-		Col.Role,
-		Col.Active,
+		entity.Col("ID"),
+		entity.Col("Email"),
+		entity.Col("Name"),
+		entity.Col("Role"),
+		entity.Col("Active"),
 	}
 	where := map[string]interface{}{}
 	if active {
-		where[Col.Active] = true
+		where[entity.Col("Active")] = true
 	}
-	orderBy := Col.ID
-	rows, err := mysql.Page(tx, Table, Col.PK, column, where, orderBy, page, limit)
+	orderBy := entity.Col("ID")
+	rows, err := mysql.Page(tx, entity.Table(), entity.PK(), column, where, orderBy, page, limit)
 	defer rows.Close()
 	if err != nil {
 		return list, mysql.ErrMsgHandler(err), err
@@ -141,7 +144,7 @@ func (dao *Dao) List(page, limit int, active bool) (common.PageRespVo, string, i
 	}
 
 	var total int
-	err = tx.QueryRow("SELECT COUNT(*) FROM " + Table).Scan(&total)
+	err = tx.QueryRow("SELECT COUNT(*) FROM " + entity.Table()).Scan(&total)
 	if err != nil {
 		return list, mysql.ErrMsgHandler(err), err
 	}
