@@ -8,6 +8,8 @@ import (
 	"otter/service/sha3"
 )
 
+var entity Entity
+
 // Dao user dao
 type Dao struct{}
 
@@ -22,7 +24,6 @@ func (dao *Dao) SignUp(signUp SignUpReqVo) (string, interface{}) {
 	// encrypt password
 	encryptPwd := sha3.Encrypt(signUp.Pwd)
 
-	var entity Entity
 	kv := map[string]interface{}{
 		entity.Col("Email"): signUp.Email,
 		entity.Col("Pwd"):   encryptPwd,
@@ -42,7 +43,6 @@ func (dao *Dao) SignIn(signIn SignInReqVo) (SignInResVo, string, interface{}) {
 	defer tx.Commit()
 
 	var response SignInResVo
-	var entity Entity
 	column := []string{
 		entity.Col("ID"),
 		entity.Col("Email"),
@@ -79,7 +79,6 @@ func (dao *Dao) Update(payload jwt.Payload, updateData UpdateReqVo) (string, int
 		return cons.RSDBError, err
 	}
 
-	var entity Entity
 	set := map[string]interface{}{}
 	if len(updateData.Name) != 0 {
 		set[entity.Col("Name")] = updateData.Name
@@ -115,7 +114,6 @@ func (dao *Dao) List(page, limit int, active bool) (common.PageRespVo, string, i
 		return list, cons.RSDBError, err
 	}
 
-	var entity Entity
 	column := []string{
 		entity.Col("ID"),
 		entity.Col("Email"),

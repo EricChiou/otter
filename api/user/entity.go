@@ -1,13 +1,12 @@
 package user
 
 import (
-	"reflect"
-
-	"otter/service/dataHandler"
+	"otter/api/common"
 )
 
 // Entity user table entity
 type Entity struct {
+	common.BaseEntity
 	ID          int    `json:"id" db:"id"`
 	Email       string `json:"email" db:"email"`
 	Pwd         string `json:"pwd" db:"pwd"`
@@ -26,17 +25,4 @@ func (entity *Entity) Table() string {
 // PK user table pk column name
 func (entity *Entity) PK() string {
 	return "id"
-}
-
-// Col get entity column name
-func (entity *Entity) Col(key string) string {
-	s, ok := reflect.TypeOf(entity).Elem().FieldByName(key)
-	if ok {
-		col := s.Tag.Get("db")
-		if len(col) > 0 {
-			return col
-		}
-	}
-
-	return dataHandler.Camel2Snake(key)
 }

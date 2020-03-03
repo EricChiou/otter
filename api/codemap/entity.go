@@ -1,42 +1,28 @@
 package codemap
 
-// Table codemap table name
-const Table string = "codemap"
-
-// PK codemap table pk column name
-const PK string = "id"
+import (
+	"otter/api/common"
+)
 
 // Entity role table entity
 type Entity struct {
-	ID          int    `json:"id"`
-	Type        string `json:"type"`
-	Code        string `json:"code"`
-	Name        string `json:"name"`
-	SortNo      int    `json:"sortNo"`
-	Enable      bool   `json:"enable"`
-	CreatedDate string `json:"creatDate"`
-	UpdatedDate string `json:"updateDate"`
+	common.BaseEntity
+	ID          int    `json:"id" db:"id"`
+	Type        string `json:"type" db:"type"`
+	Code        string `json:"code" db:"code"`
+	Name        string `json:"name" db:"name"`
+	SortNo      int    `json:"sortNo" db:"sort_no"`
+	Enable      bool   `json:"enable" db:"enable"`
+	CreatedDate string `json:"creatDate" db:"created_date"`
+	UpdatedDate string `json:"updateDate" db:"updated_date"`
 }
 
-// Col role table column name
-var Col col = col{
-	ID:          "id",
-	Type:        "type",
-	Code:        "code",
-	Name:        "name",
-	SortNo:      "sort_no",
-	Enable:      "enable",
-	CreatedDate: "created_date",
-	UpdatedDate: "updated_date",
+// Table codemap table name
+func (entity *Entity) Table() string {
+	return "codemap"
 }
 
-type col struct {
-	ID          string
-	Type        string
-	Code        string
-	Name        string
-	SortNo      string
-	Enable      string
-	CreatedDate string
-	UpdatedDate string
+// PK codemap table pk column name
+func (entity *Entity) PK() string {
+	return "id"
 }

@@ -6,6 +6,8 @@ import (
 	"otter/db/mysql"
 )
 
+var entity Entity
+
 // Dao codemap dao
 type Dao struct{}
 
@@ -18,13 +20,13 @@ func (dao *Dao) Add(addReqVo AddReqVo) (string, interface{}) {
 	}
 
 	kv := map[string]interface{}{
-		Col.Type:   addReqVo.Type,
-		Col.Code:   addReqVo.Code,
-		Col.Name:   addReqVo.Name,
-		Col.SortNo: addReqVo.SortNo,
-		Col.Enable: addReqVo.Enable,
+		entity.Col("Type"):   addReqVo.Type,
+		entity.Col("Code"):   addReqVo.Code,
+		entity.Col("Name"):   addReqVo.Name,
+		entity.Col("SortNo"): addReqVo.SortNo,
+		entity.Col("Enable"): addReqVo.Enable,
 	}
-	_, err = mysql.Insert(tx, Table, kv)
+	_, err = mysql.Insert(tx, entity.Table(), kv)
 	if err != nil {
 		return mysql.ErrMsgHandler(err), err
 	}
@@ -41,15 +43,15 @@ func (dao *Dao) Update(updateReqVo UpdateReqVo) (string, interface{}) {
 	}
 
 	setKV := map[string]interface{}{
-		Col.Code:   updateReqVo.Code,
-		Col.Name:   updateReqVo.Name,
-		Col.SortNo: updateReqVo.SortNo,
-		Col.Enable: updateReqVo.Enable,
+		entity.Col("Code"):   updateReqVo.Code,
+		entity.Col("Name"):   updateReqVo.Name,
+		entity.Col("SortNo"): updateReqVo.SortNo,
+		entity.Col("Enable"): updateReqVo.Enable,
 	}
 	whereKV := map[string]interface{}{
-		Col.ID: updateReqVo.ID,
+		entity.Col("ID"): updateReqVo.ID,
 	}
-	_, err = mysql.Update(tx, Table, setKV, whereKV)
+	_, err = mysql.Update(tx, entity.Table(), setKV, whereKV)
 	if err != nil {
 		return mysql.ErrMsgHandler(err), err
 	}
@@ -66,9 +68,9 @@ func (dao *Dao) Delete(deleteReqVo DeleteReqVo) (string, interface{}) {
 	}
 
 	whereKV := map[string]interface{}{
-		Col.ID: deleteReqVo.ID,
+		entity.Col("ID"): deleteReqVo.ID,
 	}
-	_, err = mysql.Delete(tx, Table, whereKV)
+	_, err = mysql.Delete(tx, entity.Table(), whereKV)
 	if err != nil {
 		return mysql.ErrMsgHandler(err), err
 	}
@@ -90,22 +92,22 @@ func (dao *Dao) List(page, limit int, typ string, enble bool) (common.PageRespVo
 	}
 
 	column := []string{
-		Col.ID,
-		Col.Type,
-		Col.Code,
-		Col.Name,
-		Col.SortNo,
-		Col.Enable,
+		entity.Col("ID"),
+		entity.Col("Type"),
+		entity.Col("Code"),
+		entity.Col("Name"),
+		entity.Col("SortNo"),
+		entity.Col("Enable"),
 	}
 	where := map[string]interface{}{}
 	if len(typ) > 0 {
-		where[Col.Type] = typ
+		where[entity.Col("Type")] = typ
 	}
 	if enble {
-		where[Col.Enable] = true
+		where[entity.Col("Enable")] = true
 	}
-	orderBy := Col.SortNo
-	rows, err := mysql.Page(tx, Table, PK, column, where, orderBy, page, limit)
+	orderBy := entity.Col("SortNo")
+	rows, err := mysql.Page(tx, entity.Table(), entity.PK(), column, where, orderBy, page, limit)
 	defer rows.Close()
 	if err != nil {
 		return list, mysql.ErrMsgHandler(err), err
@@ -123,7 +125,7 @@ func (dao *Dao) List(page, limit int, typ string, enble bool) (common.PageRespVo
 	var total int
 	var args []interface{}
 	whereStr, args := mysql.WhereString(where, args)
-	err = tx.QueryRow("SELECT COUNT(*) FROM "+Table+whereStr, args...).Scan(&total)
+	err = tx.QueryRow("SELECT COUNT(*) FROM "+entity.Table()+whereStr, args...).Scan(&total)
 	if err != nil {
 		return list, mysql.ErrMsgHandler(err), err
 	}

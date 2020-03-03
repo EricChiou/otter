@@ -3,39 +3,25 @@ package entity
 // Table acl table name
 const Table string = "acl"
 
-// Col acl table column name
-var Col col = col{
-	PK:          "code",
-	Code:        "code",
-	Name:        "name",
-	Type:        "type",
-	Lv:          "lv",
-	SortNo:      "sort_no",
-	Enable:      "enable",
-	CreatedDate: "created_date",
-	UpdatedDate: "updated_date",
-}
-
 // Entity acl table entity
 type Entity struct {
-	Code        string `json:"code"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Lv          int    `json:"lv"`
-	SortNo      int    `json:"sortNo"`
-	Enable      bool   `json:"enable"`
-	CreatedDate string `json:"creatDate"`
-	UpdatedDate string `json:"updateDate"`
+	ID          int    `json:"id" db:"id"`
+	Code        string `json:"code" db:"code"`
+	Name        string `json:"name" db:"name"`
+	Type        string `json:"type" db:"type"`
+	Lv          int    `json:"lv" db:"lv"`
+	SortNo      int    `json:"sortNo" db:"sort_no"`
+	Enable      bool   `json:"enable" db:"enable"`
+	CreatedDate string `json:"creatDate" db:"created_date"`
+	UpdatedDate string `json:"updateDate" db:"updated_date"`
 }
 
-type col struct {
-	PK          string
-	Code        string
-	Name        string
-	Type        string
-	Lv          string
-	SortNo      string
-	Enable      string
-	CreatedDate string
-	UpdatedDate string
+// Table acl table name
+func (entity *Entity) Table() string {
+	return "acl"
+}
+
+// PK acl table pk column name
+func (entity *Entity) PK() string {
+	return "id"
 }
