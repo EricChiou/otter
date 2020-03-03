@@ -6,11 +6,8 @@ import (
 	"otter/service/dataHandler"
 )
 
-// BaseEntity base entity function
-type BaseEntity struct{}
-
-// Col get entity column name
-func (entity *BaseEntity) Col(key string) string {
+// GetColName get entity column name
+func GetColName(entity interface{}, key string) string {
 	s, ok := reflect.TypeOf(entity).Elem().FieldByName(key)
 	if ok {
 		col := s.Tag.Get("db")

@@ -6,7 +6,6 @@ import (
 
 // Entity role table entity
 type Entity struct {
-	common.BaseEntity
 	ID          int    `json:"id" db:"id"`
 	Type        string `json:"type" db:"type"`
 	Code        string `json:"code" db:"code"`
@@ -25,4 +24,9 @@ func (entity *Entity) Table() string {
 // PK codemap table pk column name
 func (entity *Entity) PK() string {
 	return "id"
+}
+
+// Col get entity column name
+func (entity *Entity) Col(key string) string {
+	return common.GetColName(entity, key)
 }

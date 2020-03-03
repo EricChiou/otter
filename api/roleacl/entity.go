@@ -6,7 +6,6 @@ import (
 
 // Entity role_acl table entity
 type Entity struct {
-	common.BaseEntity
 	ID          int    `json:"id" db:"id"`
 	RoleCode    string `json:"roleCode" db:"role_code"`
 	ACLCode     string `json:"aclCode" db:"acl_code"`
@@ -22,4 +21,9 @@ func (entity *Entity) Table() string {
 // PK role_acl table pk column name
 func (entity *Entity) PK() string {
 	return "id"
+}
+
+// Col get entity column name
+func (entity *Entity) Col(key string) string {
+	return common.GetColName(entity, key)
 }

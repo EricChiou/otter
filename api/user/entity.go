@@ -6,7 +6,6 @@ import (
 
 // Entity user table entity
 type Entity struct {
-	common.BaseEntity
 	ID          int    `json:"id" db:"id"`
 	Email       string `json:"email" db:"email"`
 	Pwd         string `json:"pwd" db:"pwd"`
@@ -25,4 +24,9 @@ func (entity *Entity) Table() string {
 // PK user table pk column name
 func (entity *Entity) PK() string {
 	return "id"
+}
+
+// Col get entity column name
+func (entity *Entity) Col(key string) string {
+	return common.GetColName(entity, key)
 }

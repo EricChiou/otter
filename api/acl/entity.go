@@ -1,7 +1,8 @@
 package entity
 
-// Table acl table name
-const Table string = "acl"
+import (
+	"otter/api/common"
+)
 
 // Entity acl table entity
 type Entity struct {
@@ -24,4 +25,9 @@ func (entity *Entity) Table() string {
 // PK acl table pk column name
 func (entity *Entity) PK() string {
 	return "id"
+}
+
+// Col get entity column name
+func (entity *Entity) Col(key string) string {
+	return common.GetColName(entity, key)
 }
