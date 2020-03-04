@@ -1,7 +1,7 @@
 package role
 
 import (
-	"otter/api/common"
+	"otter/service/datahandler"
 )
 
 // Entity role table entity
@@ -28,5 +28,5 @@ func (entity *Entity) PK() string {
 
 // Col get entity column name
 func (entity *Entity) Col(key string) string {
-	return common.GetColName(entity, key)
+	return datahandler.GetColName(entity, key)
 }
