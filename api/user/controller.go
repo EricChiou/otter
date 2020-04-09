@@ -13,10 +13,13 @@ import (
 	check "otter/service/checkparam"
 )
 
-var dao Dao
+// Controller user controller
+type Controller struct {
+	dao Dao
+}
 
 // SignUp user sign up controller
-func SignUp(context *router.Context) {
+func (con *Controller) SignUp(context *router.Context) {
 	ctx := context.Ctx
 
 	// check body format
@@ -34,12 +37,11 @@ func SignUp(context *router.Context) {
 		return
 	}
 
-	apiResult, trace := dao.SignUp(signUpData)
-	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, trace))
+	con.dao.SignUp(ctx, signUpData)
 }
 
 // SignIn user sign in controller
-func SignIn(context *router.Context) {
+func (con *Controller) SignIn(context *router.Context) {
 	ctx := context.Ctx
 
 	// check body format
@@ -55,12 +57,11 @@ func SignIn(context *router.Context) {
 		return
 	}
 
-	response, apiResult, trace := dao.SignIn(signInData)
-	fmt.Fprintf(ctx, api.Result(ctx, apiResult, response, trace))
+	con.dao.SignIn(ctx, signInData)
 }
 
 // Update user data
-func Update(context *router.Context) {
+func (con *Controller) Update(context *router.Context) {
 	ctx := context.Ctx
 
 	// check body format
@@ -89,12 +90,12 @@ func Update(context *router.Context) {
 		return
 	}
 
-	apiResult, trace := dao.Update(payload, updateData)
+	apiResult, trace := con.dao.Update(ctx, payload, updateData)
 	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, trace))
 }
 
 // List get user list
-func List(context *router.Context) {
+func (con *Controller) List(context *router.Context) {
 	ctx := context.Ctx
 
 	// check jwt
@@ -115,6 +116,6 @@ func List(context *router.Context) {
 	}
 	active := string(ctx.QueryArgs().Peek("active"))
 
-	list, apiResult, trace := dao.List(page, limit, (active == "true"))
+	list, apiResult, trace := con.dao.List(ctx, page, limit, (active == "true"))
 	fmt.Fprintf(ctx, api.Result(ctx, apiResult, list, trace))
 }
