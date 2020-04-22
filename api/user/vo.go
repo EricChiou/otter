@@ -2,15 +2,15 @@ package user
 
 // SignUpReqVo user sign up request data vo
 type SignUpReqVo struct {
-	Email string `json:"email"`
-	Pwd   string `json:"pwd"`
-	Name  string `json:"name"`
+	Acc  string `json:"acc"`
+	Pwd  string `json:"pwd"`
+	Name string `json:"name"`
 }
 
 // SignInReqVo user sign in request data vo
 type SignInReqVo struct {
-	Email string `json:"email"`
-	Pwd   string `json:"pwd"`
+	Acc string `json:"acc"`
+	Pwd string `json:"pwd"`
 }
 
 // SignInResVo user sign in response data vo
@@ -28,7 +28,7 @@ type UpdateReqVo struct {
 // ListDataVo user list data vo
 type ListDataVo struct {
 	ID       int    `json:"id"`
-	Email    string `json:"email"`
+	Acc      string `json:"acc"`
 	Name     string `json:"name"`
 	Identity string `json:"identity"`
 	Active   bool   `json:"active"`

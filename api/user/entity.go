@@ -3,7 +3,7 @@ package user
 // Entity user table entity
 type Entity struct {
 	ID          int    `json:"id"`
-	Email       string `json:"email"`
+	Acc         string `json:"acc"`
 	Pwd         string `json:"pwd"`
 	Name        string `json:"name"`
 	Role        string `json:"role"`
@@ -16,7 +16,7 @@ type Entity struct {
 func (entity *Entity) Col() Col {
 	return Col{
 		ID:          "id",
-		Email:       "email",
+		Acc:         "acc",
 		Pwd:         "pwd",
 		Name:        "name",
 		Role:        "role",
@@ -29,7 +29,7 @@ func (entity *Entity) Col() Col {
 // Col user table column name
 type Col struct {
 	ID          string
-	Email       string
+	Acc         string
 	Pwd         string
 	Name        string
 	Role        string

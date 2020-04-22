@@ -31,7 +31,7 @@ func (con *Controller) SignUp(context *router.Context) {
 	}
 
 	// check data
-	result := check.Check(signUpData.Email, signUpData.Pwd, signUpData.Name)
+	result := check.Check(signUpData.Acc, signUpData.Pwd, signUpData.Name)
 	if !result {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, nil))
 		return
@@ -46,12 +46,12 @@ func (con *Controller) SignIn(context *router.Context) {
 
 	// check body format
 	signInData := SignInReqVo{
-		Email: string(ctx.QueryArgs().Peek("email")),
-		Pwd:   string(ctx.QueryArgs().Peek("pwd")),
+		Acc: string(ctx.QueryArgs().Peek("acc")),
+		Pwd: string(ctx.QueryArgs().Peek("pwd")),
 	}
 
 	// check data
-	result := check.Check(signInData.Email, signInData.Pwd)
+	result := check.Check(signInData.Acc, signInData.Pwd)
 	if !result {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, nil))
 		return

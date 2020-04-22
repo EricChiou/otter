@@ -30,9 +30,9 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 
 	var entity Entity
 	kv := map[string]interface{}{
-		entity.Col().Email: signUp.Email,
-		entity.Col().Pwd:   encryptPwd,
-		entity.Col().Name:  signUp.Name,
+		entity.Col().Acc:  signUp.Acc,
+		entity.Col().Pwd:  encryptPwd,
+		entity.Col().Name: signUp.Name,
 	}
 	_, err = mysql.Insert(tx, entity.Table(), kv)
 	if err != nil {
@@ -52,17 +52,17 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	var response SignInResVo
 	column := []string{
 		entity.Col().ID,
-		entity.Col().Email,
+		entity.Col().Acc,
 		entity.Col().Pwd,
 		entity.Col().Name,
 		entity.Col().Role,
 	}
 	where := map[string]interface{}{
-		entity.Col().Email:  signIn.Email,
+		entity.Col().Acc:    signIn.Acc,
 		entity.Col().Active: true,
 	}
 	row := mysql.QueryRow(tx, entity.Table(), column, where)
-	err = row.Scan(&entity.ID, &entity.Email, &entity.Pwd, &entity.Name, &entity.Role)
+	err = row.Scan(&entity.ID, &entity.Acc, &entity.Pwd, &entity.Name, &entity.Role)
 	if err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.RSDataError, response, err))
 		return
@@ -73,7 +73,7 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 		return
 	}
 
-	token, _ := jwt.Generate(entity.ID, entity.Email, entity.Name, entity.Role)
+	token, _ := jwt.Generate(entity.ID, entity.Acc, entity.Name, entity.Role)
 	response = SignInResVo{
 		Token: token,
 	}
@@ -127,7 +127,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, page, limit int, active bool) (co
 	var entity Entity
 	column := []string{
 		entity.Col().ID,
-		entity.Col().Email,
+		entity.Col().Acc,
 		entity.Col().Name,
 		entity.Col().Role,
 		entity.Col().Active,
@@ -145,7 +145,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, page, limit int, active bool) (co
 
 	for rows.Next() {
 		var data ListDataVo
-		err = rows.Scan(&data.ID, &data.Email, &data.Name, &data.Identity, &data.Active)
+		err = rows.Scan(&data.ID, &data.Acc, &data.Name, &data.Identity, &data.Active)
 		if err != nil {
 			return list, mysql.ErrMsgHandler(err), err
 		}
