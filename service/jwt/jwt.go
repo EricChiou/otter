@@ -21,7 +21,8 @@ type Payload struct {
 
 // Generate generate jwt
 func Generate(userID int, email, name, role string) (string, error) {
-	jwtExpire, err := strconv.Atoi(config.Conf.JWTExpire)
+	cfg := config.Get()
+	jwtExpire, err := strconv.Atoi(cfg.JWTExpire)
 	if err != nil {
 		jwtExpire = 1
 	}
@@ -33,13 +34,14 @@ func Generate(userID int, email, name, role string) (string, error) {
 		Role:  role,
 		Exp:   time.Now().Unix() + int64(jwtExpire*86400),
 	}
-	return jwt.GenerateJWT(payload, cons.JWTHS256, config.Conf.JWTKey)
+	return jwt.GenerateJWT(payload, cons.JWTHS256, cfg.JWTKey)
 }
 
 // Verify verify JWT
 func Verify(jwtStr string) (Payload, bool) {
+	cfg := config.Get()
 	var payload Payload
-	bytes, result := jwt.VerifyJWT(jwtStr, cons.JWTHS256, config.Conf.JWTKey)
+	bytes, result := jwt.VerifyJWT(jwtStr, cons.JWTHS256, cfg.JWTKey)
 	if !result {
 		return payload, false
 	}

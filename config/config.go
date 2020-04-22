@@ -20,8 +20,7 @@ type config struct {
 	ENV             string `key:"ENV"`
 }
 
-// Config config data
-var Conf = config{}
+var cfg = config{}
 
 // LoadConfig load config
 func Load(configFilePath string) error {
@@ -30,10 +29,15 @@ func Load(configFilePath string) error {
 		return err
 	}
 
-	keys := reflect.TypeOf(Conf)
-	values := reflect.ValueOf(&Conf).Elem()
+	keys := reflect.TypeOf(cfg)
+	values := reflect.ValueOf(&cfg).Elem()
 	for i := 0; i < keys.NumField(); i++ {
 		values.Field(i).SetString(keyValue[keys.Field(i).Tag.Get("key")])
 	}
 	return nil
+}
+
+// Get config
+func Get() config {
+	return cfg
 }

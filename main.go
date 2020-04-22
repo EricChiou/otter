@@ -18,6 +18,7 @@ func main() {
 	if err := config.Load(cons.ConfigFilePath); err != nil {
 		panic(err)
 	}
+	cfg := config.Get()
 
 	// init db
 	if err := mysql.Init(); err != nil {
@@ -39,11 +40,11 @@ func main() {
 	routes.Init()
 
 	// start http server
-	if err := router.ListenAndServe(config.Conf.ServerPort); err != nil {
+	if err := router.ListenAndServe(cfg.ServerPort); err != nil {
 		panic(err)
 	}
 	// start https server
-	// if err = router.ListenAndServeTLS(config.Conf.ServerPort, config.Conf.SSLCertFilePath, config.Conf.SSLKeyFilePath); err != nil {
+	// if err = router.ListenAndServeTLS(cfg.ServerPort, cfg.SSLCertFilePath, cfg.SSLKeyFilePath); err != nil {
 	// 	panic(err)
 	// }
 

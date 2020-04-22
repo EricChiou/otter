@@ -13,11 +13,12 @@ var DB *sql.DB
 
 // Init connect MySQL
 func Init() (err error) {
-	userName := config.Conf.MySQLUserName
-	password := config.Conf.MySQLPassword
-	addr := config.Conf.MySQLAddr
-	port := config.Conf.MySQLPort
-	dbName := config.Conf.MySQLDBNAME
+	cfg := config.Get()
+	userName := cfg.MySQLUserName
+	password := cfg.MySQLPassword
+	addr := cfg.MySQLAddr
+	port := cfg.MySQLPort
+	dbName := cfg.MySQLDBNAME
 
 	DB, err = sql.Open("mysql", userName+":"+password+"@tcp("+addr+":"+port+")/"+dbName)
 	return err
