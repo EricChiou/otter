@@ -32,7 +32,7 @@ func Load() error {
 	roleACL = make(map[string][]string)
 
 	var entity roleacl.Entity
-	column := []string{entity.Col("RoleCode"), entity.Col("ACLCode")}
+	column := []string{entity.Col().RoleCode, entity.Col().ACLCode}
 	rows, err := mysql.Query(tx, entity.Table(), column, make(map[string]interface{}))
 	if err != nil {
 		return err

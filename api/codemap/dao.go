@@ -6,8 +6,6 @@ import (
 	"otter/db/mysql"
 )
 
-var entity Entity
-
 // Dao codemap dao
 type Dao struct{}
 
@@ -19,12 +17,13 @@ func (dao *Dao) Add(addReqVo AddReqVo) (string, interface{}) {
 		return cons.RSDBError, err
 	}
 
+	var entity Entity
 	kv := map[string]interface{}{
-		entity.Col("Type"):   addReqVo.Type,
-		entity.Col("Code"):   addReqVo.Code,
-		entity.Col("Name"):   addReqVo.Name,
-		entity.Col("SortNo"): addReqVo.SortNo,
-		entity.Col("Enable"): addReqVo.Enable,
+		entity.Col().Type:   addReqVo.Type,
+		entity.Col().Code:   addReqVo.Code,
+		entity.Col().Name:   addReqVo.Name,
+		entity.Col().SortNo: addReqVo.SortNo,
+		entity.Col().Enable: addReqVo.Enable,
 	}
 	_, err = mysql.Insert(tx, entity.Table(), kv)
 	if err != nil {
@@ -42,14 +41,15 @@ func (dao *Dao) Update(updateReqVo UpdateReqVo) (string, interface{}) {
 		return cons.RSDBError, err
 	}
 
+	var entity Entity
 	setKV := map[string]interface{}{
-		entity.Col("Code"):   updateReqVo.Code,
-		entity.Col("Name"):   updateReqVo.Name,
-		entity.Col("SortNo"): updateReqVo.SortNo,
-		entity.Col("Enable"): updateReqVo.Enable,
+		entity.Col().Code:   updateReqVo.Code,
+		entity.Col().Name:   updateReqVo.Name,
+		entity.Col().SortNo: updateReqVo.SortNo,
+		entity.Col().Enable: updateReqVo.Enable,
 	}
 	whereKV := map[string]interface{}{
-		entity.Col("ID"): updateReqVo.ID,
+		entity.Col().ID: updateReqVo.ID,
 	}
 	_, err = mysql.Update(tx, entity.Table(), setKV, whereKV)
 	if err != nil {
@@ -67,8 +67,9 @@ func (dao *Dao) Delete(deleteReqVo DeleteReqVo) (string, interface{}) {
 		return cons.RSDBError, err
 	}
 
+	var entity Entity
 	whereKV := map[string]interface{}{
-		entity.Col("ID"): deleteReqVo.ID,
+		entity.Col().ID: deleteReqVo.ID,
 	}
 	_, err = mysql.Delete(tx, entity.Table(), whereKV)
 	if err != nil {
@@ -91,22 +92,23 @@ func (dao *Dao) List(page, limit int, typ string, enble bool) (common.PageRespVo
 		return list, cons.RSDBError, err
 	}
 
+	var entity Entity
 	column := []string{
-		entity.Col("ID"),
-		entity.Col("Type"),
-		entity.Col("Code"),
-		entity.Col("Name"),
-		entity.Col("SortNo"),
-		entity.Col("Enable"),
+		entity.Col().ID,
+		entity.Col().Type,
+		entity.Col().Code,
+		entity.Col().Name,
+		entity.Col().SortNo,
+		entity.Col().Enable,
 	}
 	where := map[string]interface{}{}
 	if len(typ) > 0 {
-		where[entity.Col("Type")] = typ
+		where[entity.Col().Type] = typ
 	}
 	if enble {
-		where[entity.Col("Enable")] = true
+		where[entity.Col().Enable] = true
 	}
-	orderBy := entity.Col("SortNo")
+	orderBy := entity.Col().SortNo
 	rows, err := mysql.Page(tx, entity.Table(), entity.PK(), column, where, orderBy, page, limit)
 	defer rows.Close()
 	if err != nil {

@@ -26,16 +26,6 @@ func (entity *Entity) Col() Col {
 	}
 }
 
-// Table user table name
-func (entity *Entity) Table() string {
-	return "user"
-}
-
-// PK user table pk column name
-func (entity *Entity) PK() string {
-	return "id"
-}
-
 // Col user table column name
 type Col struct {
 	ID          string
@@ -46,4 +36,14 @@ type Col struct {
 	Active      string
 	CreatedDate string
 	UpdatedDate string
+}
+
+// Table user table name
+func (entity *Entity) Table() string {
+	return "user"
+}
+
+// PK user table pk column name
+func (entity *Entity) PK() string {
+	return "id"
 }
