@@ -69,7 +69,7 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	and := "AND t1." + entity.Col().Status + "=?"
 	row := tx.QueryRow(selectStr+from+join+on+where+and,
 		signIn.Acc,
-		"active",
+		cons.UserStstus.Active,
 	)
 	err = row.Scan(&entity.ID, &entity.Acc, &entity.Pwd, &entity.Name, &entity.RoleCode, &roleEnt.Name)
 	if err != nil {
@@ -146,7 +146,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, page, limit int, active bool) {
 	}
 	where := map[string]interface{}{}
 	if active {
-		where[entity.Col().Status] = "active"
+		where[entity.Col().Status] = cons.UserStstus.Active
 	}
 	orderBy := entity.Col().ID
 	rows, err := mysql.Page(tx, entity.Table(), entity.PK(), column, where, orderBy, page, limit)
