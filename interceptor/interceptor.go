@@ -9,7 +9,7 @@ import (
 )
 
 // Interceptor check jwt
-func Interceptor(ctx *fasthttp.RequestCtx, aclCode ...string) (jwt.Payload, bool, string) {
+func Interceptor(ctx *fasthttp.RequestCtx, aclCodes ...acl.Code) (jwt.Payload, bool, cons.ApiResult) {
 	var payload jwt.Payload
 	var result bool
 
@@ -23,8 +23,8 @@ func Interceptor(ctx *fasthttp.RequestCtx, aclCode ...string) (jwt.Payload, bool
 	}
 
 	// check permission
-	for _, code := range aclCode {
-		if result = acl.Check(code, payload.Role); !result {
+	for _, aclCode := range aclCodes {
+		if result = acl.Check(aclCode, payload.RoleCode); !result {
 			return payload, false, cons.RSPermissionDenied
 		}
 	}

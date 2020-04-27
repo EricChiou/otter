@@ -30,6 +30,6 @@ type ListDataVo struct {
 	ID       int    `json:"id"`
 	Acc      string `json:"acc"`
 	Name     string `json:"name"`
-	Identity string `json:"identity"`
-	Active   bool   `json:"active"`
+	RoleCode string `json:"roleCode"`
+	Status   string `json:"status"`
 }

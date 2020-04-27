@@ -1,29 +1,30 @@
 package constants
 
-// setting
+// Authorization Bearer Token
 const (
-	ServerName     string = "Calico & MooMoo"
-	Sha3Len        int    = 256
-	TokenHeader    string = "Authorization"
-	TokenPrefix    string = "Bearer "
-	ConfigFilePath string = "./config.ini"
+	TokenHeader string = "Authorization"
+	TokenPrefix string = "Bearer "
 )
 
-// API result
+// ApiResult api result
+type ApiResult string
+
 const (
-	RSSuccess          string = "success"
-	RSFormatError      string = "formatError"
-	RSPermissionDenied string = "permissionDenied"
-	RSDBError          string = "dbError"
-	RSServerError      string = "serverError"
-	RSDuplicate        string = "duplicate"
-	RSDataError        string = "dataError"
-	RSTokenError       string = "tokenError"
+	RSSuccess          ApiResult = "success"
+	RSFormatError      ApiResult = "formatError"
+	RSPermissionDenied ApiResult = "permissionDenied"
+	RSDBError          ApiResult = "dbError"
+	RSServerError      ApiResult = "serverError"
+	RSDuplicate        ApiResult = "duplicate"
+	RSDataError        ApiResult = "dataError"
+	RSTokenError       ApiResult = "tokenError"
 )
 
-// jwt alg type
+// JwtAlgTyp jwt alg type
+type JwtAlgTyp string
+
 const (
-	JWTHS256 string = "HS256"
-	JWTHS384 string = "HS384"
-	JWTHS512 string = "HS512"
+	JWTHS256 JwtAlgTyp = "HS256"
+	JWTHS384 JwtAlgTyp = "HS384"
+	JWTHS512 JwtAlgTyp = "HS512"
 )

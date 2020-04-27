@@ -44,7 +44,7 @@ func (con *Controller) SignUp(context *router.Context) {
 func (con *Controller) SignIn(context *router.Context) {
 	ctx := context.Ctx
 
-	// check body format
+	// check param
 	signInData := SignInReqVo{
 		Acc: string(ctx.QueryArgs().Peek("acc")),
 		Pwd: string(ctx.QueryArgs().Peek("pwd")),
@@ -73,25 +73,21 @@ func (con *Controller) Update(context *router.Context) {
 	}
 
 	// check data
-	result := check.Check(updateData.Name, updateData.Pwd)
+	result := check.Check(updateData.ID)
 	if !result {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, nil))
 		return
 	}
 
 	// check jwt and acl
-	var aclCode []string
-	if updateData.ID != 0 {
-		aclCode = append(aclCode, acl.UpdateUserInfo)
-	}
+	aclCode := []acl.Code{acl.UpdateUser}
 	payload, result, reason := interceptor.Interceptor(ctx, aclCode...)
 	if !result {
 		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
 		return
 	}
 
-	apiResult, trace := con.dao.Update(ctx, payload, updateData)
-	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, trace))
+	con.dao.Update(ctx, payload, updateData)
 }
 
 // List get user list
@@ -116,6 +112,5 @@ func (con *Controller) List(context *router.Context) {
 	}
 	active := string(ctx.QueryArgs().Peek("active"))
 
-	list, apiResult, trace := con.dao.List(ctx, page, limit, (active == "true"))
-	fmt.Fprintf(ctx, api.Result(ctx, apiResult, list, trace))
+	con.dao.List(ctx, page, limit, (active == "true"))
 }

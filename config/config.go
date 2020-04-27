@@ -1,11 +1,12 @@
 package config
 
 import (
+	cons "otter/constants"
 	conf "otter/pkg/config"
 	"reflect"
 )
 
-// Config config struct
+// config struct, set in config.ini
 type config struct {
 	ServerPort      string `key:"SERVER_PORT"`
 	SSLCertFilePath string `key:"SSL_CERT_FILE_PATH"`
@@ -20,9 +21,17 @@ type config struct {
 	ENV             string `key:"ENV"`
 }
 
+// config setting, set straightly here
+const (
+	ConfigFilePath string         = "./config.ini"
+	ServerName     string         = "otter framework"
+	JwtAlg         cons.JwtAlgTyp = cons.JWTHS256
+	Sha3Len        int            = 256
+)
+
 var cfg = config{}
 
-// LoadConfig load config
+// LoadConfig load config from config.ini
 func Load(configFilePath string) error {
 	keyValue, err := conf.LoadConfigFile(configFilePath)
 	if err != nil {

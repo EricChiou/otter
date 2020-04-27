@@ -3,7 +3,7 @@ package router
 import (
 	"github.com/valyala/fasthttp"
 
-	cons "otter/constants"
+	"otter/config"
 )
 
 // ListenAndServe start http server
@@ -18,7 +18,7 @@ func ListenAndServeTLS(port, certPath, keyPath string) error {
 
 func newFHServer() *fasthttp.Server {
 	return &fasthttp.Server{
-		Name:    cons.ServerName,
+		Name:    config.ServerName,
 		Handler: FasthttpHandler(),
 	}
 }

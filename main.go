@@ -5,8 +5,8 @@ import (
 
 	"otter/acl"
 	"otter/config"
-	cons "otter/constants"
 	"otter/db/mysql"
+	"otter/jobqueue"
 	"otter/router"
 	"otter/routes"
 
@@ -15,7 +15,7 @@ import (
 
 func main() {
 	// load config
-	if err := config.Load(cons.ConfigFilePath); err != nil {
+	if err := config.Load(config.ConfigFilePath); err != nil {
 		panic(err)
 	}
 	cfg := config.Get()
@@ -25,6 +25,9 @@ func main() {
 		panic(err)
 	}
 	defer mysql.Close()
+
+	// init jobqueue
+	jobqueue.Init()
 
 	// load acl
 	if err := acl.Load(); err != nil {
@@ -47,6 +50,9 @@ func main() {
 	// if err = router.ListenAndServeTLS(cfg.ServerPort, cfg.SSLCertFilePath, cfg.SSLKeyFilePath); err != nil {
 	// 	panic(err)
 	// }
+
+	// waiting for jobqueue finished
+	jobqueue.Wait()
 
 	defer func() {
 		if err := recover(); err != nil {

@@ -35,15 +35,14 @@ func Add(context *router.Context) {
 	}
 
 	// check jwt and acl
-	aclCode := []string{acl.AddCodemap}
+	aclCode := []acl.Code{acl.AddCodemap}
 	_, result, reason := interceptor.Interceptor(ctx, aclCode...)
 	if !result {
 		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
 		return
 	}
 
-	apiResult, trace := dao.Add(addReqVo)
-	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, trace))
+	dao.Add(ctx, addReqVo)
 }
 
 // Update update codemap
@@ -59,35 +58,35 @@ func Update(context *router.Context) {
 	}
 
 	// check data
-	result := check.Check(updateReqVo.ID, updateReqVo.Code, updateReqVo.Name)
+	result := check.Check(updateReqVo.ID)
 	if !result {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, nil))
 		return
 	}
 
 	// check jwt and acl
-	aclCode := []string{acl.UpdateCodemap}
+	aclCode := []acl.Code{acl.UpdateCodemap}
 	_, result, reason := interceptor.Interceptor(ctx, aclCode...)
 	if !result {
 		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
 		return
 	}
 
-	apiResult, trace := dao.Update(updateReqVo)
-	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, trace))
+	dao.Update(ctx, updateReqVo)
 }
 
 // Delete delete codemap
 func Delete(context *router.Context) {
 	ctx := context.Ctx
 
-	// check body format
+	// check param
 	var deleteReqVo DeleteReqVo
-	err := json.Unmarshal(ctx.PostBody(), &deleteReqVo)
+	id, err := strconv.Atoi(string(ctx.QueryArgs().Peek("id")))
 	if err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
 		return
 	}
+	deleteReqVo.ID = id
 
 	// check data
 	result := check.Check(deleteReqVo.ID)
@@ -97,15 +96,14 @@ func Delete(context *router.Context) {
 	}
 
 	// check jwt and acl
-	aclCode := []string{acl.DeleteCodemap}
+	aclCode := []acl.Code{acl.DeleteCodemap}
 	_, result, reason := interceptor.Interceptor(ctx, aclCode...)
 	if !result {
 		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
 		return
 	}
 
-	apiResult, trace := dao.Delete(deleteReqVo)
-	fmt.Fprintf(ctx, api.Result(ctx, apiResult, nil, trace))
+	dao.Delete(ctx, deleteReqVo)
 }
 
 // List get codemap list
@@ -119,7 +117,7 @@ func List(context *router.Context) {
 		return
 	}
 
-	// check body format
+	// check param
 	page, err := strconv.Atoi(string(ctx.QueryArgs().Peek("page")))
 	if err != nil {
 		page = 1
@@ -131,6 +129,5 @@ func List(context *router.Context) {
 	typ := string(ctx.QueryArgs().Peek("type"))
 	enable := string(ctx.QueryArgs().Peek("enable"))
 
-	list, apiResult, trace := dao.List(page, limit, typ, (enable == "true"))
-	fmt.Fprintf(ctx, api.Result(ctx, apiResult, list, trace))
+	dao.List(ctx, page, limit, typ, (enable == "true"))
 }

@@ -5,20 +5,23 @@ import (
 	"otter/db/mysql"
 )
 
+// Code acl code type
+type Code string
+
 const (
 	// AddCodemap acl code
-	AddCodemap string = "addCodemap"
+	AddCodemap Code = "addCodemap"
 	// UpdateCodemap acl code
-	UpdateCodemap string = "updateCodemap"
+	UpdateCodemap Code = "updateCodemap"
 	// DeleteCodemap acl code
-	DeleteCodemap string = "deleteCodemap"
+	DeleteCodemap Code = "deleteCodemap"
 	// UpdateUserInfo acl code
-	UpdateUserInfo string = "updateUserInfo"
+	UpdateUser Code = "updateUser"
 	// DeleteUser acl code
-	DeleteUser string = "deleteUser"
+	DeleteUser Code = "deleteUser"
 )
 
-var roleACL map[string][]string = make(map[string][]string)
+var roleACL map[string][]Code = make(map[string][]Code)
 
 // Load loading permission setting
 func Load() error {
@@ -29,7 +32,7 @@ func Load() error {
 	}
 
 	// reset roleACL
-	roleACL = make(map[string][]string)
+	roleACL = make(map[string][]Code)
 
 	var entity roleacl.Entity
 	column := []string{entity.Col().RoleCode, entity.Col().ACLCode}
@@ -44,9 +47,9 @@ func Load() error {
 			return err
 		}
 		if roleACL[entity.RoleCode] == nil {
-			roleACL[entity.RoleCode] = []string{entity.ACLCode}
+			roleACL[entity.RoleCode] = []Code{Code(entity.ACLCode)}
 		} else {
-			roleACL[entity.RoleCode] = append(roleACL[entity.RoleCode], entity.ACLCode)
+			roleACL[entity.RoleCode] = append(roleACL[entity.RoleCode], Code(entity.ACLCode))
 		}
 	}
 
@@ -54,7 +57,7 @@ func Load() error {
 }
 
 // Check check role permission
-func Check(aclCode, roleCode string) bool {
+func Check(aclCode Code, roleCode string) bool {
 	if roleACL[roleCode] != nil {
 		for _, code := range roleACL[roleCode] {
 			if aclCode == code {

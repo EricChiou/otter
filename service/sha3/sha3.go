@@ -1,7 +1,7 @@
 package sha3
 
 import (
-	cons "otter/constants"
+	"otter/config"
 	"otter/pkg/sha3"
 )
 
@@ -10,5 +10,5 @@ func Encrypt(pwd string, lenght ...int) string {
 	if len(lenght) > 0 {
 		return sha3.Encrypt(pwd, lenght[0])
 	}
-	return sha3.Encrypt(pwd, cons.Sha3Len)
+	return sha3.Encrypt(pwd, config.Sha3Len)
 }

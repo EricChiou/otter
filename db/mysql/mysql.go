@@ -32,7 +32,7 @@ func Close() {
 }
 
 // ErrMsgHandler error message handler
-func ErrMsgHandler(err error) string {
+func ErrMsgHandler(err error) cons.ApiResult {
 	if strings.Contains(err.Error(), "Duplicate") {
 		return cons.RSDuplicate
 	} else {
@@ -87,7 +87,7 @@ func Delete(tx *sql.Tx, table string, whereKV map[string]interface{}) (sql.Resul
 // Query query data
 func Query(tx *sql.Tx, table string, column []string, whereKV map[string]interface{}) (*sql.Rows, error) {
 	var args []interface{}
-	columns := columnString(column)
+	columns := ColumnString(column)
 	where, args := WhereString(whereKV, args)
 
 	return tx.Query("SELECT "+columns+" FROM "+table+where, args...)
@@ -96,7 +96,7 @@ func Query(tx *sql.Tx, table string, column []string, whereKV map[string]interfa
 // QueryRow query one data
 func QueryRow(tx *sql.Tx, table string, column []string, whereKV map[string]interface{}) *sql.Row {
 	var args []interface{}
-	columns := columnString(column)
+	columns := ColumnString(column)
 	where, args := WhereString(whereKV, args)
 
 	return tx.QueryRow("SELECT "+columns+" FROM "+table+where, args...)
@@ -105,7 +105,7 @@ func QueryRow(tx *sql.Tx, table string, column []string, whereKV map[string]inte
 // Page paging data
 func Page(tx *sql.Tx, table, pk string, column []string, whereKV map[string]interface{}, orderBy string, page, limit int) (*sql.Rows, error) {
 	var args []interface{}
-	columns := columnString(column)
+	columns := ColumnString(column)
 	where, args := WhereString(whereKV, args)
 	args = append(args, (page-1)*limit, limit)
 
@@ -133,7 +133,8 @@ func WhereString(whereKV map[string]interface{}, args []interface{}) (string, []
 	return where, args
 }
 
-func columnString(column []string) string {
+// ColumnString get db column string
+func ColumnString(column []string) string {
 	columns := ""
 	for _, key := range column {
 		columns += ", " + key
@@ -145,4 +146,11 @@ func columnString(column []string) string {
 	}
 
 	return columns
+}
+
+func StringHandler(original string, replace ...string) string {
+	for _, s := range replace {
+		original = strings.Replace(original, "?", s, 1)
+	}
+	return original
 }

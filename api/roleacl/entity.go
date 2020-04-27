@@ -2,11 +2,11 @@ package roleacl
 
 // Entity role_acl table entity
 type Entity struct {
-	ID          int    `json:"id"`
-	RoleCode    string `json:"roleCode"`
-	ACLCode     string `json:"aclCode"`
-	CreatedDate string `json:"creatDate"`
-	UpdatedDate string `json:"updateDate"`
+	ID          int    `json:"id,omitempty"`
+	RoleCode    string `json:"roleCode,omitempty"`
+	ACLCode     string `json:"aclCode,omitempty"`
+	CreatedDate string `json:"creatDate,omitempty"`
+	UpdatedDate string `json:"updateDate,omitempty"`
 }
 
 // Col get role_acl table column name

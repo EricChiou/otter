@@ -2,14 +2,14 @@ package user
 
 // Entity user table entity
 type Entity struct {
-	ID          int    `json:"id"`
-	Acc         string `json:"acc"`
-	Pwd         string `json:"pwd"`
-	Name        string `json:"name"`
-	Role        string `json:"role"`
-	Active      bool   `json:"active"`
-	CreatedDate string `json:"creatDate"`
-	UpdatedDate string `json:"updateDate"`
+	ID          int    `json:"id,omitempty"`
+	Acc         string `json:"acc,omitempty"`
+	Pwd         string `json:"pwd,omitempty"`
+	Name        string `json:"name,omitempty"`
+	RoleCode    string `json:"roleCode,omitempty"`
+	Status      string `json:"status,omitempty"`
+	CreatedDate string `json:"creatDate,omitempty"`
+	UpdatedDate string `json:"updateDate,omitempty"`
 }
 
 // Col get entity column name
@@ -19,8 +19,8 @@ func (entity *Entity) Col() Col {
 		Acc:         "acc",
 		Pwd:         "pwd",
 		Name:        "name",
-		Role:        "role",
-		Active:      "active",
+		RoleCode:    "role_code",
+		Status:      "status",
 		CreatedDate: "created_date",
 		UpdatedDate: "updated_date",
 	}
@@ -32,8 +32,8 @@ type Col struct {
 	Acc         string
 	Pwd         string
 	Name        string
-	Role        string
-	Active      string
+	RoleCode    string
+	Status      string
 	CreatedDate string
 	UpdatedDate string
 }

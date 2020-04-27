@@ -2,14 +2,14 @@ package codemap
 
 // Entity codemap table entity
 type Entity struct {
-	ID          int    `json:"id"`
-	Type        string `json:"type"`
-	Code        string `json:"code"`
-	Name        string `json:"name"`
-	SortNo      int    `json:"sortNo"`
-	Enable      bool   `json:"enable"`
-	CreatedDate string `json:"creatDate"`
-	UpdatedDate string `json:"updateDate"`
+	ID          int    `json:"id,omitempty"`
+	Type        string `json:"type,omitempty"`
+	Code        string `json:"code,omitempty"`
+	Name        string `json:"name,omitempty"`
+	SortNo      int    `json:"sortNo,omitempty"`
+	Enable      bool   `json:"enable,omitempty"`
+	CreatedDate string `json:"creatDate,omitempty"`
+	UpdatedDate string `json:"updateDate,omitempty"`
 }
 
 // Col get codemap table column name

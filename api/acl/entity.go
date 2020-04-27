@@ -2,15 +2,15 @@ package entity
 
 // Entity acl table entity
 type Entity struct {
-	ID          int    `json:"id"`
-	Code        string `json:"code"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Lv          int    `json:"lv"`
-	SortNo      int    `json:"sortNo"`
-	Enable      bool   `json:"enable"`
-	CreatedDate string `json:"creatDate"`
-	UpdatedDate string `json:"updateDate"`
+	ID          int    `json:"id,omitempty"`
+	Code        string `json:"code,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Type        string `json:"type,omitempty"`
+	Lv          int    `json:"lv,omitempty"`
+	SortNo      int    `json:"sortNo,omitempty"`
+	Enable      bool   `json:"enable,omitempty"`
+	CreatedDate string `json:"creatDate,omitempty"`
+	UpdatedDate string `json:"updateDate,omitempty"`
 }
 
 // Col get acl table column name
