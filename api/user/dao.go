@@ -61,13 +61,17 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	var roleEnt role.Entity
 	var response SignInResVo
 
-	selectStr := "SELECT t1." + entity.Col().ID + ", t1." + entity.Col().Acc + ", t1." + entity.Col().Pwd + ", t1." + entity.Col().Name + ", t1." + entity.Col().RoleCode + ", t2." + roleEnt.Col().Name + " "
-	from := "FROM `" + entity.Table() + "` as t1 "
-	join := "INNER JOIN `" + roleEnt.Table() + "` as t2 "
-	on := "ON t1." + entity.Col().RoleCode + "=t2." + roleEnt.Col().Code + " "
-	where := "WHERE t1." + entity.Col().Acc + "=? "
-	and := "AND t1." + entity.Col().Status + "=?"
-	row := tx.QueryRow(selectStr+from+join+on+where+and,
+	execStr := mysql.ExecString(
+		"SELECT t1.?, t1.?, t1.?, t1.?, t1.?, t2.? FROM `?` as t1 INNER JOIN `?` as t2 ON t1.?=t2.? WHERE t1.?=! AND t1.?=!",
+		/* SELECT */ entity.Col().ID, entity.Col().Acc, entity.Col().Pwd, entity.Col().Name, entity.Col().RoleCode, roleEnt.Col().Name,
+		/* FROM */ entity.Table(),
+		/* INNER JOIN */ roleEnt.Table(),
+		/* ON */ entity.Col().RoleCode, roleEnt.Col().Code,
+		/* WHERE */ entity.Col().Acc,
+		/* AND */ entity.Col().Status,
+	)
+	row := tx.QueryRow(
+		execStr,
 		signIn.Acc,
 		cons.UserStstus.Active,
 	)
@@ -123,11 +127,11 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData
 }
 
 // List dao
-func (dao *Dao) List(ctx *fasthttp.RequestCtx, page, limit int, active bool) {
+func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	list := common.PageRespVo{
 		Records: []interface{}{},
-		Page:    page,
-		Limit:   limit,
+		Page:    listReqVo.Page,
+		Limit:   listReqVo.Limit,
 	}
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
@@ -145,11 +149,11 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, page, limit int, active bool) {
 		entity.Col().Status,
 	}
 	where := map[string]interface{}{}
-	if active {
+	if listReqVo.Active == "true" {
 		where[entity.Col().Status] = cons.UserStstus.Active
 	}
 	orderBy := entity.Col().ID
-	rows, err := mysql.Page(tx, entity.Table(), entity.PK(), column, where, orderBy, page, limit)
+	rows, err := mysql.Page(tx, entity.Table(), entity.PK(), column, where, orderBy, listReqVo.Page, listReqVo.Limit)
 	defer rows.Close()
 	if err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), list, err))
@@ -157,13 +161,13 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, page, limit int, active bool) {
 	}
 
 	for rows.Next() {
-		var data ListDataVo
-		err = rows.Scan(&data.ID, &data.Acc, &data.Name, &data.RoleCode, &data.Status)
+		var record ListResVo
+		err = rows.Scan(&record.ID, &record.Acc, &record.Name, &record.RoleCode, &record.Status)
 		if err != nil {
 			fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), list, err))
 			return
 		}
-		list.Records = append(list.Records, data)
+		list.Records = append(list.Records, record)
 	}
 
 	var total int

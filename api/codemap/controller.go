@@ -1,9 +1,7 @@
 package codemap
 
 import (
-	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"otter/acl"
 	cons "otter/constants"
@@ -21,16 +19,8 @@ func Add(context *router.Context) {
 
 	// check body format
 	var addReqVo AddReqVo
-	err := json.Unmarshal(ctx.PostBody(), &addReqVo)
-	if err != nil {
+	if err := check.Valid(ctx, &addReqVo); err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
-		return
-	}
-
-	// check data
-	result := check.Check(addReqVo.Type, addReqVo.Code, addReqVo.Name)
-	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, nil))
 		return
 	}
 
@@ -49,26 +39,18 @@ func Add(context *router.Context) {
 func Update(context *router.Context) {
 	ctx := context.Ctx
 
-	// check body format
-	var updateReqVo UpdateReqVo
-	err := json.Unmarshal(ctx.PostBody(), &updateReqVo)
-	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
-		return
-	}
-
-	// check data
-	result := check.Check(updateReqVo.ID)
-	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, nil))
-		return
-	}
-
 	// check jwt and acl
 	aclCode := []acl.Code{acl.UpdateCodemap}
 	_, result, reason := interceptor.Interceptor(ctx, aclCode...)
 	if !result {
 		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
+		return
+	}
+
+	// check body format
+	var updateReqVo UpdateReqVo
+	if err := check.Valid(ctx, &updateReqVo); err != nil {
+		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
 		return
 	}
 
@@ -79,27 +61,18 @@ func Update(context *router.Context) {
 func Delete(context *router.Context) {
 	ctx := context.Ctx
 
-	// check param
-	var deleteReqVo DeleteReqVo
-	id, err := strconv.Atoi(string(ctx.QueryArgs().Peek("id")))
-	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
-		return
-	}
-	deleteReqVo.ID = id
-
-	// check data
-	result := check.Check(deleteReqVo.ID)
-	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, nil))
-		return
-	}
-
 	// check jwt and acl
 	aclCode := []acl.Code{acl.DeleteCodemap}
 	_, result, reason := interceptor.Interceptor(ctx, aclCode...)
 	if !result {
 		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
+		return
+	}
+
+	// check param
+	var deleteReqVo DeleteReqVo
+	if err := check.Valid(ctx, &deleteReqVo); err != nil {
+		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
 		return
 	}
 
@@ -118,16 +91,18 @@ func List(context *router.Context) {
 	}
 
 	// check param
-	page, err := strconv.Atoi(string(ctx.QueryArgs().Peek("page")))
-	if err != nil {
-		page = 1
+	var listReqVo ListReqVo
+	if err := check.Valid(ctx, &listReqVo); err != nil {
+		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
+		return
 	}
-	limit, err := strconv.Atoi(string(ctx.QueryArgs().Peek("limit")))
-	if err != nil {
-		limit = 10
-	}
-	typ := string(ctx.QueryArgs().Peek("type"))
-	enable := string(ctx.QueryArgs().Peek("enable"))
 
-	dao.List(ctx, page, limit, typ, (enable == "true"))
+	if listReqVo.Page == 0 {
+		listReqVo.Page = 1
+	}
+	if listReqVo.Limit == 0 {
+		listReqVo.Limit = 10
+	}
+
+	dao.List(ctx, listReqVo)
 }

@@ -38,10 +38,12 @@ func Load(configFilePath string) error {
 		return err
 	}
 
-	keys := reflect.TypeOf(cfg)
+	keys := reflect.TypeOf(&cfg).Elem()
 	values := reflect.ValueOf(&cfg).Elem()
 	for i := 0; i < keys.NumField(); i++ {
-		values.Field(i).SetString(keyValue[keys.Field(i).Tag.Get("key")])
+		if len(keyValue[keys.Field(i).Tag.Get("key")]) != 0 {
+			values.Field(i).SetString(keyValue[keys.Field(i).Tag.Get("key")])
+		}
 	}
 	return nil
 }

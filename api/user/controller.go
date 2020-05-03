@@ -1,9 +1,7 @@
 package user
 
 import (
-	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"otter/acl"
 	cons "otter/constants"
@@ -24,16 +22,8 @@ func (con *Controller) SignUp(context *router.Context) {
 
 	// check body format
 	var signUpData SignUpReqVo
-	err := json.Unmarshal(ctx.PostBody(), &signUpData)
-	if err != nil {
+	if err := check.Valid(ctx, &signUpData); err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
-		return
-	}
-
-	// check data
-	result := check.Check(signUpData.Acc, signUpData.Pwd, signUpData.Name)
-	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, nil))
 		return
 	}
 
@@ -45,14 +35,8 @@ func (con *Controller) SignIn(context *router.Context) {
 	ctx := context.Ctx
 
 	// check param
-	signInData := SignInReqVo{
-		Acc: string(ctx.QueryArgs().Peek("acc")),
-		Pwd: string(ctx.QueryArgs().Peek("pwd")),
-	}
-
-	// check data
-	result := check.Check(signInData.Acc, signInData.Pwd)
-	if !result {
+	var signInData SignInReqVo
+	if err := check.Valid(ctx, &signInData); err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, nil))
 		return
 	}
@@ -64,26 +48,18 @@ func (con *Controller) SignIn(context *router.Context) {
 func (con *Controller) Update(context *router.Context) {
 	ctx := context.Ctx
 
-	// check body format
-	var updateData UpdateReqVo
-	err := json.Unmarshal(ctx.PostBody(), &updateData)
-	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
-		return
-	}
-
-	// check data
-	result := check.Check(updateData.ID)
-	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, nil))
-		return
-	}
-
 	// check jwt and acl
 	aclCode := []acl.Code{acl.UpdateUser}
 	payload, result, reason := interceptor.Interceptor(ctx, aclCode...)
 	if !result {
 		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
+		return
+	}
+
+	// check body format
+	var updateData UpdateReqVo
+	if err := check.Valid(ctx, &updateData); err != nil {
+		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
 		return
 	}
 
@@ -102,15 +78,18 @@ func (con *Controller) List(context *router.Context) {
 	}
 
 	// check body format
-	page, err := strconv.Atoi(string(ctx.QueryArgs().Peek("page")))
-	if err != nil {
-		page = 1
+	var listReqVo ListReqVo
+	if err := check.Valid(ctx, &listReqVo); err != nil {
+		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
+		return
 	}
-	limit, err := strconv.Atoi(string(ctx.QueryArgs().Peek("limit")))
-	if err != nil {
-		limit = 10
-	}
-	active := string(ctx.QueryArgs().Peek("active"))
 
-	con.dao.List(ctx, page, limit, (active == "true"))
+	if listReqVo.Page == 0 {
+		listReqVo.Page = 1
+	}
+	if listReqVo.Limit == 0 {
+		listReqVo.Limit = 10
+	}
+
+	con.dao.List(ctx, listReqVo)
 }

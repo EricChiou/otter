@@ -148,9 +148,11 @@ func ColumnString(column []string) string {
 	return columns
 }
 
-func StringHandler(original string, replace ...string) string {
-	for _, s := range replace {
-		original = strings.Replace(original, "?", s, 1)
+// ExecString get exec string, "?" will replaced by params string and "!" will replaced by "?"
+func ExecString(original string, params ...string) string {
+	for _, param := range params {
+		original = strings.Replace(original, "?", param, 1)
 	}
+	original = strings.Replace(original, "!", "?", -1)
 	return original
 }

@@ -100,11 +100,11 @@ func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) {
 }
 
 // List get codemap list
-func (dao *Dao) List(ctx *fasthttp.RequestCtx, page, limit int, typ string, enble bool) {
+func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	list := common.PageRespVo{
 		Records: []interface{}{},
-		Page:    page,
-		Limit:   limit,
+		Page:    listReqVo.Page,
+		Limit:   listReqVo.Limit,
 	}
 	tx, err := mysql.DB.Begin()
 	defer tx.Commit()
@@ -123,14 +123,14 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, page, limit int, typ string, enbl
 		entity.Col().Enable,
 	}
 	where := map[string]interface{}{}
-	if len(typ) > 0 {
-		where[entity.Col().Type] = typ
+	if len(listReqVo.Type) > 0 {
+		where[entity.Col().Type] = listReqVo.Type
 	}
-	if enble {
+	if listReqVo.Enable == "true" {
 		where[entity.Col().Enable] = true
 	}
 	orderBy := entity.Col().SortNo
-	rows, err := mysql.Page(tx, entity.Table(), entity.PK(), column, where, orderBy, page, limit)
+	rows, err := mysql.Page(tx, entity.Table(), entity.PK(), column, where, orderBy, listReqVo.Page, listReqVo.Limit)
 	defer rows.Close()
 	if err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), list, err))
@@ -138,13 +138,13 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, page, limit int, typ string, enbl
 	}
 
 	for rows.Next() {
-		var data ListDataVo
-		err = rows.Scan(&data.ID, &data.Type, &data.Code, &data.Name, &data.SortNo, &data.Enable)
+		var record ListResVo
+		err = rows.Scan(&record.ID, &record.Type, &record.Code, &record.Name, &record.SortNo, &record.Enable)
 		if err != nil {
 			fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), list, err))
 			return
 		}
-		list.Records = append(list.Records, data)
+		list.Records = append(list.Records, record)
 	}
 
 	var total int
