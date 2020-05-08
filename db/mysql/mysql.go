@@ -85,12 +85,15 @@ func Delete(tx *sql.Tx, table string, whereKV map[string]interface{}) (sql.Resul
 }
 
 // Query query data
-func Query(tx *sql.Tx, table string, column []string, whereKV map[string]interface{}) (*sql.Rows, error) {
+func Query(tx *sql.Tx, table string, column []string, whereKV map[string]interface{}, orderBy string) (*sql.Rows, error) {
 	var args []interface{}
 	columns := ColumnString(column)
 	where, args := WhereString(whereKV, args)
+	if len(orderBy) > 0 {
+		orderBy = " ORDER BY " + orderBy
+	}
 
-	return tx.Query("SELECT "+columns+" FROM "+table+where, args...)
+	return tx.Query("SELECT "+columns+" FROM "+table+where+orderBy, args...)
 }
 
 // QueryRow query one data
