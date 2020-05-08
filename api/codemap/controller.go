@@ -11,10 +11,13 @@ import (
 	check "otter/service/checkparam"
 )
 
-var dao Dao
+// Controller codemap controller
+type Controller struct {
+	dao Dao
+}
 
 // Add add new code map
-func Add(context *router.Context) {
+func (con *Controller) Add(context *router.Context) {
 	ctx := context.Ctx
 
 	// check body format
@@ -32,11 +35,11 @@ func Add(context *router.Context) {
 		return
 	}
 
-	dao.Add(ctx, addReqVo)
+	con.dao.Add(ctx, addReqVo)
 }
 
 // Update update codemap
-func Update(context *router.Context) {
+func (con *Controller) Update(context *router.Context) {
 	ctx := context.Ctx
 
 	// check jwt and acl
@@ -54,11 +57,11 @@ func Update(context *router.Context) {
 		return
 	}
 
-	dao.Update(ctx, updateReqVo)
+	con.dao.Update(ctx, updateReqVo)
 }
 
 // Delete delete codemap
-func Delete(context *router.Context) {
+func (con *Controller) Delete(context *router.Context) {
 	ctx := context.Ctx
 
 	// check jwt and acl
@@ -76,11 +79,11 @@ func Delete(context *router.Context) {
 		return
 	}
 
-	dao.Delete(ctx, deleteReqVo)
+	con.dao.Delete(ctx, deleteReqVo)
 }
 
 // List get codemap list
-func List(context *router.Context) {
+func (con *Controller) List(context *router.Context) {
 	ctx := context.Ctx
 
 	// check jwt
@@ -104,5 +107,5 @@ func List(context *router.Context) {
 		listReqVo.Limit = 10
 	}
 
-	dao.List(ctx, listReqVo)
+	con.dao.List(ctx, listReqVo)
 }

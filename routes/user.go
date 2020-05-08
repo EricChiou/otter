@@ -8,15 +8,15 @@ import (
 // InitUserAPI init user api
 func InitUserAPI() {
 	groupName := "/user"
-	var con user.Controller
+	var controller user.Controller
 
 	// Get
-	router.Get(groupName+"/signIn", con.SignIn)
-	router.Get(groupName+"/list", con.List)
+	router.Get(groupName+"/signIn", controller.SignIn)
+	router.Get(groupName+"/list", controller.List)
 
 	// Post
-	router.Post(groupName, con.Update)
+	router.Post(groupName, controller.Update)
 
 	// Put
-	router.Put(groupName+"/signUp", con.SignUp)
+	router.Put(groupName+"/signUp", controller.SignUp)
 }
