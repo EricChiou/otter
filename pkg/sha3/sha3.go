@@ -26,7 +26,7 @@ func Encrypt(str string, long int) string {
 		return hex.EncodeToString(byte64[:])
 
 	default:
-		byte48 := sha3.Sum384([]byte(str))
+		byte48 := sha3.Sum256([]byte(str))
 		return hex.EncodeToString(byte48[:])
 	}
 }
