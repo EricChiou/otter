@@ -10,14 +10,16 @@ const (
 type ApiResult string
 
 const (
-	RSSuccess          ApiResult = "success"
-	RSFormatError      ApiResult = "formatError"
-	RSPermissionDenied ApiResult = "permissionDenied"
-	RSDBError          ApiResult = "dbError"
-	RSServerError      ApiResult = "serverError"
+	RSSuccess          ApiResult = "ok"
 	RSDuplicate        ApiResult = "duplicate"
-	RSDataError        ApiResult = "dataError"
+	RSPermissionDenied ApiResult = "permissionDenied"
 	RSTokenError       ApiResult = "tokenError"
+	RSFormatError      ApiResult = "formatError"
+	RSParseError       ApiResult = "parseError"
+	RSDBError          ApiResult = "dbError"
+	RSDataError        ApiResult = "dataError"
+	RSServerError      ApiResult = "serverError"
+	RSUnknownError     ApiResult = "unknownError"
 )
 
 // JwtAlgTyp jwt alg type
