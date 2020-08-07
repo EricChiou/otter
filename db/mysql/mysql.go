@@ -11,8 +11,15 @@ import (
 // DB mysql connecting
 var DB *sql.DB
 
+var specificCharStr string = "\"':.,;(){}[]&|=+-*%/\\<>^"
+var specificChar [128]bool
+
 // Init connect MySQL
 func Init() (err error) {
+	for _, c := range specificCharStr {
+		specificChar[int(c)] = true
+	}
+
 	cfg := config.Get()
 	userName := cfg.MySQLUserName
 	password := cfg.MySQLPassword
@@ -151,11 +158,37 @@ func ColumnString(column []string) string {
 	return columns
 }
 
-// ExecString get exec string, "?" will replaced by params string and "!" will replaced by "?"
-func ExecString(original string, params ...string) string {
-	for _, param := range params {
-		original = strings.Replace(original, "?", param, 1)
+// ExecSQL get exec string, string "#keyword" will replaced by params which key is "keyword"
+func ExecSQL(original string, params map[string]string) string {
+	convertSql := ""
+	preIndex := 0
+	for i := 0; i < len(original)-1; i++ {
+		if original[i:i+1] == "#" {
+			key := getKey(original, i+1)
+			value := params[key]
+			if len(value) > 0 {
+				convertSql += original[preIndex:i] + value
+				i += len(key)
+				preIndex = i + 1
+			}
+		}
 	}
-	original = strings.Replace(original, "!", "?", -1)
-	return original
+	convertSql += original[preIndex:]
+
+	return convertSql
+}
+
+func getKey(original string, startIndex int) string {
+	for j := startIndex; j < len(original); j++ {
+		if isSpecificChar([]rune(original[j : j+1])[0]) {
+			key := original[startIndex:j]
+			return key
+		}
+	}
+
+	return original[startIndex:]
+}
+
+func isSpecificChar(c rune) bool {
+	return (c < 128 && specificChar[c]) || c == ' '
 }

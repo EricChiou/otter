@@ -61,23 +61,32 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	var roleEnt role.Entity
 	var response SignInResVo
 
-	execStr := mysql.ExecString(
-		"SELECT t1.?, t1.?, t1.?, t1.?, t1.?, t2.? FROM `?` as t1 INNER JOIN `?` as t2 ON t1.?=t2.? WHERE t1.?=! AND t1.?=!",
-		/* SELECT */ entity.Col().ID, entity.Col().Acc, entity.Col().Pwd, entity.Col().Name, entity.Col().RoleCode, roleEnt.Col().Name,
-		/* FROM */ entity.Table(),
-		/* INNER JOIN */ roleEnt.Table(),
-		/* ON */ entity.Col().RoleCode, roleEnt.Col().Code,
-		/* WHERE */ entity.Col().Acc,
-		/* AND */ entity.Col().Status,
-	)
-	row := tx.QueryRow(
-		execStr,
-		signIn.Acc,
-		cons.UserStstus.Active,
-	)
-	err = row.Scan(&entity.ID, &entity.Acc, &entity.Pwd, &entity.Name, &entity.RoleCode, &roleEnt.Name)
+	sql := "SELECT #userT.#idCol, #userT.#accCol, #userT.#pwdCol, #userT.#nameCol, #userT.#roleCodeCol, #userT.#statusCol, #roleT.#roleNameCol " +
+		"FROM #userT " +
+		"INNER JOIN #roleT ON #userT.#roleCodeCol=#roleT.#codeCol " +
+		"WHERE #userT.#accCol=?"
+	var param map[string]string = make(map[string]string)
+	param["userT"] = entity.Table()
+	param["idCol"] = entity.Col().ID
+	param["accCol"] = entity.Col().Acc
+	param["pwdCol"] = entity.Col().Pwd
+	param["nameCol"] = entity.Col().Name
+	param["roleCodeCol"] = entity.Col().RoleCode
+	param["statusCol"] = entity.Col().Status
+	param["roleT"] = roleEnt.Table()
+	param["roleNameCol"] = roleEnt.Col().Name
+	param["codeCol"] = roleEnt.Col().Code
+
+	execSQL := mysql.ExecSQL(sql, param)
+	row := tx.QueryRow(execSQL, signIn.Acc)
+	err = row.Scan(&entity.ID, &entity.Acc, &entity.Pwd, &entity.Name, &entity.RoleCode, &entity.Status, &roleEnt.Name)
 	if err != nil {
 		fmt.Fprintf(ctx, api.Result(ctx, cons.RSDataError, response, err))
+		return
+	}
+
+	if entity.Status != string(cons.UserStstus.Active) {
+		fmt.Fprintf(ctx, api.Result(ctx, cons.RSDataError, response, nil))
 		return
 	}
 

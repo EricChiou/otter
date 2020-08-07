@@ -6,7 +6,7 @@ import (
 	"reflect"
 )
 
-// config struct, set in config.ini
+// config struct, set parameter in config.ini file
 type config struct {
 	ServerPort      string `key:"SERVER_PORT"`
 	SSLCertFilePath string `key:"SSL_CERT_FILE_PATH"`
@@ -21,7 +21,7 @@ type config struct {
 	ENV             string `key:"ENV"`
 }
 
-// config setting, set straightly here
+// config setting, set parameter here straightly
 const (
 	ConfigFilePath string         = "./config.ini"
 	ServerName     string         = "otter framework"
