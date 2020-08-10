@@ -5,10 +5,11 @@ import (
 
 	"otter/api/common"
 	"otter/api/role"
-	cons "otter/constants"
+	"otter/constants/api"
+	"otter/constants/userstatus"
 	"otter/db/mysql"
 	"otter/jobqueue"
-	api "otter/service/apihandler"
+	"otter/service/apihandler"
 	"otter/service/jwt"
 	"otter/service/sha3"
 
@@ -22,15 +23,9 @@ type Dao struct{}
 func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 	wait := make(chan int)
 	jobqueue.User.SignUp.Add(func() {
-		tx, err := mysql.DB.Begin()
 		defer func() {
-			tx.Commit()
 			wait <- 1
 		}()
-		if err != nil {
-			fmt.Fprintf(ctx, api.Result(ctx, cons.RSDBError, nil, err))
-			return
-		}
 
 		// encrypt password
 		encryptPwd := sha3.Encrypt(signUp.Pwd)
@@ -41,30 +36,25 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 			entity.Col().Pwd:  encryptPwd,
 			entity.Col().Name: signUp.Name,
 		}
-		_, err = mysql.Insert(tx, entity.Table(), kv)
+		_, err := mysql.Insert(entity.Table(), kv)
 		if err != nil {
-			fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
+			fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
 			return
 		}
 
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSSuccess, nil, nil))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, nil, nil))
 	})
 	<-wait
 }
 
 // SignIn dao
 func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
-	tx, err := mysql.DB.Begin()
-	defer tx.Commit()
-
 	var entity Entity
 	var roleEnt role.Entity
-	var response SignInResVo
-
-	sql := "SELECT #userT.#idCol, #userT.#accCol, #userT.#pwdCol, #userT.#nameCol, #userT.#roleCodeCol, #userT.#statusCol, #roleT.#roleNameCol " +
-		"FROM #userT " +
-		"INNER JOIN #roleT ON #userT.#roleCodeCol=#roleT.#codeCol " +
-		"WHERE #userT.#accCol=?"
+	sql := "SELECT user.#idCol, user.#accCol, user.#pwdCol, user.#nameCol, user.#roleCodeCol, user.#statusCol, role.#roleNameCol " +
+		"FROM #userT user " +
+		"INNER JOIN #roleT role ON user.#roleCodeCol=role.#codeCol " +
+		"WHERE user.#accCol=?"
 	var param map[string]string = make(map[string]string)
 	param["userT"] = entity.Table()
 	param["idCol"] = entity.Col().ID
@@ -77,40 +67,46 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	param["roleNameCol"] = roleEnt.Col().Name
 	param["codeCol"] = roleEnt.Col().Code
 
-	execSQL := mysql.ExecSQL(sql, param)
-	row := tx.QueryRow(execSQL, signIn.Acc)
-	err = row.Scan(&entity.ID, &entity.Acc, &entity.Pwd, &entity.Name, &entity.RoleCode, &entity.Status, &roleEnt.Name)
+	args := []interface{}{signIn.Acc}
+	err := mysql.QueryRow(sql, param, args, func(result mysql.RowResult) error {
+		row := result.Row
+		err := row.Scan(&entity.ID, &entity.Acc, &entity.Pwd, &entity.Name, &entity.RoleCode, &entity.Status, &roleEnt.Name)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	// check account existing
 	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSDataError, response, err))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
 		return
 	}
 
-	if entity.Status != string(cons.UserStstus.Active) {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSDataError, response, nil))
-		return
-	}
-
+	// check pwd
 	if entity.Pwd != sha3.Encrypt(signIn.Pwd) {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSDataError, response, nil))
+		fmt.Println(entity.Pwd)
+		fmt.Println(sha3.Encrypt(signIn.Pwd))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, api.DataError, nil, nil))
 		return
 	}
 
+	// check account status
+	if entity.Status != string(userstatus.Active) {
+		fmt.Fprintf(ctx, apihandler.Result(ctx, api.AccInactive, nil, nil))
+		return
+	}
+
+	var response SignInResVo
 	token, _ := jwt.Generate(entity.ID, entity.Acc, entity.Name, entity.RoleCode, roleEnt.Name)
 	response = SignInResVo{
 		Token: token,
 	}
-	fmt.Fprintf(ctx, api.Result(ctx, cons.RSSuccess, response, nil))
+	fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, response, nil))
 }
 
 // Update dao
 func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData UpdateReqVo) {
-	tx, err := mysql.DB.Begin()
-	defer tx.Commit()
-	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSDBError, nil, err))
-		return
-	}
-
 	var entity Entity
 	set := map[string]interface{}{}
 	if len(updateData.Name) != 0 {
@@ -126,13 +122,13 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData
 		where[entity.Col().ID] = payload.ID
 	}
 
-	_, err = mysql.Update(tx, entity.Table(), set, where)
+	_, err := mysql.Update(entity.Table(), set, where)
 	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
 		return
 	}
 
-	fmt.Fprintf(ctx, api.Result(ctx, cons.RSSuccess, nil, nil))
+	fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, nil, nil))
 }
 
 // List dao
@@ -141,12 +137,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		Records: []interface{}{},
 		Page:    listReqVo.Page,
 		Limit:   listReqVo.Limit,
-	}
-	tx, err := mysql.DB.Begin()
-	defer tx.Commit()
-	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSDBError, list, err))
-		return
+		Total:   0,
 	}
 
 	var entity Entity
@@ -159,33 +150,27 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	}
 	where := map[string]interface{}{}
 	if listReqVo.Active == "true" {
-		where[entity.Col().Status] = cons.UserStstus.Active
+		where[entity.Col().Status] = userstatus.Active
 	}
 	orderBy := entity.Col().ID
-	rows, err := mysql.Page(tx, entity.Table(), entity.PK(), column, where, orderBy, listReqVo.Page, listReqVo.Limit)
-	defer rows.Close()
-	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), list, err))
-		return
-	}
-
-	for rows.Next() {
-		var record ListResVo
-		err = rows.Scan(&record.ID, &record.Acc, &record.Name, &record.RoleCode, &record.Status)
-		if err != nil {
-			fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), list, err))
-			return
+	total, err := mysql.Page(entity.Table(), entity.PK(), column, where, orderBy, listReqVo.Page, listReqVo.Limit, func(result mysql.RowsResult) error {
+		rows := result.Rows
+		for rows.Next() {
+			var record ListResVo
+			err := rows.Scan(&record.ID, &record.Acc, &record.Name, &record.RoleCode, &record.Status)
+			if err != nil {
+				return err
+			}
+			list.Records = append(list.Records, record)
 		}
-		list.Records = append(list.Records, record)
-	}
 
-	var total int
-	err = tx.QueryRow("SELECT COUNT(*) FROM " + entity.Table()).Scan(&total)
+		return nil
+	})
 	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), list, err))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), list, err))
 		return
 	}
 	list.Total = total
 
-	fmt.Fprintf(ctx, api.Result(ctx, cons.RSSuccess, list, nil))
+	fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, list, nil))
 }

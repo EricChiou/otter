@@ -10,7 +10,7 @@ import (
 type Context struct {
 	Rep    http.ResponseWriter
 	Req    *http.Request
-	Ctx  *fasthttp.RequestCtx
+	Ctx    *fasthttp.RequestCtx
 	Params Params
 }
 

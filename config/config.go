@@ -1,7 +1,7 @@
 package config
 
 import (
-	cons "otter/constants"
+	"otter/constants/jwt"
 	conf "otter/pkg/config"
 	"reflect"
 )
@@ -23,10 +23,10 @@ type config struct {
 
 // config setting, set parameter here straightly
 const (
-	ConfigFilePath string         = "./config.ini"
-	ServerName     string         = "otter framework"
-	JwtAlg         cons.JwtAlgTyp = cons.JWTHS256
-	Sha3Len        int            = 256
+	ConfigFilePath string     = "./config.ini"
+	ServerName     string     = "otter framework"
+	JwtAlg         jwt.AlgTyp = jwt.HS256
+	Sha3Len        int        = 256
 )
 
 var cfg = config{}

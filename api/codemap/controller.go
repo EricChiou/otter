@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"otter/acl"
-	cons "otter/constants"
+	"otter/constants/api"
 	"otter/interceptor"
 	"otter/router"
-	api "otter/service/apihandler"
+	"otter/service/apihandler"
 	check "otter/service/checkparam"
 )
 
@@ -23,7 +23,7 @@ func (con *Controller) Add(context *router.Context) {
 	// check body format
 	var addReqVo AddReqVo
 	if err := check.Valid(ctx, &addReqVo); err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
 		return
 	}
 
@@ -31,7 +31,7 @@ func (con *Controller) Add(context *router.Context) {
 	aclCode := []acl.Code{acl.AddCodemap}
 	_, result, reason := interceptor.Interceptor(ctx, aclCode...)
 	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, reason, nil, nil))
 		return
 	}
 
@@ -46,14 +46,14 @@ func (con *Controller) Update(context *router.Context) {
 	aclCode := []acl.Code{acl.UpdateCodemap}
 	_, result, reason := interceptor.Interceptor(ctx, aclCode...)
 	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, reason, nil, nil))
 		return
 	}
 
 	// check body format
 	var updateReqVo UpdateReqVo
 	if err := check.Valid(ctx, &updateReqVo); err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
 		return
 	}
 
@@ -68,14 +68,14 @@ func (con *Controller) Delete(context *router.Context) {
 	aclCode := []acl.Code{acl.DeleteCodemap}
 	_, result, reason := interceptor.Interceptor(ctx, aclCode...)
 	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, reason, nil, nil))
 		return
 	}
 
 	// check param
 	var deleteReqVo DeleteReqVo
 	if err := check.Valid(ctx, &deleteReqVo); err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
 		return
 	}
 
@@ -89,14 +89,14 @@ func (con *Controller) List(context *router.Context) {
 	// check jwt
 	_, result, reason := interceptor.Interceptor(ctx)
 	if !result {
-		fmt.Fprintf(ctx, api.Result(ctx, reason, nil, nil))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, reason, nil, nil))
 		return
 	}
 
 	// check param
 	var listReqVo ListReqVo
 	if err := check.Valid(ctx, &listReqVo); err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSFormatError, nil, err))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
 		return
 	}
 

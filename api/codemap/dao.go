@@ -3,10 +3,10 @@ package codemap
 import (
 	"fmt"
 	"otter/api/common"
-	cons "otter/constants"
+	"otter/constants/api"
 	"otter/db/mysql"
 	"otter/jobqueue"
-	api "otter/service/apihandler"
+	"otter/service/apihandler"
 
 	"github.com/valyala/fasthttp"
 )
@@ -18,15 +18,9 @@ type Dao struct{}
 func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 	wait := make(chan int)
 	jobqueue.Codemap.Add.Add(func() {
-		tx, err := mysql.DB.Begin()
 		defer func() {
-			tx.Commit()
 			wait <- 1
 		}()
-		if err != nil {
-			fmt.Fprintf(ctx, api.Result(ctx, cons.RSDBError, nil, err))
-			return
-		}
 
 		var entity Entity
 		kv := map[string]interface{}{
@@ -36,26 +30,19 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 			entity.Col().SortNo: addReqVo.SortNo,
 			entity.Col().Enable: addReqVo.Enable,
 		}
-		_, err = mysql.Insert(tx, entity.Table(), kv)
+		_, err := mysql.Insert(entity.Table(), kv)
 		if err != nil {
-			fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
+			fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
 			return
 		}
 
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSSuccess, nil, nil))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, nil, nil))
 	})
 	<-wait
 }
 
 // Update update codemap dao
 func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
-	tx, err := mysql.DB.Begin()
-	defer tx.Commit()
-	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSDBError, nil, err))
-		return
-	}
-
 	var entity Entity
 	setKV := map[string]interface{}{
 		entity.Col().Code:   updateReqVo.Code,
@@ -67,36 +54,29 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
 	whereKV := map[string]interface{}{
 		entity.Col().ID: updateReqVo.ID,
 	}
-	_, err = mysql.Update(tx, entity.Table(), setKV, whereKV)
+	_, err := mysql.Update(entity.Table(), setKV, whereKV)
 	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
 		return
 	}
 
-	fmt.Fprintf(ctx, api.Result(ctx, cons.RSSuccess, nil, nil))
+	fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, nil, nil))
 	return
 }
 
 // Delete update codemap dao
 func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) {
-	tx, err := mysql.DB.Begin()
-	defer tx.Commit()
-	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSDBError, nil, err))
-		return
-	}
-
 	var entity Entity
 	whereKV := map[string]interface{}{
 		entity.Col().ID: deleteReqVo.ID,
 	}
-	_, err = mysql.Delete(tx, entity.Table(), whereKV)
+	_, err := mysql.Delete(entity.Table(), whereKV)
 	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
 		return
 	}
 
-	fmt.Fprintf(ctx, api.Result(ctx, cons.RSSuccess, nil, nil))
+	fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, nil, nil))
 }
 
 // List get codemap list
@@ -105,12 +85,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		Records: []interface{}{},
 		Page:    listReqVo.Page,
 		Limit:   listReqVo.Limit,
-	}
-	tx, err := mysql.DB.Begin()
-	defer tx.Commit()
-	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, cons.RSDBError, list, err))
-		return
+		Total:   0,
 	}
 
 	var entity Entity
@@ -130,32 +105,24 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		where[entity.Col().Enable] = true
 	}
 	orderBy := entity.Col().SortNo
-	rows, err := mysql.Page(tx, entity.Table(), entity.PK(), column, where, orderBy, listReqVo.Page, listReqVo.Limit)
-	defer rows.Close()
-	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), list, err))
-		return
-	}
-
-	for rows.Next() {
-		var record ListResVo
-		err = rows.Scan(&record.ID, &record.Type, &record.Code, &record.Name, &record.SortNo, &record.Enable)
-		if err != nil {
-			fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), list, err))
-			return
+	total, err := mysql.Page(entity.Table(), entity.PK(), column, where, orderBy, listReqVo.Page, listReqVo.Limit, func(result mysql.RowsResult) error {
+		rows := result.Rows
+		for rows.Next() {
+			var record ListResVo
+			err := rows.Scan(&record.ID, &record.Type, &record.Code, &record.Name, &record.SortNo, &record.Enable)
+			if err != nil {
+				return err
+			}
+			list.Records = append(list.Records, record)
 		}
-		list.Records = append(list.Records, record)
-	}
 
-	var total int
-	var args []interface{}
-	whereStr, args := mysql.WhereString(where, args)
-	err = tx.QueryRow("SELECT COUNT(*) FROM "+entity.Table()+whereStr, args...).Scan(&total)
+		return nil
+	})
 	if err != nil {
-		fmt.Fprintf(ctx, api.Result(ctx, mysql.ErrMsgHandler(err), list, err))
+		fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), list, err))
 		return
 	}
 	list.Total = total
 
-	fmt.Fprintf(ctx, api.Result(ctx, cons.RSSuccess, list, nil))
+	fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, list, nil))
 }

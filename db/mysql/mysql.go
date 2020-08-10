@@ -2,10 +2,11 @@ package mysql
 
 import (
 	"database/sql"
+	"errors"
 	"strings"
 
 	"otter/config"
-	cons "otter/constants"
+	"otter/constants/api"
 )
 
 // DB mysql connecting
@@ -13,6 +14,16 @@ var DB *sql.DB
 
 var specificCharStr string = "\"':.,;(){}[]&|=+-*%/\\<>^"
 var specificChar [128]bool
+
+// RowResult db QueryRow result
+type RowResult struct {
+	Row *sql.Row
+}
+
+// RowsResult db Query result
+type RowsResult struct {
+	Rows *sql.Rows
+}
 
 // Init connect MySQL
 func Init() (err error) {
@@ -39,16 +50,22 @@ func Close() {
 }
 
 // ErrMsgHandler error message handler
-func ErrMsgHandler(err error) cons.ApiResult {
+func ErrMsgHandler(err error) api.RespStatus {
 	if strings.Contains(err.Error(), "Duplicate") {
-		return cons.RSDuplicate
+		return api.Duplicate
 	} else {
-		return cons.RSDBError
+		return api.DBError
 	}
 }
 
 // Insert insert data
-func Insert(tx *sql.Tx, table string, kv map[string]interface{}) (sql.Result, error) {
+func Insert(table string, kv map[string]interface{}) (sql.Result, error) {
+	tx, err := DB.Begin()
+	defer tx.Commit()
+	if err != nil {
+		return nil, errors.New("db not initialized")
+	}
+
 	keys := ""
 	values := ""
 	var args []interface{}
@@ -68,7 +85,13 @@ func Insert(tx *sql.Tx, table string, kv map[string]interface{}) (sql.Result, er
 }
 
 // Update upadte data
-func Update(tx *sql.Tx, table string, setKV map[string]interface{}, whereKV map[string]interface{}) (sql.Result, error) {
+func Update(table string, setKV map[string]interface{}, whereKV map[string]interface{}) (sql.Result, error) {
+	tx, err := DB.Begin()
+	defer tx.Commit()
+	if err != nil {
+		return nil, errors.New("db not initialized")
+	}
+
 	var args []interface{}
 	set := ""
 	for k, v := range setKV {
@@ -84,49 +107,78 @@ func Update(tx *sql.Tx, table string, setKV map[string]interface{}, whereKV map[
 }
 
 // Delete delete data
-func Delete(tx *sql.Tx, table string, whereKV map[string]interface{}) (sql.Result, error) {
-	var args []interface{}
-	where, args := WhereString(whereKV, args)
+func Delete(table string, whereKV map[string]interface{}) (sql.Result, error) {
+	tx, err := DB.Begin()
+	defer tx.Commit()
+	if err != nil {
+		return nil, errors.New("db not initialized")
+	}
+	where, args := WhereString(whereKV, []interface{}{})
 
 	return tx.Exec("DELETE FROM "+table+where, args...)
 }
 
 // Query query data
-func Query(tx *sql.Tx, table string, column []string, whereKV map[string]interface{}, orderBy string) (*sql.Rows, error) {
-	var args []interface{}
-	columns := ColumnString(column)
-	where, args := WhereString(whereKV, args)
-	if len(orderBy) > 0 {
-		orderBy = " ORDER BY " + orderBy
+func Query(sql string, params map[string]string, args []interface{}, rowMapper func(RowsResult) error) error {
+	tx, err := DB.Begin()
+	defer tx.Commit()
+	if err != nil {
+		return errors.New("db not initialized")
 	}
 
-	return tx.Query("SELECT "+columns+" FROM "+table+where+orderBy, args...)
+	convertSql := execSQL(sql, params)
+	rows, err := tx.Query(convertSql, args...)
+	defer rows.Close()
+	if err != nil {
+		return err
+	}
+
+	return rowMapper(RowsResult{Rows: rows})
 }
 
 // QueryRow query one data
-func QueryRow(tx *sql.Tx, table string, column []string, whereKV map[string]interface{}) *sql.Row {
-	var args []interface{}
-	columns := ColumnString(column)
-	where, args := WhereString(whereKV, args)
+func QueryRow(sql string, params map[string]string, args []interface{}, rowMapper func(RowResult) error) error {
+	tx, err := DB.Begin()
+	defer tx.Commit()
+	if err != nil {
+		return errors.New("db not initialized")
+	}
 
-	return tx.QueryRow("SELECT "+columns+" FROM "+table+where, args...)
+	convertSql := execSQL(sql, params)
+	row := tx.QueryRow(convertSql, args...)
+	return rowMapper(RowResult{Row: row})
 }
 
 // Page paging data
-func Page(tx *sql.Tx, table, pk string, column []string, whereKV map[string]interface{}, orderBy string, page, limit int) (*sql.Rows, error) {
-	var args []interface{}
-	columns := ColumnString(column)
-	where, args := WhereString(whereKV, args)
-	args = append(args, (page-1)*limit, limit)
+func Page(table, pk string, column []string, whereKV map[string]interface{}, orderBy string, page, limit int, rowMapper func(RowsResult) error) (int, error) {
+	tx, err := DB.Begin()
+	defer tx.Commit()
+	if err != nil {
+		return 0, errors.New("db not initialized")
+	}
 
-	return tx.Query(
+	where, args := WhereString(whereKV, []interface{}{})
+	var total int
+	err = tx.QueryRow("SELECT COUNT(*) FROM "+table+where, args...).Scan(&total)
+	if err != nil {
+		return total, err
+	}
+
+	columns := ColumnString(column)
+	args = append(args, (page-1)*limit, limit)
+	rows, err := tx.Query(
 		"SELECT "+columns+
 			" FROM "+table+
-			" JOIN "+
-			"( SELECT "+pk+" FROM "+table+where+" ORDER BY "+orderBy+" LIMIT ?, ? ) t"+
+			" JOIN "+"( SELECT "+pk+" FROM "+table+where+" ORDER BY "+orderBy+" LIMIT ?, ? ) t"+
 			" USING ("+pk+")",
 		args...,
 	)
+	defer rows.Close()
+	if err != nil {
+		return total, err
+	}
+
+	return total, rowMapper(RowsResult{Rows: rows})
 }
 
 // WhereString get db where string
@@ -158,22 +210,21 @@ func ColumnString(column []string) string {
 	return columns
 }
 
-// ExecSQL get exec string, string "#keyword" will replaced by params which key is "keyword"
-func ExecSQL(original string, params map[string]string) string {
+func execSQL(originalSql string, params map[string]string) string {
 	convertSql := ""
 	preIndex := 0
-	for i := 0; i < len(original)-1; i++ {
-		if original[i:i+1] == "#" {
-			key := getKey(original, i+1)
+	for i := 0; i < len(originalSql)-1; i++ {
+		if originalSql[i:i+1] == "#" {
+			key := getKey(originalSql, i+1)
 			value := params[key]
 			if len(value) > 0 {
-				convertSql += original[preIndex:i] + value
+				convertSql += originalSql[preIndex:i] + value
 				i += len(key)
 				preIndex = i + 1
 			}
 		}
 	}
-	convertSql += original[preIndex:]
+	convertSql += originalSql[preIndex:]
 
 	return convertSql
 }
