@@ -1,8 +1,6 @@
 package user
 
 import (
-	"fmt"
-
 	"otter/api/common"
 	"otter/api/role"
 	"otter/constants/api"
@@ -38,11 +36,11 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 		}
 		_, err := mysql.Insert(entity.Table(), kv)
 		if err != nil {
-			fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
+			apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 			return
 		}
 
-		fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, nil, nil))
+		apihandler.Response(ctx, api.Success, nil, nil)
 	})
 	<-wait
 }
@@ -79,19 +77,19 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	})
 	// check account existing
 	if err != nil {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
+		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 		return
 	}
 
 	// check pwd
 	if entity.Pwd != sha3.Encrypt(signIn.Pwd) {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, api.DataError, nil, nil))
+		apihandler.Response(ctx, api.DataError, nil, nil)
 		return
 	}
 
 	// check account status
 	if entity.Status != string(userstatus.Active) {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, api.AccInactive, nil, nil))
+		apihandler.Response(ctx, api.AccInactive, nil, nil)
 		return
 	}
 
@@ -100,7 +98,7 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	response = SignInResVo{
 		Token: token,
 	}
-	fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, response, nil))
+	apihandler.Response(ctx, api.Success, response, nil)
 }
 
 // Update dao
@@ -122,11 +120,11 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData
 
 	_, err := mysql.Update(entity.Table(), set, where)
 	if err != nil {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
+		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 		return
 	}
 
-	fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, nil, nil))
+	apihandler.Response(ctx, api.Success, nil, nil)
 }
 
 // List dao
@@ -165,10 +163,10 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		return nil
 	})
 	if err != nil {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), list, err))
+		apihandler.Response(ctx, mysql.ErrMsgHandler(err), list, err)
 		return
 	}
 	list.Total = total
 
-	fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, list, nil))
+	apihandler.Response(ctx, api.Success, list, nil)
 }

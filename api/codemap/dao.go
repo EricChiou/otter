@@ -1,7 +1,6 @@
 package codemap
 
 import (
-	"fmt"
 	"otter/api/common"
 	"otter/constants/api"
 	"otter/db/mysql"
@@ -32,11 +31,11 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 		}
 		_, err := mysql.Insert(entity.Table(), kv)
 		if err != nil {
-			fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
+			apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 			return
 		}
 
-		fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, nil, nil))
+		apihandler.Response(ctx, api.Success, nil, nil)
 	})
 	<-wait
 }
@@ -56,11 +55,11 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
 	}
 	_, err := mysql.Update(entity.Table(), setKV, whereKV)
 	if err != nil {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
+		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 		return
 	}
 
-	fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, nil, nil))
+	apihandler.Response(ctx, api.Success, nil, nil)
 	return
 }
 
@@ -72,11 +71,11 @@ func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) {
 	}
 	_, err := mysql.Delete(entity.Table(), whereKV)
 	if err != nil {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), nil, err))
+		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 		return
 	}
 
-	fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, nil, nil))
+	apihandler.Response(ctx, api.Success, nil, nil)
 }
 
 // List get codemap list
@@ -119,10 +118,10 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		return nil
 	})
 	if err != nil {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, mysql.ErrMsgHandler(err), list, err))
+		apihandler.Response(ctx, mysql.ErrMsgHandler(err), list, err)
 		return
 	}
 	list.Total = total
 
-	fmt.Fprintf(ctx, apihandler.Result(ctx, api.Success, list, nil))
+	apihandler.Response(ctx, api.Success, list, nil)
 }

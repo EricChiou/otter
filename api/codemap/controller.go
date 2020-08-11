@@ -1,8 +1,6 @@
 package codemap
 
 import (
-	"fmt"
-
 	"otter/acl"
 	"otter/constants/api"
 	"otter/interceptor"
@@ -20,18 +18,24 @@ type Controller struct {
 func (con *Controller) Add(context *router.Context) {
 	ctx := context.Ctx
 
-	// check body format
-	var addReqVo AddReqVo
-	if err := paramhandler.Set(ctx, &addReqVo); err != nil {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
+	// check token
+	payload, err := interceptor.Token(ctx)
+	if err != nil {
+		apihandler.Response(ctx, api.TokenError, nil, nil)
 		return
 	}
 
-	// check jwt and acl
+	// check acl
 	aclCode := []acl.Code{acl.AddCodemap}
-	_, result, reason := interceptor.Interceptor(ctx, aclCode...)
-	if !result {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, reason, nil, nil))
+	if err = interceptor.Acl(ctx, payload, aclCode...); err != nil {
+		apihandler.Response(ctx, api.PermissionDenied, nil, nil)
+		return
+	}
+
+	// check body format
+	var addReqVo AddReqVo
+	if err := paramhandler.Set(ctx, &addReqVo); err != nil {
+		apihandler.Response(ctx, api.FormatError, nil, err)
 		return
 	}
 
@@ -42,18 +46,24 @@ func (con *Controller) Add(context *router.Context) {
 func (con *Controller) Update(context *router.Context) {
 	ctx := context.Ctx
 
+	// check token
+	payload, err := interceptor.Token(ctx)
+	if err != nil {
+		apihandler.Response(ctx, api.TokenError, nil, nil)
+		return
+	}
+
 	// check jwt and acl
 	aclCode := []acl.Code{acl.UpdateCodemap}
-	_, result, reason := interceptor.Interceptor(ctx, aclCode...)
-	if !result {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, reason, nil, nil))
+	if err = interceptor.Acl(ctx, payload, aclCode...); err != nil {
+		apihandler.Response(ctx, api.PermissionDenied, nil, nil)
 		return
 	}
 
 	// check body format
 	var updateReqVo UpdateReqVo
 	if err := paramhandler.Set(ctx, &updateReqVo); err != nil {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
+		apihandler.Response(ctx, api.FormatError, nil, err)
 		return
 	}
 
@@ -64,18 +74,24 @@ func (con *Controller) Update(context *router.Context) {
 func (con *Controller) Delete(context *router.Context) {
 	ctx := context.Ctx
 
+	// check token
+	payload, err := interceptor.Token(ctx)
+	if err != nil {
+		apihandler.Response(ctx, api.TokenError, nil, nil)
+		return
+	}
+
 	// check jwt and acl
 	aclCode := []acl.Code{acl.DeleteCodemap}
-	_, result, reason := interceptor.Interceptor(ctx, aclCode...)
-	if !result {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, reason, nil, nil))
+	if err = interceptor.Acl(ctx, payload, aclCode...); err != nil {
+		apihandler.Response(ctx, api.PermissionDenied, nil, nil)
 		return
 	}
 
 	// check param
 	var deleteReqVo DeleteReqVo
 	if err := paramhandler.Set(ctx, &deleteReqVo); err != nil {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
+		apihandler.Response(ctx, api.FormatError, nil, err)
 		return
 	}
 
@@ -86,17 +102,16 @@ func (con *Controller) Delete(context *router.Context) {
 func (con *Controller) List(context *router.Context) {
 	ctx := context.Ctx
 
-	// check jwt
-	_, result, reason := interceptor.Interceptor(ctx)
-	if !result {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, reason, nil, nil))
+	// check token
+	if _, err := interceptor.Token(ctx); err != nil {
+		apihandler.Response(ctx, api.TokenError, nil, nil)
 		return
 	}
 
 	// check param
 	var listReqVo ListReqVo
 	if err := paramhandler.Set(ctx, &listReqVo); err != nil {
-		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
+		apihandler.Response(ctx, api.FormatError, nil, err)
 		return
 	}
 

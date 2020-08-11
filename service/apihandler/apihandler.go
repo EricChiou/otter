@@ -2,26 +2,27 @@ package apihandler
 
 import (
 	"encoding/json"
+	"fmt"
 	"otter/constants/api"
 
 	"github.com/valyala/fasthttp"
 )
 
-// Result api result handler
-func Result(ctx *fasthttp.RequestCtx, status api.RespStatus, data, trace interface{}) string {
+// Response api response handler
+func Response(ctx *fasthttp.RequestCtx, status api.RespStatus, data, trace interface{}) {
 	ctx.Response.Header.Add("Content-Type", "application/json")
 
-	result := apiResult{
+	result := apiResponse{
 		Status: status,
 		Data:   data,
 		Trace:  trace,
 	}
 
 	bytes, _ := json.Marshal(result)
-	return string(bytes)
+	fmt.Fprintf(ctx, string(bytes))
 }
 
-type apiResult struct {
+type apiResponse struct {
 	Status api.RespStatus `json:"status"`
 	Data   interface{}    `json:"data,omitempty"`
 	Trace  interface{}    `json:"trace,omitempty"`
