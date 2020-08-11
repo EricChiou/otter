@@ -14,8 +14,8 @@ type Context struct {
 	Params Params
 }
 
-// GetPathParam get path param
-func (context Context) GetPathParam(key string) (string, bool) {
+// PathParam get path param
+func (context Context) PathParam(key string) (string, bool) {
 	for _, param := range context.Params {
 		if param.Key == key {
 			return param.Value, true

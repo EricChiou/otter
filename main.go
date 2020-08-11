@@ -7,8 +7,7 @@ import (
 	"otter/config"
 	"otter/db/mysql"
 	"otter/jobqueue"
-	"otter/pkg/router"
-	"otter/routes"
+	"otter/router"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -40,7 +39,7 @@ func main() {
 	router.SetHeader("Access-Control-Allow-Headers", "Content-Type")
 
 	// init api
-	routes.Init()
+	router.Init()
 
 	// start http server
 	if err := router.ListenAndServe(cfg.ServerPort); err != nil {
