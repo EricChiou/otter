@@ -2,7 +2,7 @@ package routes
 
 import (
 	"otter/api/user"
-	"otter/router"
+	"otter/pkg/router"
 )
 
 // InitUserAPI init user api

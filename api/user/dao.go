@@ -85,8 +85,6 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 
 	// check pwd
 	if entity.Pwd != sha3.Encrypt(signIn.Pwd) {
-		fmt.Println(entity.Pwd)
-		fmt.Println(sha3.Encrypt(signIn.Pwd))
 		fmt.Fprintf(ctx, apihandler.Result(ctx, api.DataError, nil, nil))
 		return
 	}

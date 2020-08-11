@@ -22,15 +22,15 @@ type UpdateReqVo struct {
 
 // DeleteReqVo delete codemap vo
 type DeleteReqVo struct {
-	ID int `json:"id" typ:"para" req:"true"`
+	ID int `json:"id" req:"true"`
 }
 
 // ListReqVo codemap list vo
 type ListReqVo struct {
-	Page   int    `json:"page" typ:"para"`
-	Limit  int    `json:"limit" typ:"para"`
-	Type   string `json:"type" typ:"para"`
-	Enable string `json:"enable" typ:"para"`
+	Page   int    `json:"page"`
+	Limit  int    `json:"limit"`
+	Type   string `json:"type"`
+	Enable string `json:"enable"`
 }
 
 // response vo

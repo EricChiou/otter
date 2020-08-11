@@ -6,9 +6,9 @@ import (
 	"otter/acl"
 	"otter/constants/api"
 	"otter/interceptor"
-	"otter/router"
+	"otter/pkg/router"
 	"otter/service/apihandler"
-	check "otter/service/checkparam"
+	"otter/service/paramhandler"
 )
 
 // Controller user controller
@@ -22,7 +22,7 @@ func (con *Controller) SignUp(context *router.Context) {
 
 	// check body format
 	var signUpData SignUpReqVo
-	if err := check.Valid(ctx, &signUpData); err != nil {
+	if err := paramhandler.Set(ctx, &signUpData); err != nil {
 		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
 		return
 	}
@@ -34,9 +34,9 @@ func (con *Controller) SignUp(context *router.Context) {
 func (con *Controller) SignIn(context *router.Context) {
 	ctx := context.Ctx
 
-	// check param
+	// set param
 	var signInData SignInReqVo
-	if err := check.Valid(ctx, &signInData); err != nil {
+	if err := paramhandler.Set(ctx, &signInData); err != nil {
 		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, nil))
 		return
 	}
@@ -58,7 +58,7 @@ func (con *Controller) Update(context *router.Context) {
 
 	// check body format
 	var updateData UpdateReqVo
-	if err := check.Valid(ctx, &updateData); err != nil {
+	if err := paramhandler.Set(ctx, &updateData); err != nil {
 		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
 		return
 	}
@@ -79,7 +79,7 @@ func (con *Controller) List(context *router.Context) {
 
 	// check body format
 	var listReqVo ListReqVo
-	if err := check.Valid(ctx, &listReqVo); err != nil {
+	if err := paramhandler.Set(ctx, &listReqVo); err != nil {
 		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
 		return
 	}

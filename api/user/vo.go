@@ -10,8 +10,8 @@ type SignUpReqVo struct {
 
 // SignInReqVo user sign in request data vo
 type SignInReqVo struct {
-	Acc string `json:"acc" typ:"para" req:"true"`
-	Pwd string `json:"pwd" typ:"para" req:"true"`
+	Acc string `json:"acc" req:"true"`
+	Pwd string `json:"pwd" req:"true"`
 }
 
 // UpdateReqVo update user request data vo
@@ -22,9 +22,9 @@ type UpdateReqVo struct {
 }
 
 type ListReqVo struct {
-	Page   int    `json:"page" typ:"para"`
-	Limit  int    `json:"limit" typ:"para"`
-	Active string `json:"active" typ:"para"`
+	Page   int    `json:"page"`
+	Limit  int    `json:"limit"`
+	Active string `json:"active"`
 }
 
 // response vo

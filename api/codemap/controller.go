@@ -6,9 +6,9 @@ import (
 	"otter/acl"
 	"otter/constants/api"
 	"otter/interceptor"
-	"otter/router"
+	"otter/pkg/router"
 	"otter/service/apihandler"
-	check "otter/service/checkparam"
+	"otter/service/paramhandler"
 )
 
 // Controller codemap controller
@@ -22,7 +22,7 @@ func (con *Controller) Add(context *router.Context) {
 
 	// check body format
 	var addReqVo AddReqVo
-	if err := check.Valid(ctx, &addReqVo); err != nil {
+	if err := paramhandler.Set(ctx, &addReqVo); err != nil {
 		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
 		return
 	}
@@ -52,7 +52,7 @@ func (con *Controller) Update(context *router.Context) {
 
 	// check body format
 	var updateReqVo UpdateReqVo
-	if err := check.Valid(ctx, &updateReqVo); err != nil {
+	if err := paramhandler.Set(ctx, &updateReqVo); err != nil {
 		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
 		return
 	}
@@ -74,7 +74,7 @@ func (con *Controller) Delete(context *router.Context) {
 
 	// check param
 	var deleteReqVo DeleteReqVo
-	if err := check.Valid(ctx, &deleteReqVo); err != nil {
+	if err := paramhandler.Set(ctx, &deleteReqVo); err != nil {
 		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
 		return
 	}
@@ -95,7 +95,7 @@ func (con *Controller) List(context *router.Context) {
 
 	// check param
 	var listReqVo ListReqVo
-	if err := check.Valid(ctx, &listReqVo); err != nil {
+	if err := paramhandler.Set(ctx, &listReqVo); err != nil {
 		fmt.Fprintf(ctx, apihandler.Result(ctx, api.FormatError, nil, err))
 		return
 	}

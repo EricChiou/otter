@@ -7,7 +7,7 @@ import (
 	"otter/config"
 	"otter/db/mysql"
 	"otter/jobqueue"
-	"otter/router"
+	"otter/pkg/router"
 	"otter/routes"
 
 	_ "github.com/go-sql-driver/mysql"

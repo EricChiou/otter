@@ -2,7 +2,7 @@ package routes
 
 import (
 	"otter/api/codemap"
-	"otter/router"
+	"otter/pkg/router"
 )
 
 // InitCodemapAPI init codemap api
