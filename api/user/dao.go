@@ -6,7 +6,7 @@ import (
 	"otter/constants/api"
 	"otter/constants/userstatus"
 	"otter/db/mysql"
-	"otter/jobqueue"
+	"otter/jobqueue/queues"
 	"otter/service/apihandler"
 	"otter/service/jwt"
 	"otter/service/sha3"
@@ -20,7 +20,7 @@ type Dao struct{}
 // SignUp dao
 func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 	wait := make(chan int)
-	jobqueue.User.SignUp.Add(func() {
+	queues.User.SignUp.Add(func() {
 		defer func() {
 			wait <- 1
 		}()

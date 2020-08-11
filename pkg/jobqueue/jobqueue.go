@@ -1,119 +1,118 @@
 package jobqueue
 
 import (
-	"log"
+	"errors"
 	"sync"
 )
 
-type JobQueue struct {
-	queue   chan interface{}
+type Queue struct {
+	channel chan interface{}
 	wg      sync.WaitGroup
 	worker  func(param interface{})
 	blocked bool
 	running bool
 	closed  bool
-	run     func(jobQueue *JobQueue)
+	run     func(jobQueue *Queue)
 }
 
 // Set jobqueue worker function
-func (jobQueue *JobQueue) SetWorker(worker func(param interface{})) {
-	jobQueue.worker = worker
+func (queue *Queue) SetWorker(worker func(param interface{})) {
+	queue.worker = worker
 }
 
 // Set if jobqueue can be blocked. Default is false
-func (jobQueue *JobQueue) SetBlocked(block bool) {
-	jobQueue.blocked = block
+func (queue *Queue) SetBlocked(block bool) {
+	queue.blocked = block
 }
 
 // Run jobqueue
-func (jobQueue *JobQueue) Run() bool {
-	if jobQueue.closed {
-		jobQueue.running = false
-		log.Println("jobqueue is closed.")
-		return false
+func (queue *Queue) Run() error {
+	if queue.closed {
+		queue.running = false
+		return errors.New("jobqueue is closed.")
 	}
 
-	if jobQueue.worker == nil {
-		log.Println("jobqueue is not set worker function yet.")
-		return false
+	if queue.worker == nil {
+		return errors.New("jobqueue is not set worker function yet.")
 	}
 
-	jobQueue.running = true
-	if jobQueue.run == nil {
-		jobQueue.run = run
-		go jobQueue.run(jobQueue)
+	queue.running = true
+	if queue.run == nil {
+		queue.run = run
+		go queue.run(queue)
 	}
-	return true
+	return nil
 }
 
 // Add a new job to jobqueue
-func (jobQueue *JobQueue) Add(param interface{}) bool {
-	if jobQueue.closed {
-		log.Println("jobqueue is closed.")
-		return false
+func (queue *Queue) Add(param interface{}) error {
+	if queue.closed {
+		return errors.New("jobqueue was closed.")
 	}
 
-	if jobQueue.running {
-		if jobQueue.blocked {
-			jobQueue.queue <- param
-			jobQueue.wg.Add(1)
+	if queue.running {
+		if queue.blocked {
+			queue.channel <- param
+			queue.wg.Add(1)
 
 		} else {
 			select {
-			case jobQueue.queue <- param:
-				jobQueue.wg.Add(1)
-				return true
+			case queue.channel <- param:
+				queue.wg.Add(1)
+				return nil
 			default:
-				log.Println("jobqueue is full.")
-				return false
+				return errors.New("jobqueue is full.")
 			}
 		}
 	}
 
-	log.Println("jobqueue is not start.")
-	return false
+	return errors.New("jobqueue is not start yet.")
 }
 
 // Wait for jobqueue finished
-func (jobQueue *JobQueue) Wait() {
-	jobQueue.wg.Wait()
+func (queue *Queue) Wait() {
+	queue.wg.Wait()
 }
 
 // Start jobqueue
-func (jobQueue *JobQueue) Start() {
-	if jobQueue.run != nil {
-		jobQueue.running = true
+func (queue *Queue) Start() error {
+	if queue.run != nil {
+		queue.running = true
 	} else {
-		log.Println("jobqueue is not running.")
+		return errors.New("jobqueue is not running.")
 	}
+
+	return nil
 }
 
 // Stop jobqueue accept a new job
-func (jobQueue *JobQueue) Stop() {
-	jobQueue.running = false
+func (queue *Queue) Stop() {
+	queue.running = false
 }
 
 // Close jobqueue
-func (jobQueue *JobQueue) Close() {
-	jobQueue.running = false
-	jobQueue.closed = true
-	close(jobQueue.queue)
+func (queue *Queue) Close() {
+	queue.running = false
+	queue.closed = true
+	close(queue.channel)
 }
 
 // New a job queue
-func New(size int) JobQueue {
-	return JobQueue{
-		queue:   make(chan interface{}, size),
+func New(size int) Queue {
+	return Queue{
+		channel: make(chan interface{}, size),
+		wg:      sync.WaitGroup{},
 		worker:  nil,
 		blocked: false,
 		running: false,
 		closed:  false,
+		run:     nil,
 	}
 }
 
-func run(jobQueue *JobQueue) {
-	for job := range jobQueue.queue {
-		jobQueue.worker(job)
-		jobQueue.wg.Done()
+func run(queue *Queue) {
+	for job := range queue.channel {
+		queue.worker(job)
+		queue.wg.Done()
 	}
 }

@@ -1,13 +1,13 @@
-package jobqueue
+package queues
 
 import (
 	"otter/pkg/jobqueue"
 )
 
 type codemap struct {
-	Add jobQueue
+	Add jobqueue.Queue
 }
 
 var Codemap codemap = codemap{
-	Add: jobQueue{jobQueue: jobqueue.New(1024)},
+	Add: jobqueue.New(1024),
 }

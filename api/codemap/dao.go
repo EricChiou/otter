@@ -4,7 +4,7 @@ import (
 	"otter/api/common"
 	"otter/constants/api"
 	"otter/db/mysql"
-	"otter/jobqueue"
+	"otter/jobqueue/queues"
 	"otter/service/apihandler"
 
 	"github.com/valyala/fasthttp"
@@ -16,7 +16,7 @@ type Dao struct{}
 // Add add codemap dao
 func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 	wait := make(chan int)
-	jobqueue.Codemap.Add.Add(func() {
+	queues.Codemap.Add.Add(func() {
 		defer func() {
 			wait <- 1
 		}()
