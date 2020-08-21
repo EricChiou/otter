@@ -29,12 +29,12 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 		encryptPwd := sha3.Encrypt(signUp.Pwd)
 
 		var entity Entity
-		kv := map[string]interface{}{
-			entity.Col().Acc:  signUp.Acc,
-			entity.Col().Pwd:  encryptPwd,
-			entity.Col().Name: signUp.Name,
-		}
-		_, err := mysql.Insert(entity.Table(), kv)
+		kvParams := mysql.GetSQLParamsInstance()
+		kvParams.Add(entity.Col().Acc, signUp.Acc)
+		kvParams.Add(entity.Col().Pwd, encryptPwd)
+		kvParams.Add(entity.Col().Name, signUp.Name)
+
+		_, err := mysql.Insert(entity.Table(), kvParams)
 		if err != nil {
 			apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 			return
@@ -49,24 +49,25 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	var entity Entity
 	var roleEnt role.Entity
-	sql := "SELECT user.#idCol, user.#accCol, user.#pwdCol, user.#nameCol, user.#roleCodeCol, user.#statusCol, role.#roleNameCol " +
-		"FROM #userT user " +
-		"INNER JOIN #roleT role ON user.#roleCodeCol=role.#codeCol " +
-		"WHERE user.#accCol=?"
-	var param map[string]string = make(map[string]string)
-	param["userT"] = entity.Table()
-	param["idCol"] = entity.Col().ID
-	param["accCol"] = entity.Col().Acc
-	param["pwdCol"] = entity.Col().Pwd
-	param["nameCol"] = entity.Col().Name
-	param["roleCodeCol"] = entity.Col().RoleCode
-	param["statusCol"] = entity.Col().Status
-	param["roleT"] = roleEnt.Table()
-	param["roleNameCol"] = roleEnt.Col().Name
-	param["codeCol"] = roleEnt.Col().Code
+	sql := ""
+	sql += "SELECT user.#idCol, user.#accCol, user.#pwdCol, user.#nameCol, user.#roleCodeCol, user.#statusCol, role.#roleNameCol "
+	sql += "FROM #userT user "
+	sql += "INNER JOIN #roleT role ON user.#roleCodeCol=role.#codeCol "
+	sql += "WHERE user.#accCol=:acc"
+	param := mysql.GetSQLParamsInstance()
+	param.Add("userT", entity.Table())
+	param.Add("idCol", entity.Col().ID)
+	param.Add("accCol", entity.Col().Acc)
+	param.Add("pwdCol", entity.Col().Pwd)
+	param.Add("nameCol", entity.Col().Name)
+	param.Add("roleCodeCol", entity.Col().RoleCode)
+	param.Add("statusCol", entity.Col().Status)
+	param.Add("roleT", roleEnt.Table())
+	param.Add("roleNameCol", roleEnt.Col().Name)
+	param.Add("codeCol", roleEnt.Col().Code)
+	param.Add("acc", signIn.Acc)
 
-	args := []interface{}{signIn.Acc}
-	err := mysql.QueryRow(sql, param, args, func(result mysql.RowResult) error {
+	err := mysql.QueryRow(sql, param, func(result mysql.RowResult) error {
 		row := result.Row
 		err := row.Scan(&entity.ID, &entity.Acc, &entity.Pwd, &entity.Name, &entity.RoleCode, &entity.Status, &roleEnt.Name)
 		if err != nil {
@@ -104,21 +105,22 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 // Update dao
 func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData UpdateReqVo) {
 	var entity Entity
-	set := map[string]interface{}{}
+	setParams := mysql.GetSQLParamsInstance()
 	if len(updateData.Name) != 0 {
-		set[entity.Col().Name] = updateData.Name
+		setParams.Add(entity.Col().Name, updateData.Name)
 	}
 	if len(updateData.Pwd) != 0 {
-		set[entity.Col().Pwd] = sha3.Encrypt(updateData.Pwd)
-	}
-	var where map[string]interface{} = make(map[string]interface{})
-	if updateData.ID != 0 {
-		where[entity.Col().ID] = updateData.ID
-	} else {
-		where[entity.Col().ID] = payload.ID
+		setParams.Add(entity.Col().Pwd, sha3.Encrypt(updateData.Pwd))
 	}
 
-	_, err := mysql.Update(entity.Table(), set, where)
+	whereParams := mysql.GetSQLParamsInstance()
+	if updateData.ID != 0 {
+		whereParams.Add(entity.Col().ID, updateData.ID)
+	} else {
+		whereParams.Add(entity.Col().ID, payload.ID)
+	}
+
+	_, err := mysql.Update(entity.Table(), setParams, whereParams)
 	if err != nil {
 		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 		return
@@ -149,6 +151,10 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		where[entity.Col().Status] = userstatus.Active
 	}
 	orderBy := entity.Col().ID
+
+	sql := ""
+	sql += "SELECT "
+
 	total, err := mysql.Page(entity.Table(), entity.PK(), column, where, orderBy, listReqVo.Page, listReqVo.Limit, func(result mysql.RowsResult) error {
 		rows := result.Rows
 		for rows.Next() {

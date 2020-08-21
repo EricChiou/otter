@@ -3,6 +3,7 @@ package mysql
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 
 	"otter/config"
@@ -59,33 +60,33 @@ func ErrMsgHandler(err error) api.RespStatus {
 }
 
 // Insert insert data
-func Insert(table string, kv map[string]interface{}) (sql.Result, error) {
+func Insert(table string, columnValues sqlParams) (sql.Result, error) {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
 		return nil, errors.New("db not initialized")
 	}
 
-	keys := ""
-	values := ""
+	columnSQL := ""
+	valueSQL := ""
 	var args []interface{}
-	for k, v := range kv {
-		keys += ", " + k
-		values += ", ?"
+	for k, v := range columnValues.kv {
+		columnSQL += ", " + k
+		valueSQL += ", ?"
 		args = append(args, v)
 	}
-	if len(keys) > 2 {
-		keys = keys[2:]
+	if len(columnSQL) > 2 {
+		columnSQL = columnSQL[2:]
 	}
-	if len(values) > 2 {
-		values = values[2:]
+	if len(valueSQL) > 2 {
+		valueSQL = valueSQL[2:]
 	}
 
-	return tx.Exec("INSERT INTO "+table+"( "+keys+" ) values( "+values+" )", args...)
+	return tx.Exec("INSERT INTO "+table+"( "+columnSQL+" ) values( "+valueSQL+" )", args...)
 }
 
 // Update upadte data
-func Update(table string, setKV map[string]interface{}, whereKV map[string]interface{}) (sql.Result, error) {
+func Update(table string, set sqlParams, where sqlParams) (sql.Result, error) {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -93,41 +94,34 @@ func Update(table string, setKV map[string]interface{}, whereKV map[string]inter
 	}
 
 	var args []interface{}
-	set := ""
-	for k, v := range setKV {
-		set += ", " + k + "=?"
-		args = append(args, v)
-	}
-	if len(set) > 2 {
-		set = set[2:]
-	}
-	where, args := WhereString(whereKV, args)
+	setSQL, args := getSetSQL(set.kv, args)
+	whereSQL, args := getWhereSQL(where.kv, args)
 
-	return tx.Exec("UPDATE "+table+" SET "+set+where, args...)
+	return tx.Exec("UPDATE "+table+" SET "+setSQL+whereSQL, args...)
 }
 
 // Delete delete data
-func Delete(table string, whereKV map[string]interface{}) (sql.Result, error) {
+func Delete(table string, where sqlParams) (sql.Result, error) {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
 		return nil, errors.New("db not initialized")
 	}
-	where, args := WhereString(whereKV, []interface{}{})
+	whereSQL, args := getWhereSQL(where.kv, []interface{}{})
 
-	return tx.Exec("DELETE FROM "+table+where, args...)
+	return tx.Exec("DELETE FROM "+table+whereSQL, args...)
 }
 
 // Query query data
-func Query(sql string, params map[string]string, args []interface{}, rowMapper func(RowsResult) error) error {
+func Query(sql string, params sqlParams, rowMapper func(RowsResult) error) error {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
 		return errors.New("db not initialized")
 	}
 
-	convertSql := execSQL(sql, params)
-	rows, err := tx.Query(convertSql, args...)
+	convertSQL, args := execSQL(sql, params.kv)
+	rows, err := tx.Query(convertSQL, args...)
 	defer rows.Close()
 	if err != nil {
 		return err
@@ -136,16 +130,17 @@ func Query(sql string, params map[string]string, args []interface{}, rowMapper f
 	return rowMapper(RowsResult{Rows: rows})
 }
 
-// QueryRow query one data
-func QueryRow(sql string, params map[string]string, args []interface{}, rowMapper func(RowResult) error) error {
+// QueryRow query one row
+func QueryRow(sql string, params sqlParams, rowMapper func(RowResult) error) error {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
 		return errors.New("db not initialized")
 	}
 
-	convertSql := execSQL(sql, params)
-	row := tx.QueryRow(convertSql, args...)
+	convertSQL, args := execSQL(sql, params.kv)
+	row := tx.QueryRow(convertSQL, args...)
+
 	return rowMapper(RowResult{Row: row})
 }
 
@@ -157,14 +152,14 @@ func Page(table, pk string, column []string, whereKV map[string]interface{}, ord
 		return 0, errors.New("db not initialized")
 	}
 
-	where, args := WhereString(whereKV, []interface{}{})
+	where, args := getWhereSQL(whereKV, []interface{}{})
 	var total int
 	err = tx.QueryRow("SELECT COUNT(*) FROM "+table+where, args...).Scan(&total)
 	if err != nil {
 		return total, err
 	}
 
-	columns := ColumnString(column)
+	columns := getColumnSQL(column)
 	args = append(args, (page-1)*limit, limit)
 	rows, err := tx.Query(
 		"SELECT "+columns+
@@ -181,22 +176,33 @@ func Page(table, pk string, column []string, whereKV map[string]interface{}, ord
 	return total, rowMapper(RowsResult{Rows: rows})
 }
 
-// WhereString get db where string
-func WhereString(whereKV map[string]interface{}, args []interface{}) (string, []interface{}) {
-	where := ""
-	for k, v := range whereKV {
-		where += " AND " + k + "=?"
+func getSetSQL(kv map[string]interface{}, args []interface{}) (string, []interface{}) {
+	setSQL := ""
+	for k, v := range kv {
+		setSQL += ", " + k + "=?"
 		args = append(args, v)
 	}
-	if len(where) > 5 {
-		where = " WHERE " + where[5:]
+	if len(setSQL) > 2 {
+		setSQL = setSQL[2:]
 	}
 
-	return where, args
+	return setSQL, args
 }
 
-// ColumnString get db column string
-func ColumnString(column []string) string {
+func getWhereSQL(kv map[string]interface{}, args []interface{}) (string, []interface{}) {
+	whereSQL := ""
+	for k, v := range kv {
+		whereSQL += " AND " + k + "=?"
+		args = append(args, v)
+	}
+	if len(whereSQL) > 5 {
+		whereSQL = " WHERE " + whereSQL[5:]
+	}
+
+	return whereSQL, args
+}
+
+func getColumnSQL(column []string) string {
 	columns := ""
 	for _, key := range column {
 		columns += ", " + key
@@ -210,15 +216,28 @@ func ColumnString(column []string) string {
 	return columns
 }
 
-func execSQL(originalSql string, params map[string]string) string {
+func execSQL(originalSql string, params map[string]interface{}) (string, []interface{}) {
 	convertSql := ""
+	args := []interface{}{}
+
 	preIndex := 0
 	for i := 0; i < len(originalSql)-1; i++ {
-		if originalSql[i:i+1] == "#" {
+		switch originalSql[i : i+1] {
+		case "#":
 			key := getKey(originalSql, i+1)
-			value := params[key]
+			value := fmt.Sprintf("%v", params[key])
 			if len(value) > 0 {
 				convertSql += originalSql[preIndex:i] + value
+				i += len(key)
+				preIndex = i + 1
+			}
+
+		case ":":
+			key := getKey(originalSql, i+1)
+			value := params[key]
+			if value != nil {
+				convertSql += originalSql[preIndex:i] + "?"
+				args = append(args, value)
 				i += len(key)
 				preIndex = i + 1
 			}
@@ -226,7 +245,7 @@ func execSQL(originalSql string, params map[string]string) string {
 	}
 	convertSql += originalSql[preIndex:]
 
-	return convertSql
+	return convertSql, args
 }
 
 func getKey(original string, startIndex int) string {

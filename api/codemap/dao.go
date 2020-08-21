@@ -22,14 +22,14 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 		}()
 
 		var entity Entity
-		kv := map[string]interface{}{
-			entity.Col().Type:   addReqVo.Type,
-			entity.Col().Code:   addReqVo.Code,
-			entity.Col().Name:   addReqVo.Name,
-			entity.Col().SortNo: addReqVo.SortNo,
-			entity.Col().Enable: addReqVo.Enable,
-		}
-		_, err := mysql.Insert(entity.Table(), kv)
+		kvParams := mysql.GetSQLParamsInstance()
+		kvParams.Add(entity.Col().Type, addReqVo.Type)
+		kvParams.Add(entity.Col().Code, addReqVo.Code)
+		kvParams.Add(entity.Col().Name, addReqVo.Name)
+		kvParams.Add(entity.Col().SortNo, addReqVo.SortNo)
+		kvParams.Add(entity.Col().Enable, addReqVo.Enable)
+
+		_, err := mysql.Insert(entity.Table(), kvParams)
 		if err != nil {
 			apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 			return
@@ -43,17 +43,17 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 // Update update codemap dao
 func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
 	var entity Entity
-	setKV := map[string]interface{}{
-		entity.Col().Code:   updateReqVo.Code,
-		entity.Col().Name:   updateReqVo.Name,
-		entity.Col().Type:   updateReqVo.Type,
-		entity.Col().SortNo: updateReqVo.SortNo,
-		entity.Col().Enable: updateReqVo.Enable,
-	}
-	whereKV := map[string]interface{}{
-		entity.Col().ID: updateReqVo.ID,
-	}
-	_, err := mysql.Update(entity.Table(), setKV, whereKV)
+	setParams := mysql.GetSQLParamsInstance()
+	setParams.Add(entity.Col().Code, updateReqVo.Code)
+	setParams.Add(entity.Col().Name, updateReqVo.Name)
+	setParams.Add(entity.Col().Type, updateReqVo.Type)
+	setParams.Add(entity.Col().SortNo, updateReqVo.SortNo)
+	setParams.Add(entity.Col().Enable, updateReqVo.Enable)
+
+	whereParams := mysql.GetSQLParamsInstance()
+	whereParams.Add(entity.Col().ID, updateReqVo.ID)
+
+	_, err := mysql.Update(entity.Table(), setParams, whereParams)
 	if err != nil {
 		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 		return
@@ -66,10 +66,11 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
 // Delete update codemap dao
 func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) {
 	var entity Entity
-	whereKV := map[string]interface{}{
-		entity.Col().ID: deleteReqVo.ID,
-	}
-	_, err := mysql.Delete(entity.Table(), whereKV)
+
+	whereParams := mysql.GetSQLParamsInstance()
+	whereParams.Add(entity.Col().ID, deleteReqVo.ID)
+
+	_, err := mysql.Delete(entity.Table(), whereParams)
 	if err != nil {
 		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 		return
