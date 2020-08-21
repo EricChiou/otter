@@ -38,12 +38,12 @@ func Load() error {
 
 	var entity roleacl.Entity
 	sql := "SELECT #roleCode, #aclCode FROM #roleAclT"
-	var param map[string]string = make(map[string]string)
-	param["roleAclT"] = entity.Table()
-	param["roleCode"] = entity.Col().RoleCode
-	param["aclCode"] = entity.Col().ACLCode
+	param := mysql.GetSQLParamsInstance()
+	param.Add("roleAclT", entity.Table())
+	param.Add("roleCode", entity.Col().RoleCode)
+	param.Add("aclCode", entity.Col().ACLCode)
 
-	return mysql.Query(sql, param, []interface{}{}, func(result mysql.RowsResult) error {
+	return mysql.Query(sql, param, func(result mysql.RowsResult) error {
 		rows := result.Rows
 		for rows.Next() {
 			err := rows.Scan(&entity.RoleCode, &entity.ACLCode)
