@@ -43,7 +43,7 @@ func Load() error {
 	param.Add("roleCode", entity.Col().RoleCode)
 	param.Add("aclCode", entity.Col().ACLCode)
 
-	return mysql.Query(sql, param, func(result mysql.RowsResult) error {
+	return mysql.Query(sql, param, func(result mysql.Rows) error {
 		rows := result.Rows
 		for rows.Next() {
 			err := rows.Scan(&entity.RoleCode, &entity.ACLCode)

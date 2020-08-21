@@ -67,7 +67,7 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	param.Add("codeCol", roleEnt.Col().Code)
 	param.Add("acc", signIn.Acc)
 
-	err := mysql.QueryRow(sql, param, func(result mysql.RowResult) error {
+	err := mysql.QueryRow(sql, param, func(result mysql.Row) error {
 		row := result.Row
 		err := row.Scan(&entity.ID, &entity.Acc, &entity.Pwd, &entity.Name, &entity.RoleCode, &entity.Status, &roleEnt.Name)
 		if err != nil {
@@ -139,23 +139,33 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	}
 
 	var entity Entity
-	column := []string{
-		entity.Col().ID,
-		entity.Col().Acc,
-		entity.Col().Name,
-		entity.Col().RoleCode,
-		entity.Col().Status,
-	}
-	where := map[string]interface{}{}
+	params := mysql.GetSQLParamsInstance()
+	params.Add("userT", entity.Table())
+	params.Add("idCol", entity.Col().ID)
+	params.Add("accCol", entity.Col().Acc)
+	params.Add("nameCol", entity.Col().Name)
+	params.Add("roleCodeCol", entity.Col().RoleCode)
+	params.Add("statusCol", entity.Col().Status)
+	params.Add("index", (listReqVo.Page-1)*listReqVo.Limit)
+	params.Add("limit", listReqVo.Limit)
+
+	whereSQL := ""
 	if listReqVo.Active == "true" {
-		where[entity.Col().Status] = userstatus.Active
+		whereSQL = "WHERE #statusCol=:status "
+		params.Add("status", userstatus.Active)
 	}
-	orderBy := entity.Col().ID
 
 	sql := ""
-	sql += "SELECT "
+	sql += "SELECT #idCol, #accCol, #nameCol, #roleCodeCol, #statusCol "
+	sql += "FROM #userT "
+	sql += "JOIN ( "
+	sql += "    SELECT #pk FROM #userT " + whereSQL
+	sql += "    ORDER BY #idCol "
+	sql += "    LIMIT :index, :limit "
+	sql += ") t"
+	sql += " USING ( #pk )"
 
-	total, err := mysql.Page(entity.Table(), entity.PK(), column, where, orderBy, listReqVo.Page, listReqVo.Limit, func(result mysql.RowsResult) error {
+	err := mysql.Query(sql, params, func(result mysql.Rows) error {
 		rows := result.Rows
 		for rows.Next() {
 			var record ListResVo
@@ -169,10 +179,20 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		return nil
 	})
 	if err != nil {
-		apihandler.Response(ctx, mysql.ErrMsgHandler(err), list, err)
+		apihandler.ResponsePage(ctx, mysql.ErrMsgHandler(err), list, err)
+		return
+	}
+
+	sql = "SELECT COUNT(*) FROM #userT " + whereSQL
+	var total int
+	err = mysql.QueryRow(sql, params, func(result mysql.Row) error {
+		return result.Row.Scan(&total)
+	})
+	if err != nil {
+		apihandler.ResponsePage(ctx, mysql.ErrMsgHandler(err), list, err)
 		return
 	}
 	list.Total = total
 
-	apihandler.Response(ctx, api.Success, list, nil)
+	apihandler.ResponsePage(ctx, api.Success, list, nil)
 }

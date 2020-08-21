@@ -105,7 +105,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		where[entity.Col().Enable] = true
 	}
 	orderBy := entity.Col().SortNo
-	total, err := mysql.Page(entity.Table(), entity.PK(), column, where, orderBy, listReqVo.Page, listReqVo.Limit, func(result mysql.RowsResult) error {
+	total, err := mysql.Page(entity.Table(), entity.PK(), column, where, orderBy, listReqVo.Page, listReqVo.Limit, func(result mysql.Rows) error {
 		rows := result.Rows
 		for rows.Next() {
 			var record ListResVo

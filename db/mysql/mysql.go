@@ -16,13 +16,13 @@ var DB *sql.DB
 var specificCharStr string = "\"':.,;(){}[]&|=+-*%/\\<>^"
 var specificChar [128]bool
 
-// RowResult db QueryRow result
-type RowResult struct {
+// SQLRow db QueryRow result
+type Row struct {
 	Row *sql.Row
 }
 
-// RowsResult db Query result
-type RowsResult struct {
+// SQLRows db Query result
+type Rows struct {
 	Rows *sql.Rows
 }
 
@@ -113,7 +113,7 @@ func Delete(table string, where sqlParams) (sql.Result, error) {
 }
 
 // Query query data
-func Query(sql string, params sqlParams, rowMapper func(RowsResult) error) error {
+func Query(sql string, params sqlParams, rowMapper func(Rows) error) error {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -127,11 +127,11 @@ func Query(sql string, params sqlParams, rowMapper func(RowsResult) error) error
 		return err
 	}
 
-	return rowMapper(RowsResult{Rows: rows})
+	return rowMapper(Rows{Rows: rows})
 }
 
 // QueryRow query one row
-func QueryRow(sql string, params sqlParams, rowMapper func(RowResult) error) error {
+func QueryRow(sql string, params sqlParams, rowMapper func(Row) error) error {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -141,11 +141,11 @@ func QueryRow(sql string, params sqlParams, rowMapper func(RowResult) error) err
 	convertSQL, args := execSQL(sql, params.kv)
 	row := tx.QueryRow(convertSQL, args...)
 
-	return rowMapper(RowResult{Row: row})
+	return rowMapper(Row{Row: row})
 }
 
 // Page paging data
-func Page(table, pk string, column []string, whereKV map[string]interface{}, orderBy string, page, limit int, rowMapper func(RowsResult) error) (int, error) {
+func Page(table, pk string, column []string, whereKV map[string]interface{}, orderBy string, page, limit int, rowMapper func(Rows) error) (int, error) {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -173,7 +173,7 @@ func Page(table, pk string, column []string, whereKV map[string]interface{}, ord
 		return total, err
 	}
 
-	return total, rowMapper(RowsResult{Rows: rows})
+	return total, rowMapper(Rows{Rows: rows})
 }
 
 func getSetSQL(kv map[string]interface{}, args []interface{}) (string, []interface{}) {
