@@ -45,6 +45,7 @@ func Load() error {
 
 	return mysql.Query(sql, param, func(result mysql.Rows) error {
 		rows := result.Rows
+
 		for rows.Next() {
 			err := rows.Scan(&entity.RoleCode, &entity.ACLCode)
 			if err != nil {
@@ -57,6 +58,7 @@ func Load() error {
 				roleACL[entity.RoleCode] = append(roleACL[entity.RoleCode], Code(entity.ACLCode))
 			}
 		}
+
 		return nil
 	})
 }

@@ -109,7 +109,7 @@ func Delete(table string, where sqlParams) (sql.Result, error) {
 	}
 	whereSQL, args := getWhereSQL(where.kv, []interface{}{})
 
-	return tx.Exec("DELETE FROM "+table+whereSQL, args...)
+	return tx.Exec("DELETE FROM "+table+" "+whereSQL, args...)
 }
 
 // Query query data
@@ -120,8 +120,9 @@ func Query(sql string, params sqlParams, rowMapper func(Rows) error) error {
 		return errors.New("db not initialized")
 	}
 
-	convertSQL, args := execSQL(sql, params.kv)
-	rows, err := tx.Query(convertSQL, args...)
+	execSQL, args := convertSQL(sql, params.kv)
+
+	rows, err := tx.Query(execSQL, args...)
 	defer rows.Close()
 	if err != nil {
 		return err
@@ -138,42 +139,23 @@ func QueryRow(sql string, params sqlParams, rowMapper func(Row) error) error {
 		return errors.New("db not initialized")
 	}
 
-	convertSQL, args := execSQL(sql, params.kv)
-	row := tx.QueryRow(convertSQL, args...)
+	execSQL, args := convertSQL(sql, params.kv)
+	row := tx.QueryRow(execSQL, args...)
 
 	return rowMapper(Row{Row: row})
 }
 
-// Page paging data
-func Page(table, pk string, column []string, whereKV map[string]interface{}, orderBy string, page, limit int, rowMapper func(Rows) error) (int, error) {
-	tx, err := DB.Begin()
-	defer tx.Commit()
-	if err != nil {
-		return 0, errors.New("db not initialized")
+// WhereSQL get where sql
+func WhereSQL(params whereParams) string {
+	whereSQL := ""
+	for k, v := range params.kv {
+		whereSQL += "AND " + k + "=" + v
+	}
+	if len(whereSQL) > 5 {
+		whereSQL = "WHERE " + whereSQL[4:] + " "
 	}
 
-	where, args := getWhereSQL(whereKV, []interface{}{})
-	var total int
-	err = tx.QueryRow("SELECT COUNT(*) FROM "+table+where, args...).Scan(&total)
-	if err != nil {
-		return total, err
-	}
-
-	columns := getColumnSQL(column)
-	args = append(args, (page-1)*limit, limit)
-	rows, err := tx.Query(
-		"SELECT "+columns+
-			" FROM "+table+
-			" JOIN "+"( SELECT "+pk+" FROM "+table+where+" ORDER BY "+orderBy+" LIMIT ?, ? ) t"+
-			" USING ("+pk+")",
-		args...,
-	)
-	defer rows.Close()
-	if err != nil {
-		return total, err
-	}
-
-	return total, rowMapper(Rows{Rows: rows})
+	return whereSQL
 }
 
 func getSetSQL(kv map[string]interface{}, args []interface{}) (string, []interface{}) {
@@ -183,7 +165,7 @@ func getSetSQL(kv map[string]interface{}, args []interface{}) (string, []interfa
 		args = append(args, v)
 	}
 	if len(setSQL) > 2 {
-		setSQL = setSQL[2:]
+		setSQL = setSQL[2:] + " "
 	}
 
 	return setSQL, args
@@ -192,31 +174,17 @@ func getSetSQL(kv map[string]interface{}, args []interface{}) (string, []interfa
 func getWhereSQL(kv map[string]interface{}, args []interface{}) (string, []interface{}) {
 	whereSQL := ""
 	for k, v := range kv {
-		whereSQL += " AND " + k + "=?"
+		whereSQL += "AND " + k + "=?"
 		args = append(args, v)
 	}
 	if len(whereSQL) > 5 {
-		whereSQL = " WHERE " + whereSQL[5:]
+		whereSQL = "WHERE " + whereSQL[4:]
 	}
 
 	return whereSQL, args
 }
 
-func getColumnSQL(column []string) string {
-	columns := ""
-	for _, key := range column {
-		columns += ", " + key
-	}
-	if len(columns) > 2 {
-		columns = columns[2:]
-	} else {
-		columns = "*"
-	}
-
-	return columns
-}
-
-func execSQL(originalSql string, params map[string]interface{}) (string, []interface{}) {
+func convertSQL(originalSql string, params map[string]interface{}) (string, []interface{}) {
 	convertSql := ""
 	args := []interface{}{}
 

@@ -89,24 +89,42 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	}
 
 	var entity Entity
-	column := []string{
-		entity.Col().ID,
-		entity.Col().Type,
-		entity.Col().Code,
-		entity.Col().Name,
-		entity.Col().SortNo,
-		entity.Col().Enable,
-	}
-	where := map[string]interface{}{}
+	params := mysql.GetSQLParamsInstance()
+	params.Add("codemapT", entity.Table())
+	params.Add("pk", entity.PK())
+	params.Add("idCol", entity.Col().ID)
+	params.Add("typeCol", entity.Col().Type)
+	params.Add("codeCol", entity.Col().Code)
+	params.Add("nameCol", entity.Col().Name)
+	params.Add("sortNoCol", entity.Col().SortNo)
+	params.Add("enableCol", entity.Col().Enable)
+	params.Add("index", (listReqVo.Page-1)*listReqVo.Limit)
+	params.Add("limit", listReqVo.Limit)
+
+	whereParams := mysql.GetWhereParamsInstance()
 	if len(listReqVo.Type) > 0 {
-		where[entity.Col().Type] = listReqVo.Type
+		whereParams.Add("#typeCol", ":type")
+		params.Add("type", listReqVo.Type)
 	}
 	if listReqVo.Enable == "true" {
-		where[entity.Col().Enable] = true
+		whereParams.Add("#enableCol", ":enable")
+		params.Add("enable", true)
 	}
-	orderBy := entity.Col().SortNo
-	total, err := mysql.Page(entity.Table(), entity.PK(), column, where, orderBy, listReqVo.Page, listReqVo.Limit, func(result mysql.Rows) error {
+	whereSQL := mysql.WhereSQL(whereParams)
+
+	sql := ""
+	sql += "SELECT #idCol, #typeCol, #codeCol, #nameCol, #sortNoCol, #enableCol "
+	sql += "FROM #codemapT "
+	sql += "INNER JOIN ( "
+	sql += "    SELECT #pk FROM #codemapT " + whereSQL
+	sql += "    ORDER BY #idCol "
+	sql += "    LIMIT :index, :limit "
+	sql += ") t "
+	sql += "USING ( #pk )"
+
+	err := mysql.Query(sql, params, func(result mysql.Rows) error {
 		rows := result.Rows
+
 		for rows.Next() {
 			var record ListResVo
 			err := rows.Scan(&record.ID, &record.Type, &record.Code, &record.Name, &record.SortNo, &record.Enable)
@@ -120,6 +138,16 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	})
 	if err != nil {
 		apihandler.Response(ctx, mysql.ErrMsgHandler(err), list, err)
+		return
+	}
+
+	sql = "SELECT COUNT(*) FROM #codemapT " + whereSQL
+	var total int
+	err = mysql.QueryRow(sql, params, func(result mysql.Row) error {
+		return result.Row.Scan(&total)
+	})
+	if err != nil {
+		apihandler.ResponsePage(ctx, mysql.ErrMsgHandler(err), list, err)
 		return
 	}
 	list.Total = total

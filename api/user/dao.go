@@ -141,6 +141,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	var entity Entity
 	params := mysql.GetSQLParamsInstance()
 	params.Add("userT", entity.Table())
+	params.Add("pk", entity.PK())
 	params.Add("idCol", entity.Col().ID)
 	params.Add("accCol", entity.Col().Acc)
 	params.Add("nameCol", entity.Col().Name)
@@ -149,24 +150,26 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	params.Add("index", (listReqVo.Page-1)*listReqVo.Limit)
 	params.Add("limit", listReqVo.Limit)
 
-	whereSQL := ""
+	whereParams := mysql.GetWhereParamsInstance()
 	if listReqVo.Active == "true" {
-		whereSQL = "WHERE #statusCol=:status "
+		whereParams.Add("#statusCol", ":status")
 		params.Add("status", userstatus.Active)
 	}
+	whereSQL := mysql.WhereSQL(whereParams)
 
 	sql := ""
 	sql += "SELECT #idCol, #accCol, #nameCol, #roleCodeCol, #statusCol "
 	sql += "FROM #userT "
-	sql += "JOIN ( "
+	sql += "INNER JOIN ( "
 	sql += "    SELECT #pk FROM #userT " + whereSQL
 	sql += "    ORDER BY #idCol "
 	sql += "    LIMIT :index, :limit "
-	sql += ") t"
-	sql += " USING ( #pk )"
+	sql += ") t "
+	sql += "USING ( #pk )"
 
 	err := mysql.Query(sql, params, func(result mysql.Rows) error {
 		rows := result.Rows
+
 		for rows.Next() {
 			var record ListResVo
 			err := rows.Scan(&record.ID, &record.Acc, &record.Name, &record.RoleCode, &record.Status)
