@@ -1,7 +1,7 @@
 package queues
 
 import (
-	"otter/pkg/jobqueue"
+	"github.com/EricChiou/jobqueue"
 )
 
 type codemap struct {

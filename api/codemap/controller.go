@@ -4,9 +4,10 @@ import (
 	"otter/acl"
 	"otter/constants/api"
 	"otter/interceptor"
-	"otter/pkg/router"
 	"otter/service/apihandler"
 	"otter/service/paramhandler"
+
+	"github.com/EricChiou/httprouter"
 )
 
 // Controller codemap controller
@@ -15,7 +16,7 @@ type Controller struct {
 }
 
 // Add add new code map
-func (con *Controller) Add(context *router.Context) {
+func (con *Controller) Add(context *httprouter.Context) {
 	ctx := context.Ctx
 
 	// check token
@@ -43,7 +44,7 @@ func (con *Controller) Add(context *router.Context) {
 }
 
 // Update update codemap
-func (con *Controller) Update(context *router.Context) {
+func (con *Controller) Update(context *httprouter.Context) {
 	ctx := context.Ctx
 
 	// check token
@@ -71,7 +72,7 @@ func (con *Controller) Update(context *router.Context) {
 }
 
 // Delete delete codemap
-func (con *Controller) Delete(context *router.Context) {
+func (con *Controller) Delete(context *httprouter.Context) {
 	ctx := context.Ctx
 
 	// check token
@@ -99,7 +100,7 @@ func (con *Controller) Delete(context *router.Context) {
 }
 
 // List get codemap list
-func (con *Controller) List(context *router.Context) {
+func (con *Controller) List(context *httprouter.Context) {
 	ctx := context.Ctx
 
 	// check token

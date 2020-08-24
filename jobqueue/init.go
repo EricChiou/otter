@@ -2,7 +2,8 @@ package jobqueue
 
 import (
 	"otter/jobqueue/queues"
-	"otter/pkg/jobqueue"
+
+	"github.com/EricChiou/jobqueue"
 )
 
 func Init() {

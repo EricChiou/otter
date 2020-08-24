@@ -2,9 +2,9 @@ package router
 
 import (
 	"otter/config"
-	"otter/pkg/router"
 	"otter/router/routes"
 
+	"github.com/EricChiou/httprouter"
 	"github.com/valyala/fasthttp"
 )
 
@@ -26,12 +26,12 @@ func ListenAndServeTLS(port, certPath, keyPath string) error {
 
 // SetHeader add api response header
 func SetHeader(key string, value string) {
-	router.SetHeader(key, value)
+	httprouter.SetHeader(key, value)
 }
 
 func newFHServer() *fasthttp.Server {
 	return &fasthttp.Server{
 		Name:    config.ServerName,
-		Handler: router.FasthttpHandler(),
+		Handler: httprouter.FasthttpHandler(),
 	}
 }

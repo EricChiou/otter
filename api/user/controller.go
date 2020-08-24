@@ -4,9 +4,10 @@ import (
 	"otter/acl"
 	"otter/constants/api"
 	"otter/interceptor"
-	"otter/pkg/router"
 	"otter/service/apihandler"
 	"otter/service/paramhandler"
+
+	"github.com/EricChiou/httprouter"
 )
 
 // Controller user controller
@@ -15,7 +16,7 @@ type Controller struct {
 }
 
 // SignUp user sign up controller
-func (con *Controller) SignUp(context *router.Context) {
+func (con *Controller) SignUp(context *httprouter.Context) {
 	ctx := context.Ctx
 
 	// check body format
@@ -29,7 +30,7 @@ func (con *Controller) SignUp(context *router.Context) {
 }
 
 // SignIn user sign in controller
-func (con *Controller) SignIn(context *router.Context) {
+func (con *Controller) SignIn(context *httprouter.Context) {
 	ctx := context.Ctx
 
 	// set param
@@ -43,7 +44,7 @@ func (con *Controller) SignIn(context *router.Context) {
 }
 
 // Update user data
-func (con *Controller) Update(context *router.Context) {
+func (con *Controller) Update(context *httprouter.Context) {
 	ctx := context.Ctx
 
 	// check token
@@ -73,7 +74,7 @@ func (con *Controller) Update(context *router.Context) {
 }
 
 // List get user list
-func (con *Controller) List(context *router.Context) {
+func (con *Controller) List(context *httprouter.Context) {
 	ctx := context.Ctx
 
 	// check token

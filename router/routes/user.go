@@ -2,7 +2,8 @@ package routes
 
 import (
 	"otter/api/user"
-	"otter/pkg/router"
+
+	"github.com/EricChiou/httprouter"
 )
 
 // InitUserAPI init user api
@@ -11,12 +12,12 @@ func InitUserAPI() {
 	var controller user.Controller
 
 	// Get
-	router.Get(groupName+"/signIn", controller.SignIn)
-	router.Get(groupName+"/list", controller.List)
+	httprouter.Get(groupName+"/signIn", controller.SignIn)
+	httprouter.Get(groupName+"/list", controller.List)
 
 	// Post
-	router.Post(groupName, controller.Update)
+	httprouter.Post(groupName, controller.Update)
 
 	// Put
-	router.Put(groupName+"/signUp", controller.SignUp)
+	httprouter.Put(groupName+"/signUp", controller.SignUp)
 }
