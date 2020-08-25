@@ -29,7 +29,7 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 		encryptPwd := sha3.Encrypt(signUp.Pwd)
 
 		var entity Entity
-		kvParams := mysql.GetSQLParamsInstance()
+		kvParams := mysql.SQLParamsInstance()
 		kvParams.Add(entity.Col().Acc, signUp.Acc)
 		kvParams.Add(entity.Col().Pwd, encryptPwd)
 		kvParams.Add(entity.Col().Name, signUp.Name)
@@ -54,7 +54,7 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	sql += "FROM #userT user "
 	sql += "INNER JOIN #roleT role ON user.#roleCodeCol=role.#codeCol "
 	sql += "WHERE user.#accCol=:acc"
-	param := mysql.GetSQLParamsInstance()
+	param := mysql.SQLParamsInstance()
 	param.Add("userT", entity.Table())
 	param.Add("idCol", entity.Col().ID)
 	param.Add("accCol", entity.Col().Acc)
@@ -105,7 +105,7 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 // Update dao
 func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData UpdateReqVo) {
 	var entity Entity
-	setParams := mysql.GetSQLParamsInstance()
+	setParams := mysql.SQLParamsInstance()
 	if len(updateData.Name) != 0 {
 		setParams.Add(entity.Col().Name, updateData.Name)
 	}
@@ -113,7 +113,7 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData
 		setParams.Add(entity.Col().Pwd, sha3.Encrypt(updateData.Pwd))
 	}
 
-	whereParams := mysql.GetSQLParamsInstance()
+	whereParams := mysql.SQLParamsInstance()
 	if updateData.ID != 0 {
 		whereParams.Add(entity.Col().ID, updateData.ID)
 	} else {
@@ -139,7 +139,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	}
 
 	var entity Entity
-	params := mysql.GetSQLParamsInstance()
+	params := mysql.SQLParamsInstance()
 	params.Add("userT", entity.Table())
 	params.Add("pk", entity.PK())
 	params.Add("idCol", entity.Col().ID)
@@ -150,7 +150,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	params.Add("index", (listReqVo.Page-1)*listReqVo.Limit)
 	params.Add("limit", listReqVo.Limit)
 
-	whereParams := mysql.GetSQLParamsInstance()
+	whereParams := mysql.SQLParamsInstance()
 	if listReqVo.Active == "true" {
 		whereParams.Add("#statusCol", ":status")
 		params.Add("status", userstatus.Active)

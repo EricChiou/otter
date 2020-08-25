@@ -20,6 +20,6 @@ func (params *sqlParams) Remove(key string) {
 }
 
 // GetSQLParamsInstance get sqlParams instance
-func GetSQLParamsInstance() sqlParams {
+func SQLParamsInstance() sqlParams {
 	return sqlParams{kv: map[string]interface{}{}}
 }

@@ -22,7 +22,7 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 		}()
 
 		var entity Entity
-		kvParams := mysql.GetSQLParamsInstance()
+		kvParams := mysql.SQLParamsInstance()
 		kvParams.Add(entity.Col().Type, addReqVo.Type)
 		kvParams.Add(entity.Col().Code, addReqVo.Code)
 		kvParams.Add(entity.Col().Name, addReqVo.Name)
@@ -43,14 +43,14 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 // Update update codemap dao
 func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
 	var entity Entity
-	setParams := mysql.GetSQLParamsInstance()
+	setParams := mysql.SQLParamsInstance()
 	setParams.Add(entity.Col().Code, updateReqVo.Code)
 	setParams.Add(entity.Col().Name, updateReqVo.Name)
 	setParams.Add(entity.Col().Type, updateReqVo.Type)
 	setParams.Add(entity.Col().SortNo, updateReqVo.SortNo)
 	setParams.Add(entity.Col().Enable, updateReqVo.Enable)
 
-	whereParams := mysql.GetSQLParamsInstance()
+	whereParams := mysql.SQLParamsInstance()
 	whereParams.Add(entity.Col().ID, updateReqVo.ID)
 
 	_, err := mysql.Update(entity.Table(), setParams, whereParams)
@@ -67,7 +67,7 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
 func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) {
 	var entity Entity
 
-	whereParams := mysql.GetSQLParamsInstance()
+	whereParams := mysql.SQLParamsInstance()
 	whereParams.Add(entity.Col().ID, deleteReqVo.ID)
 
 	_, err := mysql.Delete(entity.Table(), whereParams)
@@ -89,7 +89,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	}
 
 	var entity Entity
-	params := mysql.GetSQLParamsInstance()
+	params := mysql.SQLParamsInstance()
 	params.Add("codemapT", entity.Table())
 	params.Add("pk", entity.PK())
 	params.Add("idCol", entity.Col().ID)
@@ -101,7 +101,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	params.Add("index", (listReqVo.Page-1)*listReqVo.Limit)
 	params.Add("limit", listReqVo.Limit)
 
-	whereParams := mysql.GetSQLParamsInstance()
+	whereParams := mysql.SQLParamsInstance()
 	if len(listReqVo.Type) > 0 {
 		whereParams.Add("#typeCol", ":type")
 		params.Add("type", listReqVo.Type)
