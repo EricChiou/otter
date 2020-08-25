@@ -38,7 +38,7 @@ func Load() error {
 
 	var entity roleacl.Entity
 	sql := "SELECT #roleCode, #aclCode FROM #roleAclT"
-	param := mysql.GetSQLParamsInstance()
+	param := mysql.SQLParamsInstance()
 	param.Add("roleAclT", entity.Table())
 	param.Add("roleCode", entity.Col().RoleCode)
 	param.Add("aclCode", entity.Col().ACLCode)
