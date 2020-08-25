@@ -150,7 +150,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	params.Add("index", (listReqVo.Page-1)*listReqVo.Limit)
 	params.Add("limit", listReqVo.Limit)
 
-	whereParams := mysql.GetWhereParamsInstance()
+	whereParams := mysql.GetSQLParamsInstance()
 	if listReqVo.Active == "true" {
 		whereParams.Add("#statusCol", ":status")
 		params.Add("status", userstatus.Active)

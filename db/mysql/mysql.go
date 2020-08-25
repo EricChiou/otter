@@ -146,10 +146,10 @@ func QueryRow(sql string, params sqlParams, rowMapper func(Row) error) error {
 }
 
 // WhereSQL get where sql
-func WhereSQL(params whereParams) string {
+func WhereSQL(params sqlParams) string {
 	whereSQL := ""
 	for k, v := range params.kv {
-		whereSQL += "AND " + k + "=" + v
+		whereSQL += "AND " + k + "=" + fmt.Sprintf("%v", v)
 	}
 	if len(whereSQL) > 5 {
 		whereSQL = "WHERE " + whereSQL[4:] + " "

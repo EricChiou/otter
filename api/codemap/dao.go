@@ -101,7 +101,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	params.Add("index", (listReqVo.Page-1)*listReqVo.Limit)
 	params.Add("limit", listReqVo.Limit)
 
-	whereParams := mysql.GetWhereParamsInstance()
+	whereParams := mysql.GetSQLParamsInstance()
 	if len(listReqVo.Type) > 0 {
 		whereParams.Add("#typeCol", ":type")
 		params.Add("type", listReqVo.Type)
