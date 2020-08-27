@@ -3,8 +3,8 @@ package acl
 import (
 	"database/sql"
 
-	"otter/api/roleacl"
 	"otter/db/mysql"
+	"otter/po/roleaclPo"
 )
 
 var DB *sql.DB
@@ -36,12 +36,12 @@ func Load() error {
 	// reset roleACL
 	roleACL = make(map[string][]Code)
 
-	var entity roleacl.Entity
+	var entity roleaclPo.Entity
 	sql := "SELECT #roleCode, #aclCode FROM #roleAcl"
 	param := mysql.SQLParamsInstance()
-	param.Add("roleAcl", entity.Table())
-	param.Add("roleCode", entity.Col().RoleCode)
-	param.Add("aclCode", entity.Col().ACLCode)
+	param.Add("roleAcl", roleaclPo.Table)
+	param.Add("roleCode", roleaclPo.RoleCode)
+	param.Add("aclCode", roleaclPo.ACLCode)
 
 	return mysql.Query(sql, param, []interface{}{}, func(result mysql.Rows) error {
 		rows := result.Rows

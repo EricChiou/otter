@@ -2,11 +2,12 @@ package user
 
 import (
 	"otter/api/common"
-	"otter/api/role"
 	"otter/constants/api"
 	"otter/constants/userstatus"
 	"otter/db/mysql"
 	"otter/jobqueue/queues"
+	"otter/po/rolePo"
+	"otter/po/userPo"
 	"otter/service/apihandler"
 	"otter/service/jwt"
 	"otter/service/sha3"
@@ -26,15 +27,14 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 		}()
 
 		// encrypt password
-		var entity Entity
 		encryptPwd := sha3.Encrypt(signUp.Pwd)
 		columnValues := map[string]interface{}{
-			entity.Col().Acc:  signUp.Acc,
-			entity.Col().Pwd:  encryptPwd,
-			entity.Col().Name: signUp.Name,
+			userPo.Acc:  signUp.Acc,
+			userPo.Pwd:  encryptPwd,
+			userPo.Name: signUp.Name,
 		}
 
-		_, err := mysql.Insert(entity.Table(), columnValues)
+		_, err := mysql.Insert(userPo.Table, columnValues)
 		if err != nil {
 			apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 			return
@@ -47,22 +47,22 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 
 // SignIn dao
 func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
-	var entity Entity
-	var roleEnt role.Entity
+	var entity userPo.Entity
+	var roleEnt rolePo.Entity
 
 	args := []interface{}{signIn.Acc}
 
 	param := mysql.SQLParamsInstance()
-	param.Add("user", entity.Table())
-	param.Add("id", entity.Col().ID)
-	param.Add("acc", entity.Col().Acc)
-	param.Add("pwd", entity.Col().Pwd)
-	param.Add("name", entity.Col().Name)
-	param.Add("roleCode", entity.Col().RoleCode)
-	param.Add("status", entity.Col().Status)
-	param.Add("role", roleEnt.Table())
-	param.Add("roleName", roleEnt.Col().Name)
-	param.Add("code", roleEnt.Col().Code)
+	param.Add("user", userPo.Table)
+	param.Add("id", userPo.ID)
+	param.Add("acc", userPo.Acc)
+	param.Add("pwd", userPo.Pwd)
+	param.Add("name", userPo.Name)
+	param.Add("roleCode", userPo.RoleCode)
+	param.Add("status", userPo.Status)
+	param.Add("role", rolePo.Table)
+	param.Add("roleName", rolePo.Name)
+	param.Add("code", rolePo.Code)
 
 	sql := "SELECT user.#id, user.#acc, user.#pwd, user.#name, user.#roleCode, user.#status, role.#roleName "
 	sql += "FROM #user user "
@@ -106,8 +106,6 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 
 // Update dao
 func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData UpdateReqVo) {
-	var entity Entity
-
 	args := []interface{}{}
 	var setSQL string
 	if len(updateData.Name) != 0 {
@@ -127,10 +125,10 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData
 	}
 
 	params := mysql.SQLParamsInstance()
-	params.Add("user", entity.Table())
-	params.Add("name", entity.Col().Name)
-	params.Add("pwd", entity.Col().Pwd)
-	params.Add("id", entity.Col().ID)
+	params.Add("user", userPo.Table)
+	params.Add("name", userPo.Name)
+	params.Add("pwd", userPo.Pwd)
+	params.Add("id", userPo.ID)
 
 	sql := "UPDATE #user "
 	sql += "SET " + setSQL
@@ -147,8 +145,6 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData
 
 // List dao
 func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
-	var entity Entity
-
 	args := []interface{}{(listReqVo.Page - 1) * listReqVo.Limit, listReqVo.Limit}
 	whereArgs := []interface{}{}
 
@@ -159,13 +155,13 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	}
 
 	params := mysql.SQLParamsInstance()
-	params.Add("user", entity.Table())
-	params.Add("pk", entity.PK())
-	params.Add("id", entity.Col().ID)
-	params.Add("acc", entity.Col().Acc)
-	params.Add("name", entity.Col().Name)
-	params.Add("roleCode", entity.Col().RoleCode)
-	params.Add("status", entity.Col().Status)
+	params.Add("user", userPo.Table)
+	params.Add("pk", userPo.PK)
+	params.Add("id", userPo.ID)
+	params.Add("acc", userPo.Acc)
+	params.Add("name", userPo.Name)
+	params.Add("roleCode", userPo.RoleCode)
+	params.Add("status", userPo.Status)
 
 	sql := "SELECT #id, #acc, #name, #roleCode, #status "
 	sql += "FROM #user "

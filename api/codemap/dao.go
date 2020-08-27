@@ -5,6 +5,7 @@ import (
 	"otter/constants/api"
 	"otter/db/mysql"
 	"otter/jobqueue/queues"
+	"otter/po/codemapPo"
 	"otter/service/apihandler"
 
 	"github.com/valyala/fasthttp"
@@ -21,16 +22,15 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 			wait <- 1
 		}()
 
-		var entity Entity
 		columnValues := map[string]interface{}{
-			entity.Col().Type:   addReqVo.Type,
-			entity.Col().Code:   addReqVo.Code,
-			entity.Col().Name:   addReqVo.Name,
-			entity.Col().SortNo: addReqVo.SortNo,
-			entity.Col().Enable: addReqVo.Enable,
+			codemapPo.Type:   addReqVo.Type,
+			codemapPo.Code:   addReqVo.Code,
+			codemapPo.Name:   addReqVo.Name,
+			codemapPo.SortNo: addReqVo.SortNo,
+			codemapPo.Enable: addReqVo.Enable,
 		}
 
-		_, err := mysql.Insert(entity.Table(), columnValues)
+		_, err := mysql.Insert(codemapPo.Table, columnValues)
 		if err != nil {
 			apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 			return
@@ -43,18 +43,16 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 
 // Update update codemap dao
 func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
-	var entity Entity
-
 	args := []interface{}{updateReqVo.Code, updateReqVo.Name, updateReqVo.Type, updateReqVo.SortNo, updateReqVo.Enable, updateReqVo.ID}
 
 	params := mysql.SQLParamsInstance()
-	params.Add("codemap", entity.Table())
-	params.Add("code", entity.Col().Code)
-	params.Add("name", entity.Col().Name)
-	params.Add("type", entity.Col().Type)
-	params.Add("sortNo", entity.Col().SortNo)
-	params.Add("enable", entity.Col().Enable)
-	params.Add("id", entity.Col().ID)
+	params.Add("codemap", codemapPo.Table)
+	params.Add("code", codemapPo.Code)
+	params.Add("name", codemapPo.Name)
+	params.Add("type", codemapPo.Type)
+	params.Add("sortNo", codemapPo.SortNo)
+	params.Add("enable", codemapPo.Enable)
+	params.Add("id", codemapPo.ID)
 
 	sql := "UPDATE #codemap "
 	sql += "SET #code=?, #name=?, #type=?, #sortNo=?, #enable=? "
@@ -72,13 +70,11 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
 
 // Delete update codemap dao
 func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) {
-	var entity Entity
-
 	args := []interface{}{deleteReqVo.ID}
 
 	params := mysql.SQLParamsInstance()
-	params.Add("codemap", entity.Table())
-	params.Add("id", entity.Col().ID)
+	params.Add("codemap", codemapPo.Table)
+	params.Add("id", codemapPo.ID)
 
 	sql := "DELETE FROM #codemap "
 	sql += "WHERE #id=?"
@@ -94,20 +90,18 @@ func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) {
 
 // List get codemap list
 func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
-	var entity Entity
-
 	args := []interface{}{(listReqVo.Page - 1) * listReqVo.Limit, listReqVo.Limit}
 	whereArgs := []interface{}{}
 
 	params := mysql.SQLParamsInstance()
-	params.Add("codemap", entity.Table())
-	params.Add("pk", entity.PK())
-	params.Add("id", entity.Col().ID)
-	params.Add("type", entity.Col().Type)
-	params.Add("code", entity.Col().Code)
-	params.Add("name", entity.Col().Name)
-	params.Add("sortNo", entity.Col().SortNo)
-	params.Add("enable", entity.Col().Enable)
+	params.Add("codemap", codemapPo.Table)
+	params.Add("pk", codemapPo.PK)
+	params.Add("id", codemapPo.ID)
+	params.Add("type", codemapPo.Type)
+	params.Add("code", codemapPo.Code)
+	params.Add("name", codemapPo.Name)
+	params.Add("sortNo", codemapPo.SortNo)
+	params.Add("enable", codemapPo.Enable)
 
 	var whereSQL string
 	if len(listReqVo.Type) > 0 {
