@@ -116,11 +116,12 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 	sql += "SELECT #idCol, #typeCol, #codeCol, #nameCol, #sortNoCol, #enableCol "
 	sql += "FROM #codemapT "
 	sql += "INNER JOIN ( "
-	sql += "    SELECT #pk FROM #codemapT " + whereSQL
+	sql += "    SELECT #pk FROM #codemapT "
 	sql += "    ORDER BY #idCol "
 	sql += "    LIMIT :index, :limit "
 	sql += ") t "
 	sql += "USING ( #pk )"
+	sql += whereSQL
 
 	err := mysql.Query(sql, params, func(result mysql.Rows) error {
 		rows := result.Rows
