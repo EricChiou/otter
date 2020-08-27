@@ -3,7 +3,6 @@ package mysql
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"strings"
 
 	"otter/config"
@@ -13,7 +12,7 @@ import (
 // DB mysql connecting
 var DB *sql.DB
 
-var specificCharStr string = "\"':.,;(){}[]&|=+-*%/\\<>^"
+var specificCharStr string = `"':.,;(){}[]&|=+-*%/\<>^`
 var specificChar [128]bool
 
 // SQLRow db QueryRow result
@@ -60,7 +59,7 @@ func ErrMsgHandler(err error) api.RespStatus {
 }
 
 // Insert insert data
-func Insert(table string, columnValues sqlParams) (sql.Result, error) {
+func Insert(table string, columnValues map[string]interface{}) (sql.Result, error) {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -70,7 +69,7 @@ func Insert(table string, columnValues sqlParams) (sql.Result, error) {
 	columnSQL := ""
 	valueSQL := ""
 	var args []interface{}
-	for k, v := range columnValues.kv {
+	for k, v := range columnValues {
 		columnSQL += ", " + k
 		valueSQL += ", ?"
 		args = append(args, v)
@@ -85,42 +84,27 @@ func Insert(table string, columnValues sqlParams) (sql.Result, error) {
 	return tx.Exec("INSERT INTO "+table+"( "+columnSQL+" ) values( "+valueSQL+" )", args...)
 }
 
-// Update upadte data
-func Update(table string, set sqlParams, where sqlParams) (sql.Result, error) {
+// Exec execute sql
+func Exec(sql string, params sqlParams, args []interface{}) (sql.Result, error) {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
 		return nil, errors.New("db not initialized")
 	}
 
-	var args []interface{}
-	setSQL, args := getSetSQL(set.kv, args)
-	whereSQL, args := getWhereSQL(where.kv, args)
-
-	return tx.Exec("UPDATE "+table+" SET "+setSQL+whereSQL, args...)
-}
-
-// Delete delete data
-func Delete(table string, where sqlParams) (sql.Result, error) {
-	tx, err := DB.Begin()
-	defer tx.Commit()
-	if err != nil {
-		return nil, errors.New("db not initialized")
-	}
-	whereSQL, args := getWhereSQL(where.kv, []interface{}{})
-
-	return tx.Exec("DELETE FROM "+table+" "+whereSQL, args...)
+	execSQL := convertSQL(sql, params.kv)
+	return tx.Exec(execSQL, args...)
 }
 
 // Query query data
-func Query(sql string, params sqlParams, rowMapper func(Rows) error) error {
+func Query(sql string, params sqlParams, args []interface{}, rowMapper func(Rows) error) error {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
 		return errors.New("db not initialized")
 	}
 
-	execSQL, args := convertSQL(sql, params.kv)
+	execSQL := convertSQL(sql, params.kv)
 
 	rows, err := tx.Query(execSQL, args...)
 	defer rows.Close()
@@ -132,80 +116,29 @@ func Query(sql string, params sqlParams, rowMapper func(Rows) error) error {
 }
 
 // QueryRow query one row
-func QueryRow(sql string, params sqlParams, rowMapper func(Row) error) error {
+func QueryRow(sql string, params sqlParams, args []interface{}, rowMapper func(Row) error) error {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
 		return errors.New("db not initialized")
 	}
 
-	execSQL, args := convertSQL(sql, params.kv)
+	execSQL := convertSQL(sql, params.kv)
 	row := tx.QueryRow(execSQL, args...)
 
 	return rowMapper(Row{Row: row})
 }
 
-// WhereSQL get where sql
-func WhereSQL(params sqlParams) string {
-	whereSQL := ""
-	for k, v := range params.kv {
-		whereSQL += "AND " + k + "=" + fmt.Sprintf("%v", v)
-	}
-	if len(whereSQL) > 5 {
-		whereSQL = "WHERE " + whereSQL[4:] + " "
-	}
-
-	return whereSQL
-}
-
-func getSetSQL(kv map[string]interface{}, args []interface{}) (string, []interface{}) {
-	setSQL := ""
-	for k, v := range kv {
-		setSQL += ", " + k + "=?"
-		args = append(args, v)
-	}
-	if len(setSQL) > 2 {
-		setSQL = setSQL[2:] + " "
-	}
-
-	return setSQL, args
-}
-
-func getWhereSQL(kv map[string]interface{}, args []interface{}) (string, []interface{}) {
-	whereSQL := ""
-	for k, v := range kv {
-		whereSQL += "AND " + k + "=?"
-		args = append(args, v)
-	}
-	if len(whereSQL) > 5 {
-		whereSQL = "WHERE " + whereSQL[4:]
-	}
-
-	return whereSQL, args
-}
-
-func convertSQL(originalSql string, params map[string]interface{}) (string, []interface{}) {
+func convertSQL(originalSql string, params map[string]string) string {
 	convertSql := ""
-	args := []interface{}{}
 
 	preIndex := 0
 	for i := 0; i < len(originalSql)-1; i++ {
-		switch originalSql[i : i+1] {
-		case "#":
-			key := getKey(originalSql, i+1)
-			value := fmt.Sprintf("%v", params[key])
-			if len(value) > 0 {
-				convertSql += originalSql[preIndex:i] + value
-				i += len(key)
-				preIndex = i + 1
-			}
-
-		case ":":
+		if originalSql[i:i+1] == "#" {
 			key := getKey(originalSql, i+1)
 			value := params[key]
-			if value != nil {
-				convertSql += originalSql[preIndex:i] + "?"
-				args = append(args, value)
+			if len(value) > 0 {
+				convertSql += originalSql[preIndex:i] + value
 				i += len(key)
 				preIndex = i + 1
 			}
@@ -213,7 +146,7 @@ func convertSQL(originalSql string, params map[string]interface{}) (string, []in
 	}
 	convertSql += originalSql[preIndex:]
 
-	return convertSql, args
+	return convertSql
 }
 
 func getKey(original string, startIndex int) string {

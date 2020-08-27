@@ -1,16 +1,16 @@
 package mysql
 
 type sqlParams struct {
-	kv map[string]interface{}
+	kv map[string]string
 }
 
 // Add value with key
-func (params *sqlParams) Add(key string, value interface{}) {
+func (params *sqlParams) Add(key string, value string) {
 	params.kv[key] = value
 }
 
 // Get value with key
-func (params *sqlParams) Get(key string) interface{} {
+func (params *sqlParams) Get(key string) string {
 	return params.kv[key]
 }
 
@@ -21,5 +21,5 @@ func (params *sqlParams) Remove(key string) {
 
 // GetSQLParamsInstance get sqlParams instance
 func SQLParamsInstance() sqlParams {
-	return sqlParams{kv: map[string]interface{}{}}
+	return sqlParams{kv: map[string]string{}}
 }

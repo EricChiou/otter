@@ -13,7 +13,7 @@ import (
 // GenerateJWT generate jwt
 func GenerateJWT(payload interface{}, alg, key string) (string, error) {
 	// header
-	jwtHeader := base64.StdEncoding.EncodeToString([]byte("{\"typ\":\"JWT\",\"alg\":\"" + alg + "\"}"))
+	jwtHeader := base64.StdEncoding.EncodeToString([]byte(`{"typ":"JWT","alg":"` + alg + `"}`))
 
 	// payload
 	bytes, err := json.Marshal(payload)

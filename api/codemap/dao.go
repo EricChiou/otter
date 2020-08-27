@@ -22,14 +22,15 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 		}()
 
 		var entity Entity
-		kvParams := mysql.SQLParamsInstance()
-		kvParams.Add(entity.Col().Type, addReqVo.Type)
-		kvParams.Add(entity.Col().Code, addReqVo.Code)
-		kvParams.Add(entity.Col().Name, addReqVo.Name)
-		kvParams.Add(entity.Col().SortNo, addReqVo.SortNo)
-		kvParams.Add(entity.Col().Enable, addReqVo.Enable)
+		columnValues := map[string]interface{}{
+			entity.Col().Type:   addReqVo.Type,
+			entity.Col().Code:   addReqVo.Code,
+			entity.Col().Name:   addReqVo.Name,
+			entity.Col().SortNo: addReqVo.SortNo,
+			entity.Col().Enable: addReqVo.Enable,
+		}
 
-		_, err := mysql.Insert(entity.Table(), kvParams)
+		_, err := mysql.Insert(entity.Table(), columnValues)
 		if err != nil {
 			apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 			return
@@ -43,17 +44,23 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 // Update update codemap dao
 func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
 	var entity Entity
-	setParams := mysql.SQLParamsInstance()
-	setParams.Add(entity.Col().Code, updateReqVo.Code)
-	setParams.Add(entity.Col().Name, updateReqVo.Name)
-	setParams.Add(entity.Col().Type, updateReqVo.Type)
-	setParams.Add(entity.Col().SortNo, updateReqVo.SortNo)
-	setParams.Add(entity.Col().Enable, updateReqVo.Enable)
 
-	whereParams := mysql.SQLParamsInstance()
-	whereParams.Add(entity.Col().ID, updateReqVo.ID)
+	args := []interface{}{updateReqVo.Code, updateReqVo.Name, updateReqVo.Type, updateReqVo.SortNo, updateReqVo.Enable, updateReqVo.ID}
 
-	_, err := mysql.Update(entity.Table(), setParams, whereParams)
+	params := mysql.SQLParamsInstance()
+	params.Add("codemap", entity.Table())
+	params.Add("code", entity.Col().Code)
+	params.Add("name", entity.Col().Name)
+	params.Add("type", entity.Col().Type)
+	params.Add("sortNo", entity.Col().SortNo)
+	params.Add("enable", entity.Col().Enable)
+	params.Add("id", entity.Col().ID)
+
+	sql := "UPDATE #codemap "
+	sql += "SET #code=?, #name=?, #type=?, #sortNo=?, #enable=? "
+	sql += "WHERE #id=?"
+
+	_, err := mysql.Exec(sql, params, args)
 	if err != nil {
 		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 		return
@@ -67,10 +74,16 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
 func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) {
 	var entity Entity
 
-	whereParams := mysql.SQLParamsInstance()
-	whereParams.Add(entity.Col().ID, deleteReqVo.ID)
+	args := []interface{}{deleteReqVo.ID}
 
-	_, err := mysql.Delete(entity.Table(), whereParams)
+	params := mysql.SQLParamsInstance()
+	params.Add("codemap", entity.Table())
+	params.Add("id", entity.Col().ID)
+
+	sql := "DELETE FROM #codemap "
+	sql += "WHERE #id=?"
+
+	_, err := mysql.Exec(sql, params, args)
 	if err != nil {
 		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 		return
@@ -81,49 +94,51 @@ func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) {
 
 // List get codemap list
 func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
+	var entity Entity
+
+	args := []interface{}{(listReqVo.Page - 1) * listReqVo.Limit, listReqVo.Limit}
+	whereArgs := []interface{}{}
+
+	params := mysql.SQLParamsInstance()
+	params.Add("codemap", entity.Table())
+	params.Add("pk", entity.PK())
+	params.Add("id", entity.Col().ID)
+	params.Add("type", entity.Col().Type)
+	params.Add("code", entity.Col().Code)
+	params.Add("name", entity.Col().Name)
+	params.Add("sortNo", entity.Col().SortNo)
+	params.Add("enable", entity.Col().Enable)
+
+	var whereSQL string
+	if len(listReqVo.Type) > 0 {
+		whereSQL += "AND #type=? "
+		whereArgs = append(whereArgs, listReqVo.Type)
+	}
+	if listReqVo.Enable == "true" {
+		whereSQL += "AND #enable=? "
+		whereArgs = append(whereArgs, true)
+	}
+	if len(whereSQL) > 0 {
+		whereSQL = "WHERE " + whereSQL[4:]
+	}
+
+	sql := "SELECT #id, #type, #code, #name, #sortNo, #enable "
+	sql += "FROM #codemap "
+	sql += "INNER JOIN ( "
+	sql += "    SELECT #pk FROM #codemap "
+	sql += "    ORDER BY #id "
+	sql += "    LIMIT ?, ? "
+	sql += ") t "
+	sql += "USING ( #pk )"
+	sql += whereSQL
+
 	list := common.PageRespVo{
 		Records: []interface{}{},
 		Page:    listReqVo.Page,
 		Limit:   listReqVo.Limit,
 		Total:   0,
 	}
-
-	var entity Entity
-	params := mysql.SQLParamsInstance()
-	params.Add("codemapT", entity.Table())
-	params.Add("pk", entity.PK())
-	params.Add("idCol", entity.Col().ID)
-	params.Add("typeCol", entity.Col().Type)
-	params.Add("codeCol", entity.Col().Code)
-	params.Add("nameCol", entity.Col().Name)
-	params.Add("sortNoCol", entity.Col().SortNo)
-	params.Add("enableCol", entity.Col().Enable)
-	params.Add("index", (listReqVo.Page-1)*listReqVo.Limit)
-	params.Add("limit", listReqVo.Limit)
-
-	whereParams := mysql.SQLParamsInstance()
-	if len(listReqVo.Type) > 0 {
-		whereParams.Add("#typeCol", ":type")
-		params.Add("type", listReqVo.Type)
-	}
-	if listReqVo.Enable == "true" {
-		whereParams.Add("#enableCol", ":enable")
-		params.Add("enable", true)
-	}
-	whereSQL := mysql.WhereSQL(whereParams)
-
-	sql := ""
-	sql += "SELECT #idCol, #typeCol, #codeCol, #nameCol, #sortNoCol, #enableCol "
-	sql += "FROM #codemapT "
-	sql += "INNER JOIN ( "
-	sql += "    SELECT #pk FROM #codemapT "
-	sql += "    ORDER BY #idCol "
-	sql += "    LIMIT :index, :limit "
-	sql += ") t "
-	sql += "USING ( #pk )"
-	sql += whereSQL
-
-	err := mysql.Query(sql, params, func(result mysql.Rows) error {
+	err := mysql.Query(sql, params, append(args, whereArgs...), func(result mysql.Rows) error {
 		rows := result.Rows
 
 		for rows.Next() {
@@ -142,9 +157,9 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		return
 	}
 
-	sql = "SELECT COUNT(*) FROM #codemapT " + whereSQL
+	sql = "SELECT COUNT(*) FROM #codemap " + whereSQL
 	var total int
-	err = mysql.QueryRow(sql, params, func(result mysql.Row) error {
+	err = mysql.QueryRow(sql, params, whereArgs, func(result mysql.Row) error {
 		return result.Row.Scan(&total)
 	})
 	if err != nil {

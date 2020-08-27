@@ -37,13 +37,13 @@ func Load() error {
 	roleACL = make(map[string][]Code)
 
 	var entity roleacl.Entity
-	sql := "SELECT #roleCode, #aclCode FROM #roleAclT"
+	sql := "SELECT #roleCode, #aclCode FROM #roleAcl"
 	param := mysql.SQLParamsInstance()
-	param.Add("roleAclT", entity.Table())
+	param.Add("roleAcl", entity.Table())
 	param.Add("roleCode", entity.Col().RoleCode)
 	param.Add("aclCode", entity.Col().ACLCode)
 
-	return mysql.Query(sql, param, func(result mysql.Rows) error {
+	return mysql.Query(sql, param, []interface{}{}, func(result mysql.Rows) error {
 		rows := result.Rows
 
 		for rows.Next() {

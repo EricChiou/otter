@@ -26,15 +26,15 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 		}()
 
 		// encrypt password
-		encryptPwd := sha3.Encrypt(signUp.Pwd)
-
 		var entity Entity
-		kvParams := mysql.SQLParamsInstance()
-		kvParams.Add(entity.Col().Acc, signUp.Acc)
-		kvParams.Add(entity.Col().Pwd, encryptPwd)
-		kvParams.Add(entity.Col().Name, signUp.Name)
+		encryptPwd := sha3.Encrypt(signUp.Pwd)
+		columnValues := map[string]interface{}{
+			entity.Col().Acc:  signUp.Acc,
+			entity.Col().Pwd:  encryptPwd,
+			entity.Col().Name: signUp.Name,
+		}
 
-		_, err := mysql.Insert(entity.Table(), kvParams)
+		_, err := mysql.Insert(entity.Table(), columnValues)
 		if err != nil {
 			apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 			return
@@ -49,25 +49,27 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	var entity Entity
 	var roleEnt role.Entity
-	sql := ""
-	sql += "SELECT user.#idCol, user.#accCol, user.#pwdCol, user.#nameCol, user.#roleCodeCol, user.#statusCol, role.#roleNameCol "
-	sql += "FROM #userT user "
-	sql += "INNER JOIN #roleT role ON user.#roleCodeCol=role.#codeCol "
-	sql += "WHERE user.#accCol=:acc"
-	param := mysql.SQLParamsInstance()
-	param.Add("userT", entity.Table())
-	param.Add("idCol", entity.Col().ID)
-	param.Add("accCol", entity.Col().Acc)
-	param.Add("pwdCol", entity.Col().Pwd)
-	param.Add("nameCol", entity.Col().Name)
-	param.Add("roleCodeCol", entity.Col().RoleCode)
-	param.Add("statusCol", entity.Col().Status)
-	param.Add("roleT", roleEnt.Table())
-	param.Add("roleNameCol", roleEnt.Col().Name)
-	param.Add("codeCol", roleEnt.Col().Code)
-	param.Add("acc", signIn.Acc)
 
-	err := mysql.QueryRow(sql, param, func(result mysql.Row) error {
+	args := []interface{}{signIn.Acc}
+
+	param := mysql.SQLParamsInstance()
+	param.Add("user", entity.Table())
+	param.Add("id", entity.Col().ID)
+	param.Add("acc", entity.Col().Acc)
+	param.Add("pwd", entity.Col().Pwd)
+	param.Add("name", entity.Col().Name)
+	param.Add("roleCode", entity.Col().RoleCode)
+	param.Add("status", entity.Col().Status)
+	param.Add("role", roleEnt.Table())
+	param.Add("roleName", roleEnt.Col().Name)
+	param.Add("code", roleEnt.Col().Code)
+
+	sql := "SELECT user.#id, user.#acc, user.#pwd, user.#name, user.#roleCode, user.#status, role.#roleName "
+	sql += "FROM #user user "
+	sql += "INNER JOIN #role role ON user.#roleCode=role.#code "
+	sql += "WHERE user.#acc=?"
+
+	err := mysql.QueryRow(sql, param, args, func(result mysql.Row) error {
 		row := result.Row
 		err := row.Scan(&entity.ID, &entity.Acc, &entity.Pwd, &entity.Name, &entity.RoleCode, &entity.Status, &roleEnt.Name)
 		if err != nil {
@@ -105,22 +107,36 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 // Update dao
 func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData UpdateReqVo) {
 	var entity Entity
-	setParams := mysql.SQLParamsInstance()
+
+	args := []interface{}{}
+	var setSQL string
 	if len(updateData.Name) != 0 {
-		setParams.Add(entity.Col().Name, updateData.Name)
+		setSQL += ", #name=?"
+		args = append(args, updateData.Name)
 	}
 	if len(updateData.Pwd) != 0 {
-		setParams.Add(entity.Col().Pwd, sha3.Encrypt(updateData.Pwd))
+		setSQL += ", #pwd=?"
+		args = append(args, sha3.Encrypt(updateData.Pwd))
 	}
+	setSQL = setSQL[2:] + " "
 
-	whereParams := mysql.SQLParamsInstance()
 	if updateData.ID != 0 {
-		whereParams.Add(entity.Col().ID, updateData.ID)
+		args = append(args, updateData.ID)
 	} else {
-		whereParams.Add(entity.Col().ID, payload.ID)
+		args = append(args, payload.ID)
 	}
 
-	_, err := mysql.Update(entity.Table(), setParams, whereParams)
+	params := mysql.SQLParamsInstance()
+	params.Add("user", entity.Table())
+	params.Add("name", entity.Col().Name)
+	params.Add("pwd", entity.Col().Pwd)
+	params.Add("id", entity.Col().ID)
+
+	sql := "UPDATE #user "
+	sql += "SET " + setSQL
+	sql += "WHERE #id=?"
+
+	_, err := mysql.Exec(sql, params, args)
 	if err != nil {
 		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
 		return
@@ -131,44 +147,43 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData
 
 // List dao
 func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
+	var entity Entity
+
+	args := []interface{}{(listReqVo.Page - 1) * listReqVo.Limit, listReqVo.Limit}
+	whereArgs := []interface{}{}
+
+	var whereSQL string
+	if listReqVo.Active == "true" {
+		whereSQL = "WHERE #status=?"
+		whereArgs = append(whereArgs, userstatus.Active)
+	}
+
+	params := mysql.SQLParamsInstance()
+	params.Add("user", entity.Table())
+	params.Add("pk", entity.PK())
+	params.Add("id", entity.Col().ID)
+	params.Add("acc", entity.Col().Acc)
+	params.Add("name", entity.Col().Name)
+	params.Add("roleCode", entity.Col().RoleCode)
+	params.Add("status", entity.Col().Status)
+
+	sql := "SELECT #id, #acc, #name, #roleCode, #status "
+	sql += "FROM #user "
+	sql += "    JOIN ( "
+	sql += "    SELECT #pk FROM #user "
+	sql += "    ORDER BY #id "
+	sql += "    LIMIT ?, ? "
+	sql += ") t "
+	sql += "USING ( #pk ) "
+	sql += whereSQL
+
 	list := common.PageRespVo{
 		Records: []interface{}{},
 		Page:    listReqVo.Page,
 		Limit:   listReqVo.Limit,
 		Total:   0,
 	}
-
-	var entity Entity
-	params := mysql.SQLParamsInstance()
-	params.Add("userT", entity.Table())
-	params.Add("pk", entity.PK())
-	params.Add("idCol", entity.Col().ID)
-	params.Add("accCol", entity.Col().Acc)
-	params.Add("nameCol", entity.Col().Name)
-	params.Add("roleCodeCol", entity.Col().RoleCode)
-	params.Add("statusCol", entity.Col().Status)
-	params.Add("index", (listReqVo.Page-1)*listReqVo.Limit)
-	params.Add("limit", listReqVo.Limit)
-
-	whereParams := mysql.SQLParamsInstance()
-	if listReqVo.Active == "true" {
-		whereParams.Add("#statusCol", ":status")
-		params.Add("status", userstatus.Active)
-	}
-	whereSQL := mysql.WhereSQL(whereParams)
-
-	sql := ""
-	sql += "SELECT #idCol, #accCol, #nameCol, #roleCodeCol, #statusCol "
-	sql += "FROM #userT "
-	sql += "INNER JOIN ( "
-	sql += "    SELECT #pk FROM #userT "
-	sql += "    ORDER BY #idCol "
-	sql += "    LIMIT :index, :limit "
-	sql += ") t "
-	sql += "USING ( #pk )"
-	sql += whereSQL
-
-	err := mysql.Query(sql, params, func(result mysql.Rows) error {
+	err := mysql.Query(sql, params, append(args, whereArgs...), func(result mysql.Rows) error {
 		rows := result.Rows
 
 		for rows.Next() {
@@ -187,9 +202,10 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		return
 	}
 
-	sql = "SELECT COUNT(*) FROM #userT " + whereSQL
+	sql = "SELECT COUNT(*) FROM #user " + whereSQL
+
 	var total int
-	err = mysql.QueryRow(sql, params, func(result mysql.Row) error {
+	err = mysql.QueryRow(sql, params, whereArgs, func(result mysql.Row) error {
 		return result.Row.Scan(&total)
 	})
 	if err != nil {

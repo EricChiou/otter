@@ -1,6 +1,7 @@
 package user
 
 import (
+	"errors"
 	"otter/acl"
 	"otter/constants/api"
 	"otter/interceptor"
@@ -58,6 +59,10 @@ func (con *Controller) Update(context *httprouter.Context) {
 	var updateData UpdateReqVo
 	if err := paramhandler.Set(ctx, &updateData); err != nil {
 		apihandler.Response(ctx, api.FormatError, nil, err)
+		return
+	}
+	if len(updateData.Name) == 0 && len(updateData.Pwd) == 0 {
+		apihandler.Response(ctx, api.FormatError, nil, errors.New("need name or pwd"))
 		return
 	}
 
