@@ -124,7 +124,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 
 	sql := "SELECT #id, #type, #code, #name, #sortNo, #enable "
 	sql += "FROM #codemap "
-	sql += "INNER JOIN ( "
+	sql += "    JOIN ( "
 	sql += "    SELECT #pk FROM #codemap "
 	sql += "    ORDER BY #id "
 	sql += "    LIMIT ?, ? "
