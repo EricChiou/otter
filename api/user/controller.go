@@ -5,7 +5,6 @@ import (
 	"otter/acl"
 	"otter/constants/api"
 	"otter/interceptor"
-	"otter/service/apihandler"
 	"otter/service/paramhandler"
 
 	"github.com/EricChiou/httprouter"
@@ -23,7 +22,7 @@ func (con *Controller) SignUp(context *httprouter.Context) {
 	// check body format
 	var signUpData SignUpReqVo
 	if err := paramhandler.Set(ctx, &signUpData); err != nil {
-		apihandler.Response(ctx, api.FormatError, nil, err)
+		responseEntity.Error(ctx, api.FormatError, err)
 		return
 	}
 
@@ -37,7 +36,7 @@ func (con *Controller) SignIn(context *httprouter.Context) {
 	// set param
 	var signInData SignInReqVo
 	if err := paramhandler.Set(ctx, &signInData); err != nil {
-		apihandler.Response(ctx, api.FormatError, nil, nil)
+		responseEntity.Error(ctx, api.FormatError, nil)
 		return
 	}
 
@@ -51,18 +50,18 @@ func (con *Controller) Update(context *httprouter.Context) {
 	// check token
 	payload, err := interceptor.Token(ctx)
 	if err != nil {
-		apihandler.Response(ctx, api.TokenError, nil, nil)
+		responseEntity.Error(ctx, api.TokenError, nil)
 		return
 	}
 
 	// check body format
 	var updateData UpdateReqVo
 	if err := paramhandler.Set(ctx, &updateData); err != nil {
-		apihandler.Response(ctx, api.FormatError, nil, err)
+		responseEntity.Error(ctx, api.FormatError, err)
 		return
 	}
 	if len(updateData.Name) == 0 && len(updateData.Pwd) == 0 {
-		apihandler.Response(ctx, api.FormatError, nil, errors.New("need name or pwd"))
+		responseEntity.Error(ctx, api.FormatError, errors.New("need name or pwd"))
 		return
 	}
 
@@ -70,7 +69,7 @@ func (con *Controller) Update(context *httprouter.Context) {
 	if updateData.ID != 0 && updateData.ID != payload.ID {
 		aclCode := []acl.Code{acl.UpdateUser}
 		if err := interceptor.Acl(ctx, payload, aclCode...); err != nil {
-			apihandler.Response(ctx, api.PermissionDenied, nil, nil)
+			responseEntity.Error(ctx, api.PermissionDenied, nil)
 			return
 		}
 	}
@@ -85,14 +84,14 @@ func (con *Controller) List(context *httprouter.Context) {
 	// check token
 	_, err := interceptor.Token(ctx)
 	if err != nil {
-		apihandler.Response(ctx, api.TokenError, nil, nil)
+		responseEntity.Error(ctx, api.TokenError, nil)
 		return
 	}
 
 	// check body format
 	var listReqVo ListReqVo
 	if err := paramhandler.Set(ctx, &listReqVo); err != nil {
-		apihandler.Response(ctx, api.FormatError, nil, err)
+		responseEntity.Error(ctx, api.FormatError, err)
 		return
 	}
 

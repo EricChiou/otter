@@ -9,13 +9,47 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-// Response api response handler
-func Response(ctx *fasthttp.RequestCtx, status api.RespStatus, data, trace interface{}) {
-	ctx.Response.Header.Add("Content-Type", "application/json")
+// ResponseEntity response format
+type ResponseEntity struct{}
+
+type apiResponse struct {
+	Status api.RespStatus `json:"status"`
+	Data   interface{}    `json:"data,omitempty"`
+	Trace  interface{}    `json:"trace,omitempty"`
+}
+
+var header map[string]string = map[string]string{
+	"Content-Type": "application/json",
+}
+
+func addHeader(ctx *fasthttp.RequestCtx) {
+	for k, v := range header {
+		ctx.Response.Header.Add(k, v)
+	}
+}
+
+// OK api success
+func (re *ResponseEntity) OK(ctx *fasthttp.RequestCtx, data interface{}) ResponseEntity {
+	addHeader(ctx)
+
+	result := apiResponse{
+		Status: api.Success,
+		Data:   data,
+		Trace:  nil,
+	}
+
+	bytes, _ := json.Marshal(result)
+	fmt.Fprintf(ctx, string(bytes))
+	return *re
+}
+
+// Error api error
+func (re *ResponseEntity) Error(ctx *fasthttp.RequestCtx, status api.RespStatus, trace interface{}) {
+	addHeader(ctx)
 
 	result := apiResponse{
 		Status: status,
-		Data:   data,
+		Data:   nil,
 		Trace:  trace,
 	}
 
@@ -23,9 +57,9 @@ func Response(ctx *fasthttp.RequestCtx, status api.RespStatus, data, trace inter
 	fmt.Fprintf(ctx, string(bytes))
 }
 
-// ResponsePage api response page handler
-func ResponsePage(ctx *fasthttp.RequestCtx, status api.RespStatus, list common.PageRespVo, trace interface{}) {
-	ctx.Response.Header.Add("Content-Type", "application/json")
+// Page api page format
+func (re *ResponseEntity) Page(ctx *fasthttp.RequestCtx, status api.RespStatus, list common.PageRespVo, trace interface{}) {
+	addHeader(ctx)
 
 	result := apiResponse{
 		Status: status,
@@ -35,10 +69,4 @@ func ResponsePage(ctx *fasthttp.RequestCtx, status api.RespStatus, list common.P
 
 	bytes, _ := json.Marshal(result)
 	fmt.Fprintf(ctx, string(bytes))
-}
-
-type apiResponse struct {
-	Status api.RespStatus `json:"status"`
-	Data   interface{}    `json:"data,omitempty"`
-	Trace  interface{}    `json:"trace,omitempty"`
 }

@@ -6,7 +6,6 @@ import (
 	"otter/db/mysql"
 	"otter/jobqueue/queues"
 	"otter/po/codemapPo"
-	"otter/service/apihandler"
 
 	"github.com/valyala/fasthttp"
 )
@@ -32,11 +31,11 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 
 		_, err := mysql.Insert(codemapPo.Table, columnValues)
 		if err != nil {
-			apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
+			responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 			return
 		}
 
-		apihandler.Response(ctx, api.Success, nil, nil)
+		responseEntity.OK(ctx, nil)
 	})
 	<-wait
 }
@@ -60,11 +59,11 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
 
 	_, err := mysql.Exec(sql, params, args)
 	if err != nil {
-		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
+		responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 		return
 	}
 
-	apihandler.Response(ctx, api.Success, nil, nil)
+	responseEntity.Error(ctx, api.Success, nil)
 	return
 }
 
@@ -81,11 +80,11 @@ func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) {
 
 	_, err := mysql.Exec(sql, params, args)
 	if err != nil {
-		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
+		responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 		return
 	}
 
-	apihandler.Response(ctx, api.Success, nil, nil)
+	responseEntity.Error(ctx, api.Success, nil)
 }
 
 // List get codemap list
@@ -147,7 +146,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		return nil
 	})
 	if err != nil {
-		apihandler.Response(ctx, mysql.ErrMsgHandler(err), list, err)
+		responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 		return
 	}
 
@@ -157,10 +156,10 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		return result.Row.Scan(&total)
 	})
 	if err != nil {
-		apihandler.ResponsePage(ctx, mysql.ErrMsgHandler(err), list, err)
+		responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
 		return
 	}
 	list.Total = total
 
-	apihandler.Response(ctx, api.Success, list, nil)
+	responseEntity.OK(ctx, list)
 }

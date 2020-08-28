@@ -8,7 +8,6 @@ import (
 	"otter/jobqueue/queues"
 	"otter/po/rolePo"
 	"otter/po/userPo"
-	"otter/service/apihandler"
 	"otter/service/jwt"
 	"otter/service/sha3"
 
@@ -36,11 +35,11 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 
 		_, err := mysql.Insert(userPo.Table, columnValues)
 		if err != nil {
-			apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
+			responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 			return
 		}
 
-		apihandler.Response(ctx, api.Success, nil, nil)
+		responseEntity.OK(ctx, nil)
 	})
 	<-wait
 }
@@ -80,19 +79,19 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	})
 	// check account existing
 	if err != nil {
-		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
+		responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 		return
 	}
 
 	// check pwd
 	if entity.Pwd != sha3.Encrypt(signIn.Pwd) {
-		apihandler.Response(ctx, api.DataError, nil, nil)
+		responseEntity.Error(ctx, api.DataError, nil)
 		return
 	}
 
 	// check account status
 	if entity.Status != string(userstatus.Active) {
-		apihandler.Response(ctx, api.AccInactive, nil, nil)
+		responseEntity.Error(ctx, api.AccInactive, nil)
 		return
 	}
 
@@ -101,7 +100,7 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	response = SignInResVo{
 		Token: token,
 	}
-	apihandler.Response(ctx, api.Success, response, nil)
+	responseEntity.OK(ctx, response)
 }
 
 // Update dao
@@ -136,11 +135,11 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData
 
 	_, err := mysql.Exec(sql, params, args)
 	if err != nil {
-		apihandler.Response(ctx, mysql.ErrMsgHandler(err), nil, err)
+		responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 		return
 	}
 
-	apihandler.Response(ctx, api.Success, nil, nil)
+	responseEntity.OK(ctx, nil)
 }
 
 // List dao
@@ -194,7 +193,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		return nil
 	})
 	if err != nil {
-		apihandler.ResponsePage(ctx, mysql.ErrMsgHandler(err), list, err)
+		responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
 		return
 	}
 
@@ -205,10 +204,10 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		return result.Row.Scan(&total)
 	})
 	if err != nil {
-		apihandler.ResponsePage(ctx, mysql.ErrMsgHandler(err), list, err)
+		responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
 		return
 	}
 	list.Total = total
 
-	apihandler.ResponsePage(ctx, api.Success, list, nil)
+	responseEntity.Page(ctx, api.Success, list, nil)
 }
