@@ -44,7 +44,7 @@ func (re *ResponseEntity) OK(ctx *fasthttp.RequestCtx, data interface{}) Respons
 }
 
 // Error api error
-func (re *ResponseEntity) Error(ctx *fasthttp.RequestCtx, status api.RespStatus, trace interface{}) {
+func (re *ResponseEntity) Error(ctx *fasthttp.RequestCtx, status api.RespStatus, trace interface{}) ResponseEntity {
 	addHeader(ctx)
 
 	result := apiResponse{
@@ -55,10 +55,11 @@ func (re *ResponseEntity) Error(ctx *fasthttp.RequestCtx, status api.RespStatus,
 
 	bytes, _ := json.Marshal(result)
 	fmt.Fprintf(ctx, string(bytes))
+	return *re
 }
 
 // Page api page format
-func (re *ResponseEntity) Page(ctx *fasthttp.RequestCtx, status api.RespStatus, list common.PageRespVo, trace interface{}) {
+func (re *ResponseEntity) Page(ctx *fasthttp.RequestCtx, status api.RespStatus, list common.PageRespVo, trace interface{}) ResponseEntity {
 	addHeader(ctx)
 
 	result := apiResponse{
@@ -69,4 +70,5 @@ func (re *ResponseEntity) Page(ctx *fasthttp.RequestCtx, status api.RespStatus, 
 
 	bytes, _ := json.Marshal(result)
 	fmt.Fprintf(ctx, string(bytes))
+	return *re
 }

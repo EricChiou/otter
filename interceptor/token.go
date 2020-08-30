@@ -17,6 +17,7 @@ func Token(ctx *fasthttp.RequestCtx) (jwt.Payload, error) {
 
 	if payload, ok := jwt.Verify(auth[len(api.TokenPrefix):]); !ok {
 		return payload, errors.New("token error")
+
 	} else {
 		return payload, nil
 	}
