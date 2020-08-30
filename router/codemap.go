@@ -1,4 +1,4 @@
-package routes
+package router
 
 import (
 	"otter/api/codemap"
@@ -6,13 +6,13 @@ import (
 	"github.com/EricChiou/httprouter"
 )
 
-// InitCodemapAPI init codemap api
-func InitCodemapAPI() {
+func initCodemapAPI() {
 	groupName := "/codemap"
 	var controller codemap.Controller
 
 	// Get
-	httprouter.Get(groupName+"/list", controller.List)
+	// httprouter.Get(groupName+"/list", controller.List)
+	get(groupName+"/list", false, nil, controller.List)
 
 	// Post
 	httprouter.Post(groupName, controller.Update)

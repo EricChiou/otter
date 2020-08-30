@@ -4,6 +4,7 @@ import (
 	"otter/acl"
 	"otter/constants/api"
 	"otter/interceptor"
+	"otter/service/apihandler"
 	"otter/service/paramhandler"
 
 	"github.com/EricChiou/httprouter"
@@ -99,20 +100,13 @@ func (con *Controller) Delete(context *httprouter.Context) {
 }
 
 // List get codemap list
-func (con *Controller) List(context *httprouter.Context) {
-	ctx := context.Ctx
-
-	// check token
-	if _, err := interceptor.Token(ctx); err != nil {
-		responseEntity.Error(ctx, api.TokenError, nil)
-		return
-	}
+func (con *Controller) List(webInput interceptor.WebInput) apihandler.ResponseEntity {
+	ctx := webInput.Context.Ctx
 
 	// check param
 	var listReqVo ListReqVo
 	if err := paramhandler.Set(ctx, &listReqVo); err != nil {
-		responseEntity.Error(ctx, api.FormatError, err)
-		return
+		return responseEntity.Error(ctx, api.FormatError, err)
 	}
 
 	if listReqVo.Page == 0 {
@@ -122,5 +116,5 @@ func (con *Controller) List(context *httprouter.Context) {
 		listReqVo.Limit = 10
 	}
 
-	con.dao.List(ctx, listReqVo)
+	return con.dao.List(ctx, listReqVo)
 }

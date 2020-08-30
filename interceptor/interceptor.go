@@ -2,6 +2,7 @@ package interceptor
 
 import (
 	"otter/acl"
+	"otter/constants/api"
 	"otter/service/apihandler"
 	"otter/service/jwt"
 
@@ -9,24 +10,28 @@ import (
 )
 
 type WebInput struct {
-	ctx     *httprouter.Context
-	payload jwt.Payload
+	Context *httprouter.Context
+	Payload jwt.Payload
 }
 
-func interceptor(ctx *httprouter.Context, needToken bool, aclCodes acl.Code, run func(WebInput) apihandler.ResponseEntity) apihandler.ResponseEntity {
+func Set(context *httprouter.Context, needToken bool, aclCodes []acl.Code, run func(WebInput) apihandler.ResponseEntity) apihandler.ResponseEntity {
+
 	// check token
+	payload, err := Token(context.Ctx)
+	if needToken && err != nil {
+		var responseEntity apihandler.ResponseEntity
+		return responseEntity.Error(context.Ctx, api.TokenError, nil)
+	}
 
 	// check acl
+	if err = Acl(context.Ctx, payload, aclCodes...); err != nil {
+		var responseEntity apihandler.ResponseEntity
+		return responseEntity.Error(context.Ctx, api.PermissionDenied, nil)
+	}
 
 	webInput := WebInput{
-		ctx: ctx,
+		Context: context,
 	}
 
 	return run(webInput)
-}
-
-func Get(path string, needToken bool, aclCodes acl.Code, run func(WebInput) apihandler.ResponseEntity) {
-	httprouter.Get(path, func(ctx *httprouter.Context) {
-		interceptor(ctx, needToken, aclCodes, run)
-	})
 }

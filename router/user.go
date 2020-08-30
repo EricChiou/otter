@@ -1,4 +1,4 @@
-package routes
+package router
 
 import (
 	"otter/api/user"
@@ -6,8 +6,7 @@ import (
 	"github.com/EricChiou/httprouter"
 )
 
-// InitUserAPI init user api
-func InitUserAPI() {
+func initUserAPI() {
 	groupName := "/user"
 	var controller user.Controller
 

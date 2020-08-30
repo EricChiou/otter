@@ -6,6 +6,7 @@ import (
 	"otter/db/mysql"
 	"otter/jobqueue/queues"
 	"otter/po/codemapPo"
+	"otter/service/apihandler"
 
 	"github.com/valyala/fasthttp"
 )
@@ -88,7 +89,7 @@ func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) {
 }
 
 // List get codemap list
-func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
+func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) apihandler.ResponseEntity {
 	args := []interface{}{(listReqVo.Page - 1) * listReqVo.Limit, listReqVo.Limit}
 	whereArgs := []interface{}{}
 
@@ -146,8 +147,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		return nil
 	})
 	if err != nil {
-		responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
-		return
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 	}
 
 	sql = "SELECT COUNT(*) FROM #codemap " + whereSQL
@@ -156,10 +156,9 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		return result.Row.Scan(&total)
 	})
 	if err != nil {
-		responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
-		return
+		return responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
 	}
 	list.Total = total
 
-	responseEntity.OK(ctx, list)
+	return responseEntity.OK(ctx, list)
 }
