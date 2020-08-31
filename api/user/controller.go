@@ -2,12 +2,11 @@ package user
 
 import (
 	"errors"
-	"otter/acl"
 	"otter/constants/api"
 	"otter/interceptor"
+	"otter/service/apihandler"
 	"otter/service/paramhandler"
-
-	"github.com/EricChiou/httprouter"
+	"strconv"
 )
 
 // Controller user controller
@@ -16,83 +15,81 @@ type Controller struct {
 }
 
 // SignUp user sign up controller
-func (con *Controller) SignUp(context *httprouter.Context) {
-	ctx := context.Ctx
+func (con *Controller) SignUp(webInput interceptor.WebInput) apihandler.ResponseEntity {
+	ctx := webInput.Context.Ctx
 
 	// check body format
 	var signUpData SignUpReqVo
-	if err := paramhandler.Set(ctx, &signUpData); err != nil {
-		responseEntity.Error(ctx, api.FormatError, err)
-		return
+	if err := paramhandler.Set(webInput.Context, &signUpData); err != nil {
+		return responseEntity.Error(ctx, api.FormatError, err)
 	}
 
-	con.dao.SignUp(ctx, signUpData)
+	return con.dao.SignUp(ctx, signUpData)
 }
 
 // SignIn user sign in controller
-func (con *Controller) SignIn(context *httprouter.Context) {
-	ctx := context.Ctx
+func (con *Controller) SignIn(webInput interceptor.WebInput) apihandler.ResponseEntity {
+	ctx := webInput.Context.Ctx
 
 	// set param
 	var signInData SignInReqVo
-	if err := paramhandler.Set(ctx, &signInData); err != nil {
-		responseEntity.Error(ctx, api.FormatError, nil)
-		return
+	if err := paramhandler.Set(webInput.Context, &signInData); err != nil {
+		return responseEntity.Error(ctx, api.FormatError, nil)
 	}
 
-	con.dao.SignIn(ctx, signInData)
+	return con.dao.SignIn(ctx, signInData)
 }
 
-// Update user data
-func (con *Controller) Update(context *httprouter.Context) {
-	ctx := context.Ctx
-
-	// check token
-	payload, err := interceptor.Token(ctx)
-	if err != nil {
-		responseEntity.Error(ctx, api.TokenError, nil)
-		return
-	}
+// Update user data, POST: /user
+func (con *Controller) Update(webInput interceptor.WebInput) apihandler.ResponseEntity {
+	ctx := webInput.Context.Ctx
+	payload := webInput.Payload
 
 	// check body format
 	var updateData UpdateReqVo
-	if err := paramhandler.Set(ctx, &updateData); err != nil {
-		responseEntity.Error(ctx, api.FormatError, err)
-		return
+	if err := paramhandler.Set(webInput.Context, &updateData); err != nil {
+		return responseEntity.Error(ctx, api.FormatError, err)
 	}
 	if len(updateData.Name) == 0 && len(updateData.Pwd) == 0 {
-		responseEntity.Error(ctx, api.FormatError, errors.New("need name or pwd"))
-		return
+		return responseEntity.Error(ctx, api.FormatError, errors.New("need name or pwd"))
+	}
+	updateData.ID = payload.ID
+
+	return con.dao.Update(ctx, updateData)
+}
+
+// UpdateByUserID POST: /user/:userID
+func (con *Controller) UpdateByUserID(webInput interceptor.WebInput) apihandler.ResponseEntity {
+	ctx := webInput.Context.Ctx
+
+	var updateData UpdateReqVo
+
+	// check body format
+	if err := paramhandler.Set(webInput.Context, &updateData); err != nil {
+		return responseEntity.Error(ctx, api.FormatError, err)
+	}
+	if len(updateData.Name) == 0 && len(updateData.Pwd) == 0 {
+		return responseEntity.Error(ctx, api.FormatError, errors.New("need name or pwd"))
 	}
 
-	// check acl
-	if updateData.ID != 0 && updateData.ID != payload.ID {
-		aclCode := []acl.Code{acl.UpdateUser}
-		if err := interceptor.Acl(ctx, payload, aclCode...); err != nil {
-			responseEntity.Error(ctx, api.PermissionDenied, nil)
-			return
-		}
+	// check path param
+	userID, err := strconv.ParseInt(webInput.Context.PathParam("userID"), 10, 64)
+	if err != nil {
+		return responseEntity.Error(ctx, api.FormatError, errors.New("need userID"))
 	}
+	updateData.ID = int(userID)
 
-	con.dao.Update(ctx, payload, updateData)
+	return con.dao.Update(ctx, updateData)
 }
 
 // List get user list
-func (con *Controller) List(context *httprouter.Context) {
-	ctx := context.Ctx
-
-	// check token
-	_, err := interceptor.Token(ctx)
-	if err != nil {
-		responseEntity.Error(ctx, api.TokenError, nil)
-		return
-	}
+func (con *Controller) List(webInput interceptor.WebInput) apihandler.ResponseEntity {
+	ctx := webInput.Context.Ctx
 
 	// check body format
 	var listReqVo ListReqVo
-	if err := paramhandler.Set(ctx, &listReqVo); err != nil {
-		responseEntity.Error(ctx, api.FormatError, err)
-		return
+	if err := paramhandler.Set(webInput.Context, &listReqVo); err != nil {
+		return responseEntity.Error(ctx, api.FormatError, err)
 	}
 
 	if listReqVo.Page == 0 {
@@ -102,5 +99,5 @@ func (con *Controller) List(context *httprouter.Context) {
 		listReqVo.Limit = 10
 	}
 
-	con.dao.List(ctx, listReqVo)
+	return con.dao.List(ctx, listReqVo)
 }

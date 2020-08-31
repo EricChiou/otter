@@ -15,9 +15,9 @@ import (
 type Dao struct{}
 
 // Add add codemap dao
-func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
+func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) apihandler.ResponseEntity {
 	wait := make(chan int)
-	queues.Codemap.Add.Add(func() {
+	queues.Codemap.Add.Add(func() apihandler.ResponseEntity {
 		defer func() {
 			wait <- 1
 		}()
@@ -32,17 +32,17 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) {
 
 		_, err := mysql.Insert(codemapPo.Table, columnValues)
 		if err != nil {
-			responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
-			return
+			return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 		}
 
-		responseEntity.OK(ctx, nil)
+		return responseEntity.OK(ctx, nil)
 	})
 	<-wait
+	return apihandler.ResponseEntity{}
 }
 
 // Update update codemap dao
-func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
+func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) apihandler.ResponseEntity {
 	args := []interface{}{updateReqVo.Code, updateReqVo.Name, updateReqVo.Type, updateReqVo.SortNo, updateReqVo.Enable, updateReqVo.ID}
 
 	params := mysql.SQLParamsInstance()
@@ -60,16 +60,14 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) {
 
 	_, err := mysql.Exec(sql, params, args)
 	if err != nil {
-		responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
-		return
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 	}
 
-	responseEntity.Error(ctx, api.Success, nil)
-	return
+	return responseEntity.Error(ctx, api.Success, nil)
 }
 
 // Delete update codemap dao
-func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) {
+func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) apihandler.ResponseEntity {
 	args := []interface{}{deleteReqVo.ID}
 
 	params := mysql.SQLParamsInstance()
@@ -81,11 +79,10 @@ func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) {
 
 	_, err := mysql.Exec(sql, params, args)
 	if err != nil {
-		responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
-		return
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 	}
 
-	responseEntity.Error(ctx, api.Success, nil)
+	return responseEntity.Error(ctx, api.Success, nil)
 }
 
 // List get codemap list

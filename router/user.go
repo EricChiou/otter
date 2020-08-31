@@ -1,9 +1,8 @@
 package router
 
 import (
+	"otter/acl"
 	"otter/api/user"
-
-	"github.com/EricChiou/httprouter"
 )
 
 func initUserAPI() {
@@ -11,12 +10,17 @@ func initUserAPI() {
 	var controller user.Controller
 
 	// Get
-	httprouter.Get(groupName+"/signIn", controller.SignIn)
-	httprouter.Get(groupName+"/list", controller.List)
+	// sign in
+	get(groupName+"/signIn", false, nil, controller.SignIn)
+
+	// user list
+	get(groupName+"/list", true, nil, controller.List)
 
 	// Post
-	httprouter.Post(groupName, controller.Update)
+	post(groupName, true, nil, controller.Update)
+	post(groupName+"/:userID", true, []acl.Code{acl.UpdateUser}, controller.UpdateByUserID)
 
 	// Put
-	httprouter.Put(groupName+"/signUp", controller.SignUp)
+	put(groupName+"/signUp", false, nil, controller.SignUp)
+
 }

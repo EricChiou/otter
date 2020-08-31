@@ -7,11 +7,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/EricChiou/httprouter"
 	"github.com/valyala/fasthttp"
 )
 
 // Set params from request ctx
-func Set(ctx *fasthttp.RequestCtx, varPtr interface{}, checkReq ...bool) error {
+func Set(context *httprouter.Context, varPtr interface{}, checkReq ...bool) error {
 	check := true
 	if len(checkReq) > 0 {
 		check = checkReq[0]
@@ -27,15 +28,22 @@ func Set(ctx *fasthttp.RequestCtx, varPtr interface{}, checkReq ...bool) error {
 		return errors.New("need to input struct type")
 	}
 
+	// check path params
+	for _, param := range context.Params {
+		if len(param.Value) == 0 {
+			return errors.New("path param format error")
+		}
+	}
+
 	// parse body
-	if body := ctx.PostBody(); len(body) > 0 {
+	if body := context.Ctx.PostBody(); len(body) > 0 {
 		if err := json.Unmarshal(body, varPtr); err != nil {
 			return errors.New("body json parse error")
 		}
 	}
 
 	// set parameters
-	if err := setParam(ctx, varPtr); err != nil {
+	if err := setParam(context.Ctx, varPtr); err != nil {
 		return err
 	}
 

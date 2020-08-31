@@ -8,6 +8,7 @@ import (
 	"otter/jobqueue/queues"
 	"otter/po/rolePo"
 	"otter/po/userPo"
+	"otter/service/apihandler"
 	"otter/service/jwt"
 	"otter/service/sha3"
 
@@ -18,9 +19,9 @@ import (
 type Dao struct{}
 
 // SignUp dao
-func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
+func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) apihandler.ResponseEntity {
 	wait := make(chan int)
-	queues.User.SignUp.Add(func() {
+	queues.User.SignUp.Add(func() apihandler.ResponseEntity {
 		defer func() {
 			wait <- 1
 		}()
@@ -33,19 +34,18 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) {
 			userPo.Name: signUp.Name,
 		}
 
-		_, err := mysql.Insert(userPo.Table, columnValues)
-		if err != nil {
-			responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
-			return
+		if _, err := mysql.Insert(userPo.Table, columnValues); err != nil {
+			return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 		}
 
-		responseEntity.OK(ctx, nil)
+		return responseEntity.OK(ctx, nil)
 	})
 	<-wait
+	return apihandler.ResponseEntity{}
 }
 
 // SignIn dao
-func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
+func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) apihandler.ResponseEntity {
 	var entity userPo.Entity
 	var roleEnt rolePo.Entity
 
@@ -79,20 +79,17 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	})
 	// check account existing
 	if err != nil {
-		responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
-		return
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 	}
 
 	// check pwd
 	if entity.Pwd != sha3.Encrypt(signIn.Pwd) {
-		responseEntity.Error(ctx, api.DataError, nil)
-		return
+		return responseEntity.Error(ctx, api.DataError, nil)
 	}
 
 	// check account status
 	if entity.Status != string(userstatus.Active) {
-		responseEntity.Error(ctx, api.AccInactive, nil)
-		return
+		return responseEntity.Error(ctx, api.AccInactive, nil)
 	}
 
 	var response SignInResVo
@@ -100,12 +97,13 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) {
 	response = SignInResVo{
 		Token: token,
 	}
-	responseEntity.OK(ctx, response)
+	return responseEntity.OK(ctx, response)
 }
 
 // Update dao
-func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData UpdateReqVo) {
+func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateData UpdateReqVo) apihandler.ResponseEntity {
 	args := []interface{}{}
+
 	var setSQL string
 	if len(updateData.Name) != 0 {
 		setSQL += ", #name=?"
@@ -116,12 +114,7 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData
 		args = append(args, sha3.Encrypt(updateData.Pwd))
 	}
 	setSQL = setSQL[2:] + " "
-
-	if updateData.ID != 0 {
-		args = append(args, updateData.ID)
-	} else {
-		args = append(args, payload.ID)
-	}
+	args = append(args, updateData.ID)
 
 	params := mysql.SQLParamsInstance()
 	params.Add("user", userPo.Table)
@@ -135,15 +128,14 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, payload jwt.Payload, updateData
 
 	_, err := mysql.Exec(sql, params, args)
 	if err != nil {
-		responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
-		return
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 	}
 
-	responseEntity.OK(ctx, nil)
+	return responseEntity.OK(ctx, nil)
 }
 
 // List dao
-func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
+func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) apihandler.ResponseEntity {
 	args := []interface{}{(listReqVo.Page - 1) * listReqVo.Limit, listReqVo.Limit}
 	whereArgs := []interface{}{}
 
@@ -193,8 +185,7 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		return nil
 	})
 	if err != nil {
-		responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
-		return
+		return responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
 	}
 
 	sql = "SELECT COUNT(*) FROM #user " + whereSQL
@@ -204,10 +195,9 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) {
 		return result.Row.Scan(&total)
 	})
 	if err != nil {
-		responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
-		return
+		return responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
 	}
 	list.Total = total
 
-	responseEntity.Page(ctx, api.Success, list, nil)
+	return responseEntity.Page(ctx, api.Success, list, nil)
 }

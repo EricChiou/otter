@@ -15,9 +15,13 @@ type WebInput struct {
 }
 
 func Set(context *httprouter.Context, needToken bool, aclCodes []acl.Code, run func(WebInput) apihandler.ResponseEntity) apihandler.ResponseEntity {
+	webInput := WebInput{
+		Context: context,
+	}
 
 	// check token
 	payload, err := Token(context.Ctx)
+	webInput.Payload = payload
 	if needToken && err != nil {
 		var responseEntity apihandler.ResponseEntity
 		return responseEntity.Error(context.Ctx, api.TokenError, nil)
@@ -27,10 +31,6 @@ func Set(context *httprouter.Context, needToken bool, aclCodes []acl.Code, run f
 	if err = Acl(context.Ctx, payload, aclCodes...); err != nil {
 		var responseEntity apihandler.ResponseEntity
 		return responseEntity.Error(context.Ctx, api.PermissionDenied, nil)
-	}
-
-	webInput := WebInput{
-		Context: context,
 	}
 
 	return run(webInput)
