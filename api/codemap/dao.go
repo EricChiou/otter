@@ -87,41 +87,29 @@ func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) apihan
 
 // List get codemap list
 func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) apihandler.ResponseEntity {
-	args := []interface{}{(listReqVo.Page - 1) * listReqVo.Limit, listReqVo.Limit}
-	whereArgs := []interface{}{}
-
-	params := mysql.SQLParamsInstance()
-	params.Add("codemap", codemapPo.Table)
-	params.Add("pk", codemapPo.PK)
-	params.Add("id", codemapPo.ID)
-	params.Add("type", codemapPo.Type)
-	params.Add("code", codemapPo.Code)
-	params.Add("name", codemapPo.Name)
-	params.Add("sortNo", codemapPo.SortNo)
-	params.Add("enable", codemapPo.Enable)
+	args := []interface{}{}
 
 	var whereSQL string
 	if len(listReqVo.Type) > 0 {
-		whereSQL += "AND #type=? "
-		whereArgs = append(whereArgs, listReqVo.Type)
+		whereSQL += "AND " + codemapPo.Type + "=? "
+		args = append(args, listReqVo.Type)
 	}
 	if listReqVo.Enable == "true" {
-		whereSQL += "AND #enable=? "
-		whereArgs = append(whereArgs, true)
+		whereSQL += "AND " + codemapPo.Enable + "=? "
+		args = append(args, true)
 	}
 	if len(whereSQL) > 0 {
 		whereSQL = "WHERE " + whereSQL[4:]
 	}
 
-	sql := "SELECT #id, #type, #code, #name, #sortNo, #enable "
-	sql += "FROM #codemap "
-	sql += "    JOIN ( "
-	sql += "    SELECT #pk FROM #codemap "
-	sql += "    ORDER BY #id "
-	sql += "    LIMIT ?, ? "
-	sql += ") t "
-	sql += "USING ( #pk )"
-	sql += whereSQL
+	page := mysql.Page{
+		TableName:   codemapPo.Table,
+		ColumnNames: []string{codemapPo.ID, codemapPo.Type, codemapPo.Code, codemapPo.Name, codemapPo.SortNo, codemapPo.Enable},
+		UniqueKey:   codemapPo.PK,
+		OrderBy:     codemapPo.ID,
+		Page:        listReqVo.Page,
+		Limit:       listReqVo.Limit,
+	}
 
 	list := common.PageRespVo{
 		Records: []interface{}{},
@@ -129,9 +117,8 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) apihandler.R
 		Limit:   listReqVo.Limit,
 		Total:   0,
 	}
-	err := mysql.Query(sql, params, append(args, whereArgs...), func(result mysql.Rows) error {
+	err := mysql.QueryPage(page, whereSQL, args, func(result mysql.Rows, total int) error {
 		rows := result.Rows
-
 		for rows.Next() {
 			var record ListResVo
 			err := rows.Scan(&record.ID, &record.Type, &record.Code, &record.Name, &record.SortNo, &record.Enable)
@@ -141,21 +128,12 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) apihandler.R
 			list.Records = append(list.Records, record)
 		}
 
+		list.Total = total
 		return nil
-	})
-	if err != nil {
-		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
-	}
-
-	sql = "SELECT COUNT(*) FROM #codemap " + whereSQL
-	var total int
-	err = mysql.QueryRow(sql, params, whereArgs, func(result mysql.Row) error {
-		return result.Row.Scan(&total)
 	})
 	if err != nil {
 		return responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
 	}
-	list.Total = total
 
-	return responseEntity.OK(ctx, list)
+	return responseEntity.Page(ctx, api.Success, list, nil)
 }

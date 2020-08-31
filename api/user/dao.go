@@ -136,33 +136,22 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateData UpdateReqVo) apihand
 
 // List dao
 func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) apihandler.ResponseEntity {
-	args := []interface{}{(listReqVo.Page - 1) * listReqVo.Limit, listReqVo.Limit}
-	whereArgs := []interface{}{}
+	args := []interface{}{}
 
 	var whereSQL string
 	if listReqVo.Active == "true" {
-		whereSQL = "WHERE #status=?"
-		whereArgs = append(whereArgs, userstatus.Active)
+		whereSQL = "WHERE " + userPo.Status + "=?"
+		args = append(args, userstatus.Active)
 	}
 
-	params := mysql.SQLParamsInstance()
-	params.Add("user", userPo.Table)
-	params.Add("pk", userPo.PK)
-	params.Add("id", userPo.ID)
-	params.Add("acc", userPo.Acc)
-	params.Add("name", userPo.Name)
-	params.Add("roleCode", userPo.RoleCode)
-	params.Add("status", userPo.Status)
-
-	sql := "SELECT #id, #acc, #name, #roleCode, #status "
-	sql += "FROM #user "
-	sql += "    JOIN ( "
-	sql += "    SELECT #pk FROM #user "
-	sql += "    ORDER BY #id "
-	sql += "    LIMIT ?, ? "
-	sql += ") t "
-	sql += "USING ( #pk ) "
-	sql += whereSQL
+	page := mysql.Page{
+		TableName:   userPo.Table,
+		ColumnNames: []string{userPo.ID, userPo.Acc, userPo.Name, userPo.RoleCode, userPo.Status},
+		UniqueKey:   userPo.PK,
+		OrderBy:     userPo.ID,
+		Page:        listReqVo.Page,
+		Limit:       listReqVo.Limit,
+	}
 
 	list := common.PageRespVo{
 		Records: []interface{}{},
@@ -170,9 +159,8 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) apihandler.R
 		Limit:   listReqVo.Limit,
 		Total:   0,
 	}
-	err := mysql.Query(sql, params, append(args, whereArgs...), func(result mysql.Rows) error {
+	err := mysql.QueryPage(page, whereSQL, args, func(result mysql.Rows, total int) error {
 		rows := result.Rows
-
 		for rows.Next() {
 			var record ListResVo
 			err := rows.Scan(&record.ID, &record.Acc, &record.Name, &record.RoleCode, &record.Status)
@@ -182,22 +170,12 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) apihandler.R
 			list.Records = append(list.Records, record)
 		}
 
+		list.Total = total
 		return nil
 	})
 	if err != nil {
 		return responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
 	}
-
-	sql = "SELECT COUNT(*) FROM #user " + whereSQL
-
-	var total int
-	err = mysql.QueryRow(sql, params, whereArgs, func(result mysql.Row) error {
-		return result.Row.Scan(&total)
-	})
-	if err != nil {
-		return responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
-	}
-	list.Total = total
 
 	return responseEntity.Page(ctx, api.Success, list, nil)
 }

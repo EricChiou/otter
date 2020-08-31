@@ -3,6 +3,7 @@ package mysql
 import (
 	"database/sql"
 	"errors"
+	"strconv"
 	"strings"
 
 	"otter/config"
@@ -23,6 +24,16 @@ type Row struct {
 // SQLRows db Query result
 type Rows struct {
 	Rows *sql.Rows
+}
+
+// Page QueryPage input struct
+type Page struct {
+	TableName   string
+	ColumnNames []string
+	UniqueKey   string
+	OrderBy     string
+	Page        int
+	Limit       int
 }
 
 // Init connect MySQL
@@ -97,7 +108,7 @@ func Exec(sql string, params sqlParams, args []interface{}) (sql.Result, error) 
 }
 
 // Query query data
-func Query(sql string, params sqlParams, args []interface{}, rowMapper func(Rows) error) error {
+func Query(sql string, params sqlParams, args []interface{}, rowMapper func(result Rows) error) error {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -116,7 +127,7 @@ func Query(sql string, params sqlParams, args []interface{}, rowMapper func(Rows
 }
 
 // QueryRow query one row
-func QueryRow(sql string, params sqlParams, args []interface{}, rowMapper func(Row) error) error {
+func QueryRow(sql string, params sqlParams, args []interface{}, rowMapper func(result Row) error) error {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -127,6 +138,49 @@ func QueryRow(sql string, params sqlParams, args []interface{}, rowMapper func(R
 	row := tx.QueryRow(execSQL, args...)
 
 	return rowMapper(Row{Row: row})
+}
+
+// QueryPage query page format
+func QueryPage(page Page, whereSQL string, args []interface{}, rowMapper func(result Rows, total int) error) error {
+	tx, err := DB.Begin()
+	defer tx.Commit()
+	if err != nil {
+		return errors.New("db not initialized")
+	}
+
+	var columnSQL string
+	for _, columnName := range page.ColumnNames {
+		columnSQL += ", " + columnName
+	}
+	if len(columnSQL) > 0 {
+		columnSQL = columnSQL[2:]
+	} else {
+		columnSQL = "*"
+	}
+
+	sql := "SELECT " + columnSQL + " "
+	sql += "FROM " + page.TableName + " "
+	sql += "    JOIN ( "
+	sql += "    SELECT " + page.UniqueKey + " FROM " + page.TableName + " "
+	sql += "    ORDER BY " + page.OrderBy + " "
+	sql += "    LIMIT " + strconv.Itoa((page.Page-1)*page.Limit) + ", " + strconv.Itoa(page.Limit) + " "
+	sql += ") t "
+	sql += "USING ( " + page.UniqueKey + " ) "
+	sql += whereSQL
+
+	rows, err := tx.Query(sql, args...)
+	defer rows.Close()
+	if err != nil {
+		return err
+	}
+
+	var total int
+	sql = "SELECT COUNT(*) FROM " + page.TableName + " " + whereSQL
+	row := tx.QueryRow(sql, args...)
+	row.Scan(&total)
+
+	rowMapper(Rows{Rows: rows}, total)
+	return nil
 }
 
 func convertSQL(originalSql string, params map[string]string) string {
