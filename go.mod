@@ -3,7 +3,7 @@ module otter
 go 1.13
 
 require (
-	github.com/EricChiou/httprouter v0.0.0-20200824013711-3174db4925cd
+	github.com/EricChiou/httprouter v0.0.0-20200831014526-e4b3e7cdef12
 	github.com/EricChiou/jobqueue v0.0.0-20200814093036-00677a9e2b3b
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/valyala/fasthttp v1.16.0

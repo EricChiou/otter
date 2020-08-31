@@ -2,6 +2,8 @@ github.com/EricChiou/httprouter v0.0.0-20191104062635-693a8c144fab h1:BEzyrCQaDa
 github.com/EricChiou/httprouter v0.0.0-20191104062635-693a8c144fab/go.mod h1:EU0vNQOFIs7zhbDdFAk7IXP5mzQQEiz4CoO4Vkdo3OM=
 github.com/EricChiou/httprouter v0.0.0-20200824013711-3174db4925cd h1:S97zU8nzEIuP0FdBmeKlfGF+7FrHwJeVQm1BlldoqWU=
 github.com/EricChiou/httprouter v0.0.0-20200824013711-3174db4925cd/go.mod h1:EU0vNQOFIs7zhbDdFAk7IXP5mzQQEiz4CoO4Vkdo3OM=
+github.com/EricChiou/httprouter v0.0.0-20200831014526-e4b3e7cdef12 h1:doAXMGeihnnK6oGv2j9f5qa5Tj0avPLusDN3qCTArbU=
+github.com/EricChiou/httprouter v0.0.0-20200831014526-e4b3e7cdef12/go.mod h1:uheQMb+NcTLbs/l/ySkfdzVRjkloelmg7wo9pM3JldI=
 github.com/EricChiou/jobqueue v0.0.0-20200814093036-00677a9e2b3b h1:9xZLqR5oIGyL3Eqm79HZr0CWEUCH9OXhe9eUZc5yVHE=
 github.com/EricChiou/jobqueue v0.0.0-20200814093036-00677a9e2b3b/go.mod h1:2UrL2w+y1/20arLdUf5MXpTF1be0WZg4EHeBl/iPyJo=
 github.com/andybalholm/brotli v1.0.0 h1:7UCwP93aiSfvWpapti8g88vVVGp2qqtGyePsSuDafo4=
