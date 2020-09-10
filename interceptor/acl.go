@@ -11,6 +11,10 @@ import (
 
 // Acl interceptor
 func Acl(ctx *fasthttp.RequestCtx, payload jwt.Payload, aclCodes ...acl.Code) error {
+	if len(aclCodes) <= 0 {
+		return nil
+	}
+
 	if len(payload.RoleCode) <= 0 {
 		return errors.New(string(api.PermissionDenied))
 	}
