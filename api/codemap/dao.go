@@ -4,7 +4,7 @@ import (
 	"otter/api/common"
 	"otter/constants/api"
 	"otter/db/mysql"
-	"otter/jobqueue/queues"
+	"otter/jobqueue"
 	"otter/po/codemapPo"
 	"otter/service/apihandler"
 
@@ -16,12 +16,7 @@ type Dao struct{}
 
 // Add add codemap dao
 func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) apihandler.ResponseEntity {
-	wait := make(chan int)
-	queues.Codemap.Add.Add(func() apihandler.ResponseEntity {
-		defer func() {
-			wait <- 1
-		}()
-
+	run := func() apihandler.ResponseEntity {
 		columnValues := map[string]interface{}{
 			codemapPo.Type:   addReqVo.Type,
 			codemapPo.Code:   addReqVo.Code,
@@ -36,9 +31,9 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) apihandler.Resp
 		}
 
 		return responseEntity.OK(ctx, nil)
-	})
-	<-wait
-	return apihandler.ResponseEntity{}
+	}
+
+	return jobqueue.Codemap.NewAddJob(run)
 }
 
 // Update update codemap dao

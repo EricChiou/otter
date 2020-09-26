@@ -1,31 +1,38 @@
 package jobqueue
 
 import (
-	"otter/jobqueue/queues"
+	"otter/service/apihandler"
 
 	"github.com/EricChiou/jobqueue"
 )
 
+type worker struct {
+	run  func() apihandler.ResponseEntity
+	wait *chan apihandler.ResponseEntity
+}
+
 func Init() {
 	// user job queues
-	run(&queues.User.SignUp)
+	run(&User.signUp)
 
 	// codemap job queues
-	run(&queues.Codemap.Add)
+	run(&Codemap.add)
 }
 
 func Wait() {
 	// user job queues
-	queues.User.SignUp.Wait()
+	User.signUp.Wait()
 
 	// codemap job queues
-	queues.Codemap.Add.Wait()
+	Codemap.add.Wait()
 }
 
 func run(queue *jobqueue.Queue) {
-	queue.SetWorker(func(worker interface{}) {
-		if f, ok := worker.(func()); ok {
-			f()
+	queue.SetWorker(func(w interface{}) {
+		if w, ok := w.(worker); ok {
+			*w.wait <- w.run()
+		} else {
+			*w.wait <- apihandler.ResponseEntity{}
 		}
 	})
 	queue.Run()

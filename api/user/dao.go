@@ -5,7 +5,7 @@ import (
 	"otter/constants/api"
 	"otter/constants/userstatus"
 	"otter/db/mysql"
-	"otter/jobqueue/queues"
+	"otter/jobqueue"
 	"otter/po/rolePo"
 	"otter/po/userPo"
 	"otter/service/apihandler"
@@ -20,12 +20,7 @@ type Dao struct{}
 
 // SignUp dao
 func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) apihandler.ResponseEntity {
-	wait := make(chan int)
-	queues.User.SignUp.Add(func() apihandler.ResponseEntity {
-		defer func() {
-			wait <- 1
-		}()
-
+	run := func() apihandler.ResponseEntity {
 		// encrypt password
 		encryptPwd := sha3.Encrypt(signUp.Pwd)
 		columnValues := map[string]interface{}{
@@ -39,9 +34,9 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) apihandler.
 		}
 
 		return responseEntity.OK(ctx, nil)
-	})
-	<-wait
-	return apihandler.ResponseEntity{}
+	}
+
+	return jobqueue.User.NewSignUpJob(run)
 }
 
 // SignIn dao
