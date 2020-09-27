@@ -1,14 +1,15 @@
 package jobqueue
 
 import (
-	"otter/service/apihandler"
+	"errors"
+	"otter/constants/api"
 
 	"github.com/EricChiou/jobqueue"
 )
 
 type worker struct {
-	run  func() apihandler.ResponseEntity
-	wait *chan apihandler.ResponseEntity
+	run  func() interface{}
+	wait *chan interface{}
 }
 
 func Init() {
@@ -32,7 +33,7 @@ func run(queue *jobqueue.Queue) {
 		if w, ok := w.(worker); ok {
 			*w.wait <- w.run()
 		} else {
-			*w.wait <- apihandler.ResponseEntity{}
+			*w.wait <- errors.New(string(api.ServerError))
 		}
 	})
 	queue.Run()

@@ -16,7 +16,7 @@ type Dao struct{}
 
 // Add add codemap dao
 func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) apihandler.ResponseEntity {
-	run := func() apihandler.ResponseEntity {
+	run := func() interface{} {
 		columnValues := map[string]interface{}{
 			codemapPo.Type:   addReqVo.Type,
 			codemapPo.Code:   addReqVo.Code,
@@ -33,7 +33,7 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) apihandler.Resp
 		return responseEntity.OK(ctx, nil)
 	}
 
-	return jobqueue.Codemap.NewAddJob(run)
+	return jobqueue.Codemap.NewAddJob(run).(apihandler.ResponseEntity)
 }
 
 // Update update codemap dao

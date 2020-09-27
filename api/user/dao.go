@@ -20,7 +20,7 @@ type Dao struct{}
 
 // SignUp dao
 func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) apihandler.ResponseEntity {
-	run := func() apihandler.ResponseEntity {
+	run := func() interface{} {
 		// encrypt password
 		encryptPwd := sha3.Encrypt(signUp.Pwd)
 		columnValues := map[string]interface{}{
@@ -36,7 +36,7 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) apihandler.
 		return responseEntity.OK(ctx, nil)
 	}
 
-	return jobqueue.User.NewSignUpJob(run)
+	return jobqueue.User.NewSignUpJob(run).(apihandler.ResponseEntity)
 }
 
 // SignIn dao
