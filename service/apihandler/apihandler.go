@@ -59,7 +59,7 @@ func (re *ResponseEntity) Error(ctx *fasthttp.RequestCtx, status api.RespStatus,
 }
 
 // Page api page format
-func (re *ResponseEntity) Page(ctx *fasthttp.RequestCtx, status api.RespStatus, list common.PageRespVo, trace interface{}) ResponseEntity {
+func (re *ResponseEntity) Page(ctx *fasthttp.RequestCtx, list common.PageRespVo, status api.RespStatus, trace interface{}) ResponseEntity {
 	addHeader(ctx)
 
 	result := apiResponse{

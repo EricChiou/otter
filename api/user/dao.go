@@ -8,7 +8,6 @@ import (
 	"otter/jobqueue"
 	"otter/po/rolePo"
 	"otter/po/userPo"
-	"otter/service/apihandler"
 	"otter/service/jwt"
 	"otter/service/sha3"
 
@@ -19,7 +18,7 @@ import (
 type Dao struct{}
 
 // SignUp dao
-func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) apihandler.ResponseEntity {
+func (dao *Dao) SignUp(signUp SignUpReqVo) error {
 	run := func() interface{} {
 		// encrypt password
 		encryptPwd := sha3.Encrypt(signUp.Pwd)
@@ -30,17 +29,17 @@ func (dao *Dao) SignUp(ctx *fasthttp.RequestCtx, signUp SignUpReqVo) apihandler.
 		}
 
 		if _, err := mysql.Insert(userPo.Table, columnValues); err != nil {
-			return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+			return err
 		}
 
-		return responseEntity.OK(ctx, nil)
+		return nil
 	}
 
-	return jobqueue.User.NewSignUpJob(run).(apihandler.ResponseEntity)
+	return jobqueue.User.NewSignUpJob(run).(error)
 }
 
 // SignIn dao
-func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) apihandler.ResponseEntity {
+func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) (*SignInResVo, api.RespStatus, error) {
 	var entity userPo.Entity
 	var roleEnt rolePo.Entity
 
@@ -74,29 +73,29 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) apihandler.
 	})
 	// check account existing
 	if err != nil {
-		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+		return nil, mysql.ErrMsgHandler(err), err
 	}
 
 	// check pwd
 	if entity.Pwd != sha3.Encrypt(signIn.Pwd) {
-		return responseEntity.Error(ctx, api.DataError, nil)
+		return nil, api.DataError, nil
 	}
 
 	// check account status
 	if entity.Status != string(userstatus.Active) {
-		return responseEntity.Error(ctx, api.AccInactive, nil)
+		return nil, api.AccInactive, nil
 	}
 
-	var response SignInResVo
+	var signInResVo SignInResVo
 	token, _ := jwt.Generate(entity.ID, entity.Acc, entity.Name, entity.RoleCode, roleEnt.Name)
-	response = SignInResVo{
+	signInResVo = SignInResVo{
 		Token: token,
 	}
-	return responseEntity.OK(ctx, response)
+	return &signInResVo, api.Success, nil
 }
 
 // Update dao
-func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateData UpdateReqVo) apihandler.ResponseEntity {
+func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateData UpdateReqVo) error {
 	args := []interface{}{}
 
 	var setSQL string
@@ -123,14 +122,14 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateData UpdateReqVo) apihand
 
 	_, err := mysql.Exec(sql, params, args)
 	if err != nil {
-		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+		return err
 	}
 
-	return responseEntity.OK(ctx, nil)
+	return nil
 }
 
 // List dao
-func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) apihandler.ResponseEntity {
+func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) (common.PageRespVo, error) {
 	args := []interface{}{}
 
 	var whereSQL string
@@ -169,8 +168,8 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) apihandler.R
 		return nil
 	})
 	if err != nil {
-		return responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
+		return list, err
 	}
 
-	return responseEntity.Page(ctx, api.Success, list, nil)
+	return list, nil
 }

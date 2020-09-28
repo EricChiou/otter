@@ -3,6 +3,7 @@ package user
 import (
 	"errors"
 	"otter/constants/api"
+	"otter/db/mysql"
 	"otter/interceptor"
 	"otter/service/apihandler"
 	"otter/service/paramhandler"
@@ -24,7 +25,12 @@ func (con *Controller) SignUp(webInput interceptor.WebInput) apihandler.Response
 		return responseEntity.Error(ctx, api.FormatError, err)
 	}
 
-	return con.dao.SignUp(ctx, signUpData)
+	err := con.dao.SignUp(signUpData)
+	if err != nil {
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+	}
+
+	return responseEntity.OK(ctx, nil)
 }
 
 // SignIn user sign in controller
@@ -37,7 +43,12 @@ func (con *Controller) SignIn(webInput interceptor.WebInput) apihandler.Response
 		return responseEntity.Error(ctx, api.FormatError, nil)
 	}
 
-	return con.dao.SignIn(ctx, signInData)
+	signInResVo, respStatus, err := con.dao.SignIn(ctx, signInData)
+	if respStatus != api.Success {
+		responseEntity.Error(ctx, respStatus, err)
+	}
+
+	return responseEntity.OK(ctx, signInResVo)
 }
 
 // Update user data, POST: /user
@@ -55,7 +66,12 @@ func (con *Controller) Update(webInput interceptor.WebInput) apihandler.Response
 	}
 	updateData.ID = payload.ID
 
-	return con.dao.Update(ctx, updateData)
+	err := con.dao.Update(ctx, updateData)
+	if err != nil {
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+	}
+
+	return responseEntity.OK(ctx, nil)
 }
 
 // UpdateByUserID POST: /user/:userID
@@ -79,7 +95,12 @@ func (con *Controller) UpdateByUserID(webInput interceptor.WebInput) apihandler.
 	}
 	updateData.ID = int(userID)
 
-	return con.dao.Update(ctx, updateData)
+	err = con.dao.Update(ctx, updateData)
+	if err != nil {
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+	}
+
+	return responseEntity.OK(ctx, nil)
 }
 
 // List get user list
@@ -99,5 +120,9 @@ func (con *Controller) List(webInput interceptor.WebInput) apihandler.ResponseEn
 		listReqVo.Limit = 10
 	}
 
-	return con.dao.List(ctx, listReqVo)
+	list, err := con.dao.List(ctx, listReqVo)
+	if err != nil {
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+	}
+	return responseEntity.Page(ctx, list, api.Success, nil)
 }

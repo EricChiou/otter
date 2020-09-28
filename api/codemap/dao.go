@@ -127,8 +127,8 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) apihandler.R
 		return nil
 	})
 	if err != nil {
-		return responseEntity.Page(ctx, mysql.ErrMsgHandler(err), list, err)
+		return responseEntity.Page(ctx, list, mysql.ErrMsgHandler(err), err)
 	}
 
-	return responseEntity.Page(ctx, api.Success, list, nil)
+	return responseEntity.Page(ctx, list, api.Success, nil)
 }
