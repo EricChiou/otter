@@ -1,4 +1,4 @@
-package aclPo
+package aclpo
 
 // table name
 const Table string = "acl"

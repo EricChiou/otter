@@ -4,7 +4,7 @@ import (
 	"otter/api/common"
 	"otter/db/mysql"
 	"otter/jobqueue"
-	"otter/po/codemapPo"
+	"otter/po/codemappo"
 )
 
 // Dao codemap dao
@@ -14,14 +14,14 @@ type Dao struct{}
 func (dao *Dao) Add(addReqVo AddReqVo) error {
 	run := func() interface{} {
 		columnValues := map[string]interface{}{
-			codemapPo.Type:   addReqVo.Type,
-			codemapPo.Code:   addReqVo.Code,
-			codemapPo.Name:   addReqVo.Name,
-			codemapPo.SortNo: addReqVo.SortNo,
-			codemapPo.Enable: addReqVo.Enable,
+			codemappo.Type:   addReqVo.Type,
+			codemappo.Code:   addReqVo.Code,
+			codemappo.Name:   addReqVo.Name,
+			codemappo.SortNo: addReqVo.SortNo,
+			codemappo.Enable: addReqVo.Enable,
 		}
 
-		_, err := mysql.Insert(codemapPo.Table, columnValues)
+		_, err := mysql.Insert(codemappo.Table, columnValues)
 		if err != nil {
 			return err
 		}
@@ -42,13 +42,13 @@ func (dao *Dao) Update(updateReqVo UpdateReqVo) error {
 	args := []interface{}{updateReqVo.Code, updateReqVo.Name, updateReqVo.Type, updateReqVo.SortNo, updateReqVo.Enable, updateReqVo.ID}
 
 	params := mysql.SQLParamsInstance()
-	params.Add("codemap", codemapPo.Table)
-	params.Add("code", codemapPo.Code)
-	params.Add("name", codemapPo.Name)
-	params.Add("type", codemapPo.Type)
-	params.Add("sortNo", codemapPo.SortNo)
-	params.Add("enable", codemapPo.Enable)
-	params.Add("id", codemapPo.ID)
+	params.Add("codemap", codemappo.Table)
+	params.Add("code", codemappo.Code)
+	params.Add("name", codemappo.Name)
+	params.Add("type", codemappo.Type)
+	params.Add("sortNo", codemappo.SortNo)
+	params.Add("enable", codemappo.Enable)
+	params.Add("id", codemappo.ID)
 
 	sql := "UPDATE #codemap "
 	sql += "SET #code=?, #name=?, #type=?, #sortNo=?, #enable=? "
@@ -67,8 +67,8 @@ func (dao *Dao) Delete(deleteReqVo DeleteReqVo) error {
 	args := []interface{}{deleteReqVo.ID}
 
 	params := mysql.SQLParamsInstance()
-	params.Add("codemap", codemapPo.Table)
-	params.Add("id", codemapPo.ID)
+	params.Add("codemap", codemappo.Table)
+	params.Add("id", codemappo.ID)
 
 	sql := "DELETE FROM #codemap "
 	sql += "WHERE #id=?"
@@ -87,11 +87,11 @@ func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 
 	var whereSQL string
 	if len(listReqVo.Type) > 0 {
-		whereSQL += "AND " + codemapPo.Type + "=? "
+		whereSQL += "AND " + codemappo.Type + "=? "
 		args = append(args, listReqVo.Type)
 	}
 	if listReqVo.Enable == "true" {
-		whereSQL += "AND " + codemapPo.Enable + "=? "
+		whereSQL += "AND " + codemappo.Enable + "=? "
 		args = append(args, true)
 	}
 	if len(whereSQL) > 0 {
@@ -99,10 +99,10 @@ func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 	}
 
 	page := mysql.Page{
-		TableName:   codemapPo.Table,
-		ColumnNames: []string{codemapPo.ID, codemapPo.Type, codemapPo.Code, codemapPo.Name, codemapPo.SortNo, codemapPo.Enable},
-		UniqueKey:   codemapPo.PK,
-		OrderBy:     codemapPo.ID,
+		TableName:   codemappo.Table,
+		ColumnNames: []string{codemappo.ID, codemappo.Type, codemappo.Code, codemappo.Name, codemappo.SortNo, codemappo.Enable},
+		UniqueKey:   codemappo.PK,
+		OrderBy:     codemappo.ID,
 		Page:        listReqVo.Page,
 		Limit:       listReqVo.Limit,
 	}

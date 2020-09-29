@@ -1,4 +1,4 @@
-package userPo
+package userpo
 
 // table name
 const Table string = "user"

@@ -6,8 +6,8 @@ import (
 	"otter/constants/userstatus"
 	"otter/db/mysql"
 	"otter/jobqueue"
-	"otter/po/rolePo"
-	"otter/po/userPo"
+	"otter/po/rolepo"
+	"otter/po/userpo"
 	"otter/service/sha3"
 )
 
@@ -20,12 +20,12 @@ func (dao *Dao) SignUp(signUp SignUpReqVo) error {
 		// encrypt password
 		encryptPwd := sha3.Encrypt(signUp.Pwd)
 		columnValues := map[string]interface{}{
-			userPo.Acc:  signUp.Acc,
-			userPo.Pwd:  encryptPwd,
-			userPo.Name: signUp.Name,
+			userpo.Acc:  signUp.Acc,
+			userpo.Pwd:  encryptPwd,
+			userpo.Name: signUp.Name,
 		}
 
-		if _, err := mysql.Insert(userPo.Table, columnValues); err != nil {
+		if _, err := mysql.Insert(userpo.Table, columnValues); err != nil {
 			return err
 		}
 
@@ -42,16 +42,16 @@ func (dao *Dao) SignIn(signInReqVo SignInReqVo) (userbo.SignInBo, error) {
 	args := []interface{}{signInReqVo.Acc}
 
 	param := mysql.SQLParamsInstance()
-	param.Add("user", userPo.Table)
-	param.Add("id", userPo.ID)
-	param.Add("acc", userPo.Acc)
-	param.Add("pwd", userPo.Pwd)
-	param.Add("name", userPo.Name)
-	param.Add("roleCode", userPo.RoleCode)
-	param.Add("status", userPo.Status)
-	param.Add("role", rolePo.Table)
-	param.Add("roleName", rolePo.Name)
-	param.Add("code", rolePo.Code)
+	param.Add("user", userpo.Table)
+	param.Add("id", userpo.ID)
+	param.Add("acc", userpo.Acc)
+	param.Add("pwd", userpo.Pwd)
+	param.Add("name", userpo.Name)
+	param.Add("roleCode", userpo.RoleCode)
+	param.Add("status", userpo.Status)
+	param.Add("role", rolepo.Table)
+	param.Add("roleName", rolepo.Name)
+	param.Add("code", rolepo.Code)
 
 	sql := "SELECT user.#id, user.#acc, user.#pwd, user.#name, user.#roleCode, user.#status, role.#roleName "
 	sql += "FROM #user user "
@@ -92,10 +92,10 @@ func (dao *Dao) Update(updateData UpdateReqVo) error {
 	args = append(args, updateData.ID)
 
 	params := mysql.SQLParamsInstance()
-	params.Add("user", userPo.Table)
-	params.Add("name", userPo.Name)
-	params.Add("pwd", userPo.Pwd)
-	params.Add("id", userPo.ID)
+	params.Add("user", userpo.Table)
+	params.Add("name", userpo.Name)
+	params.Add("pwd", userpo.Pwd)
+	params.Add("id", userpo.ID)
 
 	sql := "UPDATE #user "
 	sql += "SET " + setSQL
@@ -115,15 +115,15 @@ func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 
 	var whereSQL string
 	if listReqVo.Active == "true" {
-		whereSQL = "WHERE " + userPo.Status + "=?"
+		whereSQL = "WHERE " + userpo.Status + "=?"
 		args = append(args, userstatus.Active)
 	}
 
 	page := mysql.Page{
-		TableName:   userPo.Table,
-		ColumnNames: []string{userPo.ID, userPo.Acc, userPo.Name, userPo.RoleCode, userPo.Status},
-		UniqueKey:   userPo.PK,
-		OrderBy:     userPo.ID,
+		TableName:   userpo.Table,
+		ColumnNames: []string{userpo.ID, userpo.Acc, userpo.Name, userpo.RoleCode, userpo.Status},
+		UniqueKey:   userpo.PK,
+		OrderBy:     userpo.ID,
 		Page:        listReqVo.Page,
 		Limit:       listReqVo.Limit,
 	}

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"otter/db/mysql"
-	"otter/po/roleaclPo"
+	"otter/po/roleaclpo"
 )
 
 var DB *sql.DB
@@ -36,12 +36,12 @@ func Load() error {
 	// reset roleACL
 	roleACL = make(map[string][]Code)
 
-	var entity roleaclPo.Entity
+	var entity roleaclpo.Entity
 	sql := "SELECT #roleCode, #aclCode FROM #roleAcl"
 	param := mysql.SQLParamsInstance()
-	param.Add("roleAcl", roleaclPo.Table)
-	param.Add("roleCode", roleaclPo.RoleCode)
-	param.Add("aclCode", roleaclPo.ACLCode)
+	param.Add("roleAcl", roleaclpo.Table)
+	param.Add("roleCode", roleaclpo.RoleCode)
+	param.Add("aclCode", roleaclpo.ACLCode)
 
 	return mysql.Query(sql, param, []interface{}{}, func(result mysql.Rows) error {
 		rows := result.Rows

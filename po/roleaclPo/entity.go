@@ -1,4 +1,4 @@
-package roleaclPo
+package roleaclpo
 
 // table name
 const Table string = "role_acl"
