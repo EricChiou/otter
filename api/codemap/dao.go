@@ -2,20 +2,16 @@ package codemap
 
 import (
 	"otter/api/common"
-	"otter/constants/api"
 	"otter/db/mysql"
 	"otter/jobqueue"
 	"otter/po/codemapPo"
-	"otter/service/apihandler"
-
-	"github.com/valyala/fasthttp"
 )
 
 // Dao codemap dao
 type Dao struct{}
 
 // Add add codemap dao
-func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) apihandler.ResponseEntity {
+func (dao *Dao) Add(addReqVo AddReqVo) error {
 	run := func() interface{} {
 		columnValues := map[string]interface{}{
 			codemapPo.Type:   addReqVo.Type,
@@ -27,17 +23,22 @@ func (dao *Dao) Add(ctx *fasthttp.RequestCtx, addReqVo AddReqVo) apihandler.Resp
 
 		_, err := mysql.Insert(codemapPo.Table, columnValues)
 		if err != nil {
-			return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+			return err
 		}
 
-		return responseEntity.OK(ctx, nil)
+		return nil
 	}
 
-	return jobqueue.Codemap.NewAddJob(run).(apihandler.ResponseEntity)
+	err := jobqueue.Codemap.NewAddJob(run).(error)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Update update codemap dao
-func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) apihandler.ResponseEntity {
+func (dao *Dao) Update(updateReqVo UpdateReqVo) error {
 	args := []interface{}{updateReqVo.Code, updateReqVo.Name, updateReqVo.Type, updateReqVo.SortNo, updateReqVo.Enable, updateReqVo.ID}
 
 	params := mysql.SQLParamsInstance()
@@ -55,14 +56,14 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateReqVo UpdateReqVo) apihan
 
 	_, err := mysql.Exec(sql, params, args)
 	if err != nil {
-		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+		return err
 	}
 
-	return responseEntity.Error(ctx, api.Success, nil)
+	return nil
 }
 
 // Delete update codemap dao
-func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) apihandler.ResponseEntity {
+func (dao *Dao) Delete(deleteReqVo DeleteReqVo) error {
 	args := []interface{}{deleteReqVo.ID}
 
 	params := mysql.SQLParamsInstance()
@@ -74,14 +75,14 @@ func (dao *Dao) Delete(ctx *fasthttp.RequestCtx, deleteReqVo DeleteReqVo) apihan
 
 	_, err := mysql.Exec(sql, params, args)
 	if err != nil {
-		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+		return err
 	}
 
-	return responseEntity.Error(ctx, api.Success, nil)
+	return nil
 }
 
 // List get codemap list
-func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) apihandler.ResponseEntity {
+func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 	args := []interface{}{}
 
 	var whereSQL string
@@ -127,8 +128,8 @@ func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) apihandler.R
 		return nil
 	})
 	if err != nil {
-		return responseEntity.Page(ctx, list, mysql.ErrMsgHandler(err), err)
+		return list, err
 	}
 
-	return responseEntity.Page(ctx, list, api.Success, nil)
+	return list, nil
 }

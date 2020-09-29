@@ -3,10 +3,13 @@ package user
 import (
 	"errors"
 	"otter/constants/api"
+	"otter/constants/userstatus"
 	"otter/db/mysql"
 	"otter/interceptor"
 	"otter/service/apihandler"
+	"otter/service/jwt"
 	"otter/service/paramhandler"
+	"otter/service/sha3"
 	"strconv"
 )
 
@@ -38,14 +41,30 @@ func (con *Controller) SignIn(webInput interceptor.WebInput) apihandler.Response
 	ctx := webInput.Context.Ctx
 
 	// set param
-	var signInData SignInReqVo
-	if err := paramhandler.Set(webInput.Context, &signInData); err != nil {
+	var signInReqVo SignInReqVo
+	if err := paramhandler.Set(webInput.Context, &signInReqVo); err != nil {
 		return responseEntity.Error(ctx, api.FormatError, nil)
 	}
 
-	signInResVo, respStatus, err := con.dao.SignIn(ctx, signInData)
-	if respStatus != api.Success {
-		responseEntity.Error(ctx, respStatus, err)
+	signInBo, err := con.dao.SignIn(signInReqVo)
+	if err != nil {
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+	}
+
+	// check pwd
+	if signInBo.Pwd != sha3.Encrypt(signInReqVo.Pwd) {
+		return responseEntity.Error(ctx, api.DataError, nil)
+	}
+
+	// check account status
+	if signInBo.Status != string(userstatus.Active) {
+		return responseEntity.Error(ctx, api.AccInactive, nil)
+	}
+
+	var signInResVo SignInResVo
+	token, _ := jwt.Generate(signInBo.ID, signInBo.Acc, signInBo.Name, signInBo.RoleCode, signInBo.Name)
+	signInResVo = SignInResVo{
+		Token: token,
 	}
 
 	return responseEntity.OK(ctx, signInResVo)
@@ -66,7 +85,7 @@ func (con *Controller) Update(webInput interceptor.WebInput) apihandler.Response
 	}
 	updateData.ID = payload.ID
 
-	err := con.dao.Update(ctx, updateData)
+	err := con.dao.Update(updateData)
 	if err != nil {
 		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 	}
@@ -95,7 +114,7 @@ func (con *Controller) UpdateByUserID(webInput interceptor.WebInput) apihandler.
 	}
 	updateData.ID = int(userID)
 
-	err = con.dao.Update(ctx, updateData)
+	err = con.dao.Update(updateData)
 	if err != nil {
 		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 	}
@@ -120,9 +139,10 @@ func (con *Controller) List(webInput interceptor.WebInput) apihandler.ResponseEn
 		listReqVo.Limit = 10
 	}
 
-	list, err := con.dao.List(ctx, listReqVo)
+	list, err := con.dao.List(listReqVo)
 	if err != nil {
 		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
 	}
+
 	return responseEntity.Page(ctx, list, api.Success, nil)
 }

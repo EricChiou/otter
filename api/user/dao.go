@@ -2,16 +2,13 @@ package user
 
 import (
 	"otter/api/common"
-	"otter/constants/api"
+	"otter/bo/userbo"
 	"otter/constants/userstatus"
 	"otter/db/mysql"
 	"otter/jobqueue"
 	"otter/po/rolePo"
 	"otter/po/userPo"
-	"otter/service/jwt"
 	"otter/service/sha3"
-
-	"github.com/valyala/fasthttp"
 )
 
 // Dao user dao
@@ -39,11 +36,10 @@ func (dao *Dao) SignUp(signUp SignUpReqVo) error {
 }
 
 // SignIn dao
-func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) (*SignInResVo, api.RespStatus, error) {
-	var entity userPo.Entity
-	var roleEnt rolePo.Entity
+func (dao *Dao) SignIn(signInReqVo SignInReqVo) (userbo.SignInBo, error) {
+	var signInBo userbo.SignInBo
 
-	args := []interface{}{signIn.Acc}
+	args := []interface{}{signInReqVo.Acc}
 
 	param := mysql.SQLParamsInstance()
 	param.Add("user", userPo.Table)
@@ -64,7 +60,7 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) (*SignInRes
 
 	err := mysql.QueryRow(sql, param, args, func(result mysql.Row) error {
 		row := result.Row
-		err := row.Scan(&entity.ID, &entity.Acc, &entity.Pwd, &entity.Name, &entity.RoleCode, &entity.Status, &roleEnt.Name)
+		err := row.Scan(&signInBo.ID, &signInBo.Acc, &signInBo.Pwd, &signInBo.Name, &signInBo.RoleCode, &signInBo.Status, &signInBo.RoleName)
 		if err != nil {
 			return err
 		}
@@ -73,29 +69,14 @@ func (dao *Dao) SignIn(ctx *fasthttp.RequestCtx, signIn SignInReqVo) (*SignInRes
 	})
 	// check account existing
 	if err != nil {
-		return nil, mysql.ErrMsgHandler(err), err
+		return signInBo, err
 	}
 
-	// check pwd
-	if entity.Pwd != sha3.Encrypt(signIn.Pwd) {
-		return nil, api.DataError, nil
-	}
-
-	// check account status
-	if entity.Status != string(userstatus.Active) {
-		return nil, api.AccInactive, nil
-	}
-
-	var signInResVo SignInResVo
-	token, _ := jwt.Generate(entity.ID, entity.Acc, entity.Name, entity.RoleCode, roleEnt.Name)
-	signInResVo = SignInResVo{
-		Token: token,
-	}
-	return &signInResVo, api.Success, nil
+	return signInBo, nil
 }
 
 // Update dao
-func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateData UpdateReqVo) error {
+func (dao *Dao) Update(updateData UpdateReqVo) error {
 	args := []interface{}{}
 
 	var setSQL string
@@ -129,7 +110,7 @@ func (dao *Dao) Update(ctx *fasthttp.RequestCtx, updateData UpdateReqVo) error {
 }
 
 // List dao
-func (dao *Dao) List(ctx *fasthttp.RequestCtx, listReqVo ListReqVo) (common.PageRespVo, error) {
+func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 	args := []interface{}{}
 
 	var whereSQL string

@@ -2,6 +2,7 @@ package codemap
 
 import (
 	"otter/constants/api"
+	"otter/db/mysql"
 	"otter/interceptor"
 	"otter/service/apihandler"
 	"otter/service/paramhandler"
@@ -22,7 +23,12 @@ func (con *Controller) Add(webInput interceptor.WebInput) apihandler.ResponseEnt
 		return responseEntity.Error(ctx, api.FormatError, err)
 	}
 
-	return con.dao.Add(ctx, addReqVo)
+	err := con.dao.Add(addReqVo)
+	if err != nil {
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+	}
+
+	return responseEntity.OK(ctx, nil)
 }
 
 // Update update codemap
@@ -35,7 +41,12 @@ func (con *Controller) Update(webInput interceptor.WebInput) apihandler.Response
 		return responseEntity.Error(ctx, api.FormatError, err)
 	}
 
-	return con.dao.Update(ctx, updateReqVo)
+	err := con.dao.Update(updateReqVo)
+	if err != nil {
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+	}
+
+	return responseEntity.OK(ctx, nil)
 }
 
 // Delete delete codemap
@@ -48,7 +59,12 @@ func (con *Controller) Delete(webInput interceptor.WebInput) apihandler.Response
 		return responseEntity.Error(ctx, api.FormatError, err)
 	}
 
-	return con.dao.Delete(ctx, deleteReqVo)
+	err := con.dao.Delete(deleteReqVo)
+	if err != nil {
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+	}
+
+	return responseEntity.OK(ctx, nil)
 }
 
 // List get codemap list
@@ -68,5 +84,10 @@ func (con *Controller) List(webInput interceptor.WebInput) apihandler.ResponseEn
 		listReqVo.Limit = 10
 	}
 
-	return con.dao.List(ctx, listReqVo)
+	list, err := con.dao.List(listReqVo)
+	if err != nil {
+		return responseEntity.Error(ctx, mysql.ErrMsgHandler(err), err)
+	}
+
+	return responseEntity.Page(ctx, list, api.Success, nil)
 }
