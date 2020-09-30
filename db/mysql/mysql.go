@@ -92,7 +92,7 @@ func Insert(table string, columnValues map[string]interface{}) (sql.Result, erro
 		valueSQL = valueSQL[2:]
 	}
 
-	return tx.Exec("INSERT INTO "+table+"( "+columnSQL+" ) values( "+valueSQL+" )", args...)
+	return tx.Exec("INSERT INTO "+table+"( "+columnSQL+" ) VALUES( "+valueSQL+" )", args...)
 }
 
 // Exec execute sql
