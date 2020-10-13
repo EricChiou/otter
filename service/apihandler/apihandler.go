@@ -38,37 +38,47 @@ func (re *ResponseEntity) OK(ctx *fasthttp.RequestCtx, data interface{}) Respons
 		Trace:  nil,
 	}
 
-	bytes, _ := json.Marshal(result)
-	fmt.Fprintf(ctx, string(bytes))
+	sendResp(ctx, result)
 	return *re
 }
 
 // Error api error
-func (re *ResponseEntity) Error(ctx *fasthttp.RequestCtx, status api.RespStatus, trace interface{}) ResponseEntity {
+func (re *ResponseEntity) Error(ctx *fasthttp.RequestCtx, status api.RespStatus, err error) ResponseEntity {
 	addHeader(ctx)
 
 	result := apiResponse{
 		Status: status,
 		Data:   nil,
-		Trace:  trace,
+		Trace:  nil,
 	}
 
-	bytes, _ := json.Marshal(result)
-	fmt.Fprintf(ctx, string(bytes))
+	if err != nil {
+		result.Trace = err.Error()
+	}
+
+	sendResp(ctx, result)
 	return *re
 }
 
 // Page api page format
-func (re *ResponseEntity) Page(ctx *fasthttp.RequestCtx, list common.PageRespVo, status api.RespStatus, trace interface{}) ResponseEntity {
+func (re *ResponseEntity) Page(ctx *fasthttp.RequestCtx, list common.PageRespVo, status api.RespStatus, err error) ResponseEntity {
 	addHeader(ctx)
 
 	result := apiResponse{
 		Status: status,
 		Data:   list,
-		Trace:  trace,
+		Trace:  nil,
 	}
 
+	if err != nil {
+		result.Trace = err.Error()
+	}
+
+	sendResp(ctx, result)
+	return *re
+}
+
+func sendResp(ctx *fasthttp.RequestCtx, result apiResponse) {
 	bytes, _ := json.Marshal(result)
 	fmt.Fprintf(ctx, string(bytes))
-	return *re
 }

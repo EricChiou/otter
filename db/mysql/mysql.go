@@ -13,8 +13,8 @@ import (
 // DB mysql connecting
 var DB *sql.DB
 
-var specificCharStr string = `"':.,;(){}[]&|=+-*%/\<>^`
-var specificChar [128]bool
+// var specificCharStr string = `"':.,;(){}[]&|=+-*%/\<>^`
+// var specificChar [128]bool
 
 // SQLRow db QueryRow result
 type Row struct {
@@ -38,9 +38,9 @@ type Page struct {
 
 // Init connect MySQL
 func Init() (err error) {
-	for _, c := range specificCharStr {
-		specificChar[int(c)] = true
-	}
+	// for _, c := range specificCharStr {
+	// 	specificChar[int(c)] = true
+	// }
 
 	cfg := config.Get()
 	userName := cfg.MySQLUserName
@@ -70,54 +70,96 @@ func ErrMsgHandler(err error) api.RespStatus {
 }
 
 // Insert insert data
-func Insert(table string, columnValues map[string]interface{}) (sql.Result, error) {
-	tx, err := DB.Begin()
-	defer tx.Commit()
-	if err != nil {
-		return nil, errors.New("db not initialized")
-	}
+// func Insert(table string, columnValues map[string]interface{}) (sql.Result, error) {
+// 	tx, err := DB.Begin()
+// 	defer tx.Commit()
+// 	if err != nil {
+// 		return nil, errors.New("db not initialized")
+// 	}
 
-	columnSQL := ""
-	valueSQL := ""
-	var args []interface{}
-	for k, v := range columnValues {
-		columnSQL += ", " + k
-		valueSQL += ", ?"
-		args = append(args, v)
-	}
-	if len(columnSQL) > 2 {
-		columnSQL = columnSQL[2:]
-	}
-	if len(valueSQL) > 2 {
-		valueSQL = valueSQL[2:]
-	}
+// 	columnSQL := ""
+// 	valueSQL := ""
+// 	var args []interface{}
+// 	for k, v := range columnValues {
+// 		columnSQL += ", " + k
+// 		valueSQL += ", ?"
+// 		args = append(args, v)
+// 	}
+// 	if len(columnSQL) > 2 {
+// 		columnSQL = columnSQL[2:]
+// 	}
+// 	if len(valueSQL) > 2 {
+// 		valueSQL = valueSQL[2:]
+// 	}
 
-	return tx.Exec("INSERT INTO "+table+"( "+columnSQL+" ) VALUES( "+valueSQL+" )", args...)
-}
+// 	return tx.Exec("INSERT INTO "+table+"( "+columnSQL+" ) VALUES( "+valueSQL+" )", args...)
+// }
 
 // Exec execute sql
-func Exec(sql string, params sqlParams, args []interface{}) (sql.Result, error) {
+// func Exec(sql string, params sqlParams, args ...interface{}) (sql.Result, error) {
+// 	tx, err := DB.Begin()
+// 	defer tx.Commit()
+// 	if err != nil {
+// 		return nil, errors.New("db not initialized")
+// 	}
+
+// 	execSQL := convertSQL(sql, params.kv)
+// 	return tx.Exec(execSQL, args...)
+// }
+
+// Query query rows
+// func Query(sql string, params sqlParams, args []interface{}, rowMapper func(result Rows) error) error {
+// 	tx, err := DB.Begin()
+// 	defer tx.Commit()
+// 	if err != nil {
+// 		return errors.New("db not initialized")
+// 	}
+
+// 	execSQL := convertSQL(sql, params.kv)
+
+// 	rows, err := tx.Query(execSQL, args...)
+// 	defer rows.Close()
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return rowMapper(Rows{Rows: rows})
+// }
+
+// QueryRow query one row
+// func QueryRow(sql string, params sqlParams, args []interface{}, rowMapper func(result Row) error) error {
+// 	tx, err := DB.Begin()
+// 	defer tx.Commit()
+// 	if err != nil {
+// 		return errors.New("db not initialized")
+// 	}
+
+// 	execSQL := convertSQL(sql, params.kv)
+// 	row := tx.QueryRow(execSQL, args...)
+
+// 	return rowMapper(Row{Row: row})
+// }
+
+// Exec execute sql
+func Exec(sql string) (sql.Result, error) {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
 		return nil, errors.New("db not initialized")
 	}
 
-	execSQL := convertSQL(sql, params.kv)
-	return tx.Exec(execSQL, args...)
+	return tx.Exec(sql)
 }
 
-// Query query data
-func Query(sql string, params sqlParams, args []interface{}, rowMapper func(result Rows) error) error {
+// Query query rows
+func Query(sql string, rowMapper func(result Rows) error) error {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
 		return errors.New("db not initialized")
 	}
 
-	execSQL := convertSQL(sql, params.kv)
-
-	rows, err := tx.Query(execSQL, args...)
+	rows, err := tx.Query(sql)
 	defer rows.Close()
 	if err != nil {
 		return err
@@ -127,15 +169,14 @@ func Query(sql string, params sqlParams, args []interface{}, rowMapper func(resu
 }
 
 // QueryRow query one row
-func QueryRow(sql string, params sqlParams, args []interface{}, rowMapper func(result Row) error) error {
+func QueryRow(sql string, rowMapper func(result Row) error) error {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
 		return errors.New("db not initialized")
 	}
 
-	execSQL := convertSQL(sql, params.kv)
-	row := tx.QueryRow(execSQL, args...)
+	row := tx.QueryRow(sql)
 
 	return rowMapper(Row{Row: row})
 }
@@ -183,37 +224,37 @@ func QueryPage(page Page, whereSQL string, args []interface{}, rowMapper func(re
 	return nil
 }
 
-func convertSQL(originalSql string, params map[string]string) string {
-	convertSql := ""
+// func convertSQL(originalSql string, params map[string]string) string {
+// 	convertSql := ""
 
-	preIndex := 0
-	for i := 0; i < len(originalSql)-1; i++ {
-		if originalSql[i:i+1] == "#" {
-			key := getKey(originalSql, i+1)
-			value := params[key]
-			if len(value) > 0 {
-				convertSql += originalSql[preIndex:i] + value
-				i += len(key)
-				preIndex = i + 1
-			}
-		}
-	}
-	convertSql += originalSql[preIndex:]
+// 	preIndex := 0
+// 	for i := 0; i < len(originalSql)-1; i++ {
+// 		if originalSql[i:i+1] == "#" {
+// 			key := getKey(originalSql, i+1)
+// 			value := params[key]
+// 			if len(value) > 0 {
+// 				convertSql += originalSql[preIndex:i] + value
+// 				i += len(key)
+// 				preIndex = i + 1
+// 			}
+// 		}
+// 	}
+// 	convertSql += originalSql[preIndex:]
 
-	return convertSql
-}
+// 	return convertSql
+// }
 
-func getKey(original string, startIndex int) string {
-	for j := startIndex; j < len(original); j++ {
-		if isSpecificChar([]rune(original[j : j+1])[0]) {
-			key := original[startIndex:j]
-			return key
-		}
-	}
+// func getKey(original string, startIndex int) string {
+// 	for j := startIndex; j < len(original); j++ {
+// 		if isSpecificChar([]rune(original[j : j+1])[0]) {
+// 			key := original[startIndex:j]
+// 			return key
+// 		}
+// 	}
 
-	return original[startIndex:]
-}
+// 	return original[startIndex:]
+// }
 
-func isSpecificChar(c rune) bool {
-	return (c < 128 && specificChar[c]) || c == ' '
-}
+// func isSpecificChar(c rune) bool {
+// 	return (c < 128 && specificChar[c]) || c == ' '
+// }

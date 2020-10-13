@@ -9,6 +9,8 @@ import (
 	"otter/po/rolepo"
 	"otter/po/userpo"
 	"otter/service/sha3"
+
+	"github.com/EricChiou/gooq"
 )
 
 // Dao user dao
@@ -19,46 +21,32 @@ func (dao *Dao) SignUp(signUp SignUpReqVo) error {
 	run := func() interface{} {
 		// encrypt password
 		encryptPwd := sha3.Encrypt(signUp.Pwd)
-		columnValues := map[string]interface{}{
-			userpo.Acc:  signUp.Acc,
-			userpo.Pwd:  encryptPwd,
-			userpo.Name: signUp.Name,
-		}
 
-		if _, err := mysql.Insert(userpo.Table, columnValues); err != nil {
+		var sql gooq.SQL
+		sql.Insert(userpo.Table, userpo.Acc, userpo.Pwd, userpo.Name).
+			Values(s(signUp.Acc), s(encryptPwd), s(signUp.Name))
+
+		if _, err := mysql.Exec(sql.GetSQL()); err != nil {
 			return err
 		}
 
 		return nil
 	}
 
-	return jobqueue.User.NewSignUpJob(run).(error)
+	return jobqueue.User.NewSignUpJob(run)
 }
 
 // SignIn dao
 func (dao *Dao) SignIn(signInReqVo SignInReqVo) (userbo.SignInBo, error) {
 	var signInBo userbo.SignInBo
 
-	args := []interface{}{signInReqVo.Acc}
+	var sql gooq.SQL
+	sql.Select(userpo.ID, userpo.Acc, userpo.Pwd, userpo.Name, userpo.RoleCode, userpo.Status, rolepo.Name).
+		From(userpo.Table).
+		Join(rolepo.Table).On(c(userpo.RoleCode).Eq(rolepo.Code)).
+		Where(c(userpo.Acc).Eq(s(signInReqVo.Acc)))
 
-	param := mysql.SQLParamsInstance()
-	param.Add("user", userpo.Table)
-	param.Add("id", userpo.ID)
-	param.Add("acc", userpo.Acc)
-	param.Add("pwd", userpo.Pwd)
-	param.Add("name", userpo.Name)
-	param.Add("roleCode", userpo.RoleCode)
-	param.Add("status", userpo.Status)
-	param.Add("role", rolepo.Table)
-	param.Add("roleName", rolepo.Name)
-	param.Add("code", rolepo.Code)
-
-	sql := "SELECT user.#id, user.#acc, user.#pwd, user.#name, user.#roleCode, user.#status, role.#roleName "
-	sql += "FROM #user user "
-	sql += "INNER JOIN #role role ON user.#roleCode=role.#code "
-	sql += "WHERE user.#acc=?"
-
-	err := mysql.QueryRow(sql, param, args, func(result mysql.Row) error {
+	err := mysql.QueryRow(sql.GetSQL(), func(result mysql.Row) error {
 		row := result.Row
 		err := row.Scan(&signInBo.ID, &signInBo.Acc, &signInBo.Pwd, &signInBo.Name, &signInBo.RoleCode, &signInBo.Status, &signInBo.RoleName)
 		if err != nil {
@@ -77,31 +65,18 @@ func (dao *Dao) SignIn(signInReqVo SignInReqVo) (userbo.SignInBo, error) {
 
 // Update dao
 func (dao *Dao) Update(updateData UpdateReqVo) error {
-	args := []interface{}{}
-
-	var setSQL string
+	var conditions []gooq.Condition
 	if len(updateData.Name) != 0 {
-		setSQL += ", #name=?"
-		args = append(args, updateData.Name)
+		conditions = append(conditions, c(userpo.Name).Eq(s(updateData.Name)))
 	}
 	if len(updateData.Pwd) != 0 {
-		setSQL += ", #pwd=?"
-		args = append(args, sha3.Encrypt(updateData.Pwd))
+		conditions = append(conditions, c(userpo.Pwd).Eq(s(sha3.Encrypt(updateData.Pwd))))
 	}
-	setSQL = setSQL[2:] + " "
-	args = append(args, updateData.ID)
 
-	params := mysql.SQLParamsInstance()
-	params.Add("user", userpo.Table)
-	params.Add("name", userpo.Name)
-	params.Add("pwd", userpo.Pwd)
-	params.Add("id", userpo.ID)
+	var sql gooq.SQL
+	sql.Update(userpo.Table).Set(conditions...).Where(c(userpo.ID).Eq(updateData.ID))
 
-	sql := "UPDATE #user "
-	sql += "SET " + setSQL
-	sql += "WHERE #id=?"
-
-	_, err := mysql.Exec(sql, params, args)
+	_, err := mysql.Exec(sql.GetSQL())
 	if err != nil {
 		return err
 	}

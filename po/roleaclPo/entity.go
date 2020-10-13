@@ -4,7 +4,16 @@ package roleaclpo
 const Table string = "role_acl"
 
 // pk name
-const PK string = "id"
+const PK string = "role_acl.id"
+
+// column name
+const (
+	ID          string = "role_acl.id"
+	RoleCode    string = "role_acl.role_code"
+	ACLCode     string = "role_acl.acl_code"
+	CreatedDate string = "role_acl.created_date"
+	UpdatedDate string = "role_acl.updated_date"
+)
 
 // Entity role_acl table entity
 type Entity struct {
@@ -14,12 +23,3 @@ type Entity struct {
 	CreatedDate string `json:"creatDate,omitempty"`
 	UpdatedDate string `json:"updateDate,omitempty"`
 }
-
-// column name
-const (
-	ID          string = "id"
-	RoleCode    string = "role_code"
-	ACLCode     string = "acl_code"
-	CreatedDate string = "created_date"
-	UpdatedDate string = "updated_date"
-)

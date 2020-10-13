@@ -1,3 +1,9 @@
+github.com/EricChiou/gooq v0.0.0-20201011092606-89eed72d5e76 h1:A7SFMpZS2YzmVQy7bAUtt8Ope2Sk3WD3Z0uSqYvsTPk=
+github.com/EricChiou/gooq v0.0.0-20201011092606-89eed72d5e76/go.mod h1:Y4Yw2T7HcqgFw8qOvBK6Is/YVs6eAcU2oBSJ+JoiYKQ=
+github.com/EricChiou/gooq v0.0.0-20201011131814-7f30bf433726 h1:Gnl50VTxuVbMObpyGOPxwZ3bhxKSEWvf1t2tP0tTZ9Y=
+github.com/EricChiou/gooq v0.0.0-20201011131814-7f30bf433726/go.mod h1:Y4Yw2T7HcqgFw8qOvBK6Is/YVs6eAcU2oBSJ+JoiYKQ=
+github.com/EricChiou/gooq v0.0.0-20201013155129-a17fdb5a2a27 h1:r1w2WHtmLfpz9e1nhefBbSaSSMb+Gz/jm3kYJdMdH0E=
+github.com/EricChiou/gooq v0.0.0-20201013155129-a17fdb5a2a27/go.mod h1:Y4Yw2T7HcqgFw8qOvBK6Is/YVs6eAcU2oBSJ+JoiYKQ=
 github.com/EricChiou/httprouter v0.0.0-20191104062635-693a8c144fab h1:BEzyrCQaDa50VEhbkaMibTKgVMB03ELOXa+wsjG96YQ=
 github.com/EricChiou/httprouter v0.0.0-20191104062635-693a8c144fab/go.mod h1:EU0vNQOFIs7zhbDdFAk7IXP5mzQQEiz4CoO4Vkdo3OM=
 github.com/EricChiou/httprouter v0.0.0-20200824013711-3174db4925cd h1:S97zU8nzEIuP0FdBmeKlfGF+7FrHwJeVQm1BlldoqWU=
@@ -53,6 +59,10 @@ golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de h1:ikNHVSjEfnvz6sxdSPCaPt
 golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a h1:vclmkQCjlDX5OydZ9wv8rBCcS0QyQY66Mpf/7BZbInM=
 golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
+golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0 h1:hb9wdF1z5waM+dSIICn1l0DkLVDT3hqhhQsDNUmHPRE=
+golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
+golang.org/x/crypto v0.0.0-20201012173705-84dcc777aaee h1:4yd7jl+vXjalO5ztz6Vc1VADv+S/80LGJmyl1ROJ2AI=
+golang.org/x/crypto v0.0.0-20201012173705-84dcc777aaee/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/net v0.0.0-20190603091049-60506f45cf65/go.mod h1:HSz+uSET+XFnRR8LxR5pz3Of3rY3CfYBVs4xY44aLks=
 golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=

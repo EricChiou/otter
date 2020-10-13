@@ -5,6 +5,8 @@ import (
 
 	"otter/db/mysql"
 	"otter/po/roleaclpo"
+
+	"github.com/EricChiou/gooq"
 )
 
 var DB *sql.DB
@@ -37,13 +39,16 @@ func Load() error {
 	roleACL = make(map[string][]Code)
 
 	var entity roleaclpo.Entity
-	sql := "SELECT #roleCode, #aclCode FROM #roleAcl"
-	param := mysql.SQLParamsInstance()
-	param.Add("roleAcl", roleaclpo.Table)
-	param.Add("roleCode", roleaclpo.RoleCode)
-	param.Add("aclCode", roleaclpo.ACLCode)
+	// sql := "SELECT #roleCode, #aclCode FROM #roleAcl"
+	// param := mysql.SQLParamsInstance()
+	// param.Add("roleAcl", roleaclpo.Table)
+	// param.Add("roleCode", roleaclpo.RoleCode)
+	// param.Add("aclCode", roleaclpo.ACLCode)
 
-	return mysql.Query(sql, param, []interface{}{}, func(result mysql.Rows) error {
+	var sql gooq.SQL
+	sql.Select(roleaclpo.RoleCode, roleaclpo.ACLCode).From(roleaclpo.Table)
+
+	return mysql.Query(sql.GetSQL(), func(result mysql.Rows) error {
 		rows := result.Rows
 
 		for rows.Next() {
