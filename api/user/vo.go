@@ -1,6 +1,7 @@
 package user
 
 // request vo
+
 // SignUpReqVo user sign up request data vo
 type SignUpReqVo struct {
 	Acc  string `json:"acc" req:"true"`
@@ -21,6 +22,7 @@ type UpdateReqVo struct {
 	Pwd  string `json:"pwd"`
 }
 
+// ListReqVo List request vo
 type ListReqVo struct {
 	Page   int    `json:"page"`
 	Limit  int    `json:"limit"`
@@ -28,6 +30,7 @@ type ListReqVo struct {
 }
 
 // response vo
+
 // SignInResVo user sign in response data vo
 type SignInResVo struct {
 	Token string `json:"token"`

@@ -1,25 +1,26 @@
 package mysql
 
-type sqlParams struct {
+// SQLParams sql parameters
+type SQLParams struct {
 	kv map[string]string
 }
 
 // Add value with key
-func (params *sqlParams) Add(key string, value string) {
+func (params *SQLParams) Add(key string, value string) {
 	params.kv[key] = value
 }
 
 // Get value with key
-func (params *sqlParams) Get(key string) string {
+func (params *SQLParams) Get(key string) string {
 	return params.kv[key]
 }
 
 // Remove value which key equal to input parameter
-func (params *sqlParams) Remove(key string) {
+func (params *SQLParams) Remove(key string) {
 	delete(params.kv, key)
 }
 
-// GetSQLParamsInstance get sqlParams instance
-func SQLParamsInstance() sqlParams {
-	return sqlParams{kv: map[string]string{}}
+// SQLParamsInstance get sqlParams instance
+func SQLParamsInstance() SQLParams {
+	return SQLParams{kv: map[string]string{}}
 }

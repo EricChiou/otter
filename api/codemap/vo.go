@@ -1,6 +1,7 @@
 package codemap
 
 // request vo
+
 // AddReqVo add codemap vo
 type AddReqVo struct {
 	Type   string `json:"type" req:"true"`
@@ -34,6 +35,7 @@ type ListReqVo struct {
 }
 
 // response vo
+
 // ListResVo codemap list data vo
 type ListResVo struct {
 	ID     int    `json:"id"`

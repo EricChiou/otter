@@ -9,8 +9,6 @@ import (
 	"github.com/EricChiou/gooq"
 )
 
-var DB *sql.DB
-
 // Code acl code type
 type Code string
 
@@ -21,7 +19,7 @@ const (
 	UpdateCodemap Code = "updateCodemap"
 	// DeleteCodemap acl code
 	DeleteCodemap Code = "deleteCodemap"
-	// UpdateUserInfo acl code
+	// UpdateUser acl code
 	UpdateUser Code = "updateUser"
 	// DeleteUser acl code
 	DeleteUser Code = "deleteUser"
@@ -38,17 +36,12 @@ func Load() error {
 	// reset roleACL
 	roleACL = make(map[string][]Code)
 
-	var entity roleaclpo.Entity
-	// sql := "SELECT #roleCode, #aclCode FROM #roleAcl"
-	// param := mysql.SQLParamsInstance()
-	// param.Add("roleAcl", roleaclpo.Table)
-	// param.Add("roleCode", roleaclpo.RoleCode)
-	// param.Add("aclCode", roleaclpo.ACLCode)
-
 	var sql gooq.SQL
 	sql.Select(roleaclpo.RoleCode, roleaclpo.ACLCode).From(roleaclpo.Table)
 
-	return mysql.Query(sql.GetSQL(), func(result mysql.Rows) error {
+	var entity roleaclpo.Entity
+	gooq := mysql.Gooq{}
+	return gooq.Query(sql.GetSQL(), func(result mysql.Rows) error {
 		rows := result.Rows
 
 		for rows.Next() {

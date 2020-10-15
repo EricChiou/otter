@@ -10,7 +10,9 @@ import (
 )
 
 // Dao codemap dao
-type Dao struct{}
+type Dao struct {
+	gooq mysql.Gooq
+}
 
 // Add add codemap dao
 func (dao *Dao) Add(addReqVo AddReqVo) error {
@@ -19,7 +21,7 @@ func (dao *Dao) Add(addReqVo AddReqVo) error {
 		sql.Insert(codemappo.Table, codemappo.Type, codemappo.Code, codemappo.Name, codemappo.SortNo, codemappo.Enable).
 			Values(s(addReqVo.Type), s(addReqVo.Code), s(addReqVo.Name), addReqVo.SortNo, addReqVo.Enable)
 
-		if _, err := mysql.Exec(sql.GetSQL()); err != nil {
+		if _, err := dao.gooq.Exec(sql.GetSQL()); err != nil {
 			return err
 		}
 
@@ -36,7 +38,7 @@ func (dao *Dao) Update(updateReqVo UpdateReqVo) error {
 		Set(c(codemappo.Code).Eq(s(updateReqVo.Code)), c(codemappo.Name).Eq(s(updateReqVo.Name)), c(codemappo.Type).Eq(s(updateReqVo.Type)), c(codemappo.SortNo).Eq(updateReqVo.SortNo), c(codemappo.Enable).Eq(updateReqVo.Enable)).
 		Where(c(codemappo.ID).Eq(updateReqVo.ID))
 
-	_, err := mysql.Exec(sql.GetSQL())
+	_, err := dao.gooq.Exec(sql.GetSQL())
 	if err != nil {
 		return err
 	}
@@ -49,7 +51,7 @@ func (dao *Dao) Delete(deleteReqVo DeleteReqVo) error {
 	var sql gooq.SQL
 	sql.Delete(codemappo.Table).Where(c(codemappo.ID).Eq(deleteReqVo.ID))
 
-	_, err := mysql.Exec(sql.GetSQL())
+	_, err := dao.gooq.Exec(sql.GetSQL())
 	if err != nil {
 		return err
 	}
