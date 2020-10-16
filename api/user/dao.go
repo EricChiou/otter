@@ -1,6 +1,7 @@
 package user
 
 import (
+	"database/sql"
 	"otter/api/common"
 	"otter/bo/userbo"
 	"otter/constants/userstatus"
@@ -14,6 +15,12 @@ import (
 	"github.com/EricChiou/gooq"
 )
 
+type Row struct {
+	Rows *sql.Rows
+}
+
+var rows *sql.Rows
+
 // Dao user dao
 type Dao struct {
 	gooq mysql.Gooq
@@ -25,11 +32,11 @@ func (dao *Dao) SignUp(signUp SignUpReqVo) error {
 		// encrypt password
 		encryptPwd := sha3.Encrypt(signUp.Pwd)
 
-		var sql gooq.SQL
-		sql.Insert(userpo.Table, userpo.Acc, userpo.Pwd, userpo.Name).
+		var SQL gooq.SQL
+		SQL.Insert(userpo.Table, userpo.Acc, userpo.Pwd, userpo.Name).
 			Values(s(signUp.Acc), s(encryptPwd), s(signUp.Name))
 
-		if _, err := dao.gooq.Exec(sql.GetSQL()); err != nil {
+		if _, err := dao.gooq.Exec(SQL.GetSQL(), nil); err != nil {
 			return err
 		}
 
@@ -43,14 +50,13 @@ func (dao *Dao) SignUp(signUp SignUpReqVo) error {
 func (dao *Dao) SignIn(signInReqVo SignInReqVo) (userbo.SignInBo, error) {
 	var signInBo userbo.SignInBo
 
-	var sql gooq.SQL
-	sql.Select(userpo.ID, userpo.Acc, userpo.Pwd, userpo.Name, userpo.RoleCode, userpo.Status, rolepo.Name).
+	var SQL gooq.SQL
+	SQL.Select(userpo.Table+"."+userpo.ID, userpo.Acc, userpo.Pwd, userpo.Table+"."+userpo.Name, userpo.RoleCode, userpo.Status, rolepo.Table+"."+rolepo.Name).
 		From(userpo.Table).
 		Join(rolepo.Table).On(c(userpo.RoleCode).Eq(rolepo.Code)).
 		Where(c(userpo.Acc).Eq(s(signInReqVo.Acc)))
 
-	err := dao.gooq.QueryRow(sql.GetSQL(), func(result mysql.Row) error {
-		row := result.Row
+	err := dao.gooq.QueryRow(SQL.GetSQL(), func(row *sql.Row) error {
 		err := row.Scan(&signInBo.ID, &signInBo.Acc, &signInBo.Pwd, &signInBo.Name, &signInBo.RoleCode, &signInBo.Status, &signInBo.RoleName)
 		if err != nil {
 			return err
@@ -76,10 +82,10 @@ func (dao *Dao) Update(updateData UpdateReqVo) error {
 		conditions = append(conditions, c(userpo.Pwd).Eq(s(sha3.Encrypt(updateData.Pwd))))
 	}
 
-	var sql gooq.SQL
-	sql.Update(userpo.Table).Set(conditions...).Where(c(userpo.ID).Eq(updateData.ID))
+	var SQL gooq.SQL
+	SQL.Update(userpo.Table).Set(conditions...).Where(c(userpo.ID).Eq(updateData.ID))
 
-	_, err := dao.gooq.Exec(sql.GetSQL())
+	_, err := dao.gooq.Exec(SQL.GetSQL(), nil)
 	if err != nil {
 		return err
 	}
@@ -91,9 +97,9 @@ func (dao *Dao) Update(updateData UpdateReqVo) error {
 func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 	index := (listReqVo.Page - 1) * listReqVo.Limit
 
-	var sql gooq.SQL
+	var SQL gooq.SQL
 	var subSQL gooq.SQL
-	sql.Select(userpo.ID, userpo.Acc, userpo.Name, userpo.RoleCode, userpo.Status).
+	SQL.Select(userpo.ID, userpo.Acc, userpo.Name, userpo.RoleCode, userpo.Status).
 		From(userpo.Table).
 		Join(subSQL.Lp().
 			Select(userpo.PK).From(userpo.Table).
@@ -103,7 +109,7 @@ func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 		Using(userpo.PK)
 
 	if listReqVo.Active == "true" {
-		sql.Where(c(userpo.Status).Eq(s(string(userstatus.Active))))
+		SQL.Where(c(userpo.Status).Eq(s(string(userstatus.Active))))
 	}
 
 	list := common.PageRespVo{
@@ -112,8 +118,8 @@ func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 		Limit:   listReqVo.Limit,
 		Total:   0,
 	}
-	if err := dao.gooq.Query(sql.GetSQL(), func(result mysql.Rows) error {
-		rows := result.Rows
+
+	if err := dao.gooq.Query(SQL.GetSQL(), func(rows *sql.Rows) error {
 		for rows.Next() {
 			var record ListResVo
 			err := rows.Scan(&record.ID, &record.Acc, &record.Name, &record.RoleCode, &record.Status)
@@ -135,16 +141,13 @@ func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 	}
 
 	var total int
-	if err := dao.gooq.QueryRow(countSQL.GetSQL(), func(row mysql.Row) error {
-		if row.Row.Err() != nil {
-			return row.Row.Err()
-		}
-		row.Row.Scan(&total)
-		return nil
+	if err := dao.gooq.QueryRow(countSQL.GetSQL(), func(row *sql.Row) error {
+		return row.Scan(&total)
 
 	}); err != nil {
 		return list, err
 	}
+	list.Total = total
 
 	return list, nil
 }

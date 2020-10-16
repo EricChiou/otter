@@ -51,7 +51,7 @@ func (g *Gdbc) Exec(sql string, params SQLParams, args ...interface{}) (sql.Resu
 }
 
 // Query query rows
-func (g *Gdbc) Query(sql string, params SQLParams, args []interface{}, rowMapper func(result Rows) error) error {
+func (g *Gdbc) Query(sql string, params SQLParams, rowMapper func(rows *sql.Rows) error, args ...interface{}) error {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -66,11 +66,11 @@ func (g *Gdbc) Query(sql string, params SQLParams, args []interface{}, rowMapper
 		return err
 	}
 
-	return rowMapper(Rows{Rows: rows})
+	return rowMapper(rows)
 }
 
 // QueryRow query one row
-func (g *Gdbc) QueryRow(sql string, params SQLParams, args []interface{}, rowMapper func(result Row) error) error {
+func (g *Gdbc) QueryRow(sql string, params SQLParams, rowMapper func(row *sql.Row) error, args ...interface{}) error {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -80,11 +80,11 @@ func (g *Gdbc) QueryRow(sql string, params SQLParams, args []interface{}, rowMap
 	execSQL := convertSQL(sql, params.kv)
 	row := tx.QueryRow(execSQL, args...)
 
-	return rowMapper(Row{Row: row})
+	return rowMapper(row)
 }
 
 // QueryPage query page format
-func (g *Gdbc) QueryPage(page Page, whereSQL string, args []interface{}, rowMapper func(result Rows, total int) error) error {
+func (g *Gdbc) QueryPage(page Page, whereSQL string, rowMapper func(rows *sql.Rows, total int) error, args ...interface{}) error {
 	tx, err := DB.Begin()
 	defer tx.Commit()
 	if err != nil {
@@ -122,7 +122,7 @@ func (g *Gdbc) QueryPage(page Page, whereSQL string, args []interface{}, rowMapp
 	row := tx.QueryRow(sql, args...)
 	row.Scan(&total)
 
-	rowMapper(Rows{Rows: rows}, total)
+	rowMapper(rows, total)
 	return nil
 }
 

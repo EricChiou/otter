@@ -4,18 +4,18 @@ package userpo
 const Table string = "user"
 
 // pk name
-const PK string = "user.id"
+const PK string = "id"
 
 // column name
 const (
-	ID          string = "user.id"
-	Acc         string = "user.acc"
-	Pwd         string = "user.pwd"
-	Name        string = "user.name"
-	RoleCode    string = "user.role_code"
-	Status      string = "user.status"
-	CreatedDate string = "user.created_date"
-	UpdatedDate string = "user.updated_date"
+	ID          string = "id"
+	Acc         string = "acc"
+	Pwd         string = "pwd"
+	Name        string = "name"
+	RoleCode    string = "role_code"
+	Status      string = "status"
+	CreatedDate string = "created_date"
+	UpdatedDate string = "updated_date"
 )
 
 // Entity user table entity

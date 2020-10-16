@@ -4,18 +4,18 @@ package codemappo
 const Table string = "codemap"
 
 // pk name
-const PK string = "codemap.id"
+const PK string = "id"
 
 // column name
 const (
-	ID          string = "codemap.id"
-	Type        string = "codemap.type"
-	Code        string = "codemap.code"
-	Name        string = "codemap.name"
-	SortNo      string = "codemap.sort_no"
-	Enable      string = "codemap.enable"
-	CreatedDate string = "codemap.created_date"
-	UpdatedDate string = "codemap.updated_date"
+	ID          string = "id"
+	Type        string = "type"
+	Code        string = "code"
+	Name        string = "name"
+	SortNo      string = "sort_no"
+	Enable      string = "enable"
+	CreatedDate string = "created_date"
+	UpdatedDate string = "updated_date"
 )
 
 // Entity codemap table entity

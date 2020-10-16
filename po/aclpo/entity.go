@@ -4,19 +4,19 @@ package aclpo
 const Table string = "acl"
 
 // pk name
-const PK string = "acl.id"
+const PK string = "id"
 
 // column name
 const (
-	ID          string = "acl.id"
-	Code        string = "acl.code"
-	Name        string = "acl.name"
-	Type        string = "acl.type"
-	Lv          string = "acl.lv"
-	SortNo      string = "acl.sort_no"
-	Enable      string = "acl.enable"
-	CreatedDate string = "acl.created_date"
-	UpdatedDate string = "acl.updated_date"
+	ID          string = "id"
+	Code        string = "code"
+	Name        string = "name"
+	Type        string = "type"
+	Lv          string = "lv"
+	SortNo      string = "sort_no"
+	Enable      string = "enable"
+	CreatedDate string = "created_date"
+	UpdatedDate string = "updated_date"
 )
 
 // Entity acl table entity

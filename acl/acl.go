@@ -36,14 +36,12 @@ func Load() error {
 	// reset roleACL
 	roleACL = make(map[string][]Code)
 
-	var sql gooq.SQL
-	sql.Select(roleaclpo.RoleCode, roleaclpo.ACLCode).From(roleaclpo.Table)
+	var SQL gooq.SQL
+	SQL.Select(roleaclpo.RoleCode, roleaclpo.ACLCode).From(roleaclpo.Table)
 
 	var entity roleaclpo.Entity
 	gooq := mysql.Gooq{}
-	return gooq.Query(sql.GetSQL(), func(result mysql.Rows) error {
-		rows := result.Rows
-
+	return gooq.Query(SQL.GetSQL(), func(rows *sql.Rows) error {
 		for rows.Next() {
 			err := rows.Scan(&entity.RoleCode, &entity.ACLCode)
 			if err != nil {

@@ -11,16 +11,6 @@ import (
 // DB mysql connecting
 var DB *sql.DB
 
-// Row db QueryRow result
-type Row struct {
-	Row *sql.Row
-}
-
-// Rows db Query result
-type Rows struct {
-	Rows *sql.Rows
-}
-
 // Page QueryPage input struct
 type Page struct {
 	TableName   string

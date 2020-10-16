@@ -4,18 +4,18 @@ package rolepo
 const Table string = "role"
 
 // pk name
-const PK string = "role.id"
+const PK string = "id"
 
 // column name
 const (
-	ID          string = "role.id"
-	Code        string = "role.code"
-	Name        string = "role.name"
-	Lv          string = "role.lv"
-	SortNo      string = "role.sort_no"
-	Enable      string = "role.enable"
-	CreatedDate string = "role.created_date"
-	UpdatedDate string = "role.updated_date"
+	ID          string = "id"
+	Code        string = "code"
+	Name        string = "name"
+	Lv          string = "lv"
+	SortNo      string = "sort_no"
+	Enable      string = "enable"
+	CreatedDate string = "created_date"
+	UpdatedDate string = "updated_date"
 )
 
 // Entity role table entity
