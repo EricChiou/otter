@@ -3,10 +3,20 @@ package mysql
 import (
 	"database/sql"
 	"errors"
+
+	"github.com/EricChiou/gooq"
 )
 
 // Gooq instance
-type Gooq struct{}
+type Gooq struct {
+	SQL  gooq.SQL
+	Args []interface{}
+}
+
+// AddValues add args
+func (g *Gooq) AddValues(values ...interface{}) {
+	g.Args = append(g.Args, values...)
+}
 
 // Exec execute sql
 func (g *Gooq) Exec(sql string, args ...interface{}) (sql.Result, error) {
