@@ -10,6 +10,18 @@ import (
 	"strings"
 )
 
+// AlgTyp jwt alg type
+type AlgTyp string
+
+const (
+	// HS256 encrypt alg
+	HS256 AlgTyp = "HS256"
+	// HS384 encrypt alg
+	HS384 AlgTyp = "HS384"
+	// HS512 encrypt alg
+	HS512 AlgTyp = "HS512"
+)
+
 // GenerateJWT generate jwt
 func GenerateJWT(payload interface{}, alg, key string) (string, error) {
 	// header

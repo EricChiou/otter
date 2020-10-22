@@ -33,7 +33,7 @@ func SetHeader(key string, value string) {
 
 func newFHServer() *fasthttp.Server {
 	return &fasthttp.Server{
-		Name:    config.ServerName,
+		Name:    config.Get().ServerName,
 		Handler: httprouter.FasthttpHandler(),
 	}
 }

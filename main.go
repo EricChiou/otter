@@ -14,7 +14,7 @@ import (
 
 func main() {
 	// load config
-	if err := config.Load(config.ConfigFilePath); err != nil {
+	if err := config.Load(config.ConfigPath); err != nil {
 		panic(err)
 	}
 	cfg := config.Get()

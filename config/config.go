@@ -1,13 +1,14 @@
 package config
 
 import (
-	"otter/constants/jwt"
-	conf "otter/pkg/config"
-	"reflect"
+	"otter/pkg/jwt"
+
+	"github.com/EricChiou/config"
 )
 
-// config struct, set parameter in config.ini file
-type config struct {
+// Config struct, set parameter in config.ini file
+type Config struct {
+	ServerName      string `key:"SERVER_NAME"`
 	ServerPort      string `key:"SERVER_PORT"`
 	SSLCertFilePath string `key:"SSL_CERT_FILE_PATH"`
 	SSLKeyFilePath  string `key:"SSL_KEY_FILE_PATH"`
@@ -23,32 +24,19 @@ type config struct {
 
 // config setting, set parameter here straightly
 const (
-	ConfigFilePath string     = "./config.ini"
-	ServerName     string     = "otter framework"
-	JwtAlg         jwt.AlgTyp = jwt.HS256
-	Sha3Len        int        = 256
+	ConfigPath string     = "./config.ini"
+	JwtAlg     jwt.AlgTyp = jwt.HS256
+	Sha3Len    int        = 256
 )
 
-var cfg = config{}
+var cfg = Config{}
 
-// LoadConfig load config from config.ini
-func Load(configFilePath string) error {
-	keyValue, err := conf.LoadConfigFile(configFilePath)
-	if err != nil {
-		return err
-	}
-
-	keys := reflect.TypeOf(&cfg).Elem()
-	values := reflect.ValueOf(&cfg).Elem()
-	for i := 0; i < keys.NumField(); i++ {
-		if len(keyValue[keys.Field(i).Tag.Get("key")]) != 0 {
-			values.Field(i).SetString(keyValue[keys.Field(i).Tag.Get("key")])
-		}
-	}
-	return nil
+// Load config from config.ini
+func Load(filePath string) error {
+	return config.Load(filePath, &cfg)
 }
 
 // Get config
-func Get() config {
+func Get() Config {
 	return cfg
 }
