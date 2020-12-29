@@ -78,7 +78,7 @@ func (re *ResponseEntity) Page(ctx *fasthttp.RequestCtx, list common.PageRespVo,
 	return *re
 }
 
-// Empty return empty ResponseEntity and not send any response
+// Empty return ResponseEntity and not set any header or send any response
 func (re *ResponseEntity) Empty() ResponseEntity {
 	return *re
 }
