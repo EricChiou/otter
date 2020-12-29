@@ -78,6 +78,11 @@ func (re *ResponseEntity) Page(ctx *fasthttp.RequestCtx, list common.PageRespVo,
 	return *re
 }
 
+// Empty return empty ResponseEntity and not send any response
+func (re *ResponseEntity) Empty() ResponseEntity {
+	return *re
+}
+
 func sendResp(ctx *fasthttp.RequestCtx, result apiResponse) {
 	bytes, _ := json.Marshal(result)
 	fmt.Fprintf(ctx, string(bytes))
