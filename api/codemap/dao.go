@@ -11,19 +11,24 @@ import (
 )
 
 // Dao codemap dao
-type Dao struct {
-	gooq mysql.Gooq
-}
+type Dao struct{}
 
 // Add add codemap dao
 func (dao *Dao) Add(addReqVo AddReqVo) error {
 	run := func() interface{} {
 		var g mysql.Gooq
-		g.SQL.Insert(codemappo.Table, codemappo.Type, codemappo.Code, codemappo.Name, codemappo.SortNo, codemappo.Enable).
+		g.SQL.Insert(
+			codemappo.Table,
+			codemappo.Type,
+			codemappo.Code,
+			codemappo.Name,
+			codemappo.SortNo,
+			codemappo.Enable,
+		).
 			Values("?", "?", "?", "?", "?")
 		g.AddValues(addReqVo.Type, addReqVo.Code, addReqVo.Name, addReqVo.SortNo, addReqVo.Enable)
 
-		if _, err := dao.gooq.Exec(g.SQL.GetSQL(), g.Args...); err != nil {
+		if _, err := g.Exec(); err != nil {
 			return err
 		}
 
@@ -37,12 +42,18 @@ func (dao *Dao) Add(addReqVo AddReqVo) error {
 func (dao *Dao) Update(updateReqVo UpdateReqVo) error {
 	var g mysql.Gooq
 	g.SQL.Update(codemappo.Table).
-		Set(c(codemappo.Code).Eq("?"), c(codemappo.Name).Eq("?"), c(codemappo.Type).Eq("?"), c(codemappo.SortNo).Eq("?"), c(codemappo.Enable).Eq("?")).
+		Set(
+			c(codemappo.Code).Eq("?"),
+			c(codemappo.Name).Eq("?"),
+			c(codemappo.Type).Eq("?"),
+			c(codemappo.SortNo).Eq("?"),
+			c(codemappo.Enable).Eq("?"),
+		).
 		Where(c(codemappo.ID).Eq("?"))
 	g.AddValues(updateReqVo.Code, updateReqVo.Name, updateReqVo.Type, updateReqVo.SortNo, updateReqVo.Enable)
 	g.AddValues(updateReqVo.ID)
 
-	_, err := dao.gooq.Exec(g.SQL.GetSQL(), g.Args...)
+	_, err := g.Exec()
 	if err != nil {
 		return err
 	}
@@ -56,7 +67,7 @@ func (dao *Dao) Delete(deleteReqVo DeleteReqVo) error {
 	g.SQL.Delete(codemappo.Table).Where(c(codemappo.ID).Eq("?"))
 	g.AddValues(deleteReqVo.ID)
 
-	_, err := dao.gooq.Exec(g.SQL.GetSQL(), g.Args...)
+	_, err := g.Exec()
 	if err != nil {
 		return err
 	}
@@ -69,7 +80,16 @@ func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 	index := (listReqVo.Page - 1) * listReqVo.Limit
 
 	var g mysql.Gooq
-	g.SQL.Select(codemappo.ID, codemappo.Type, codemappo.Code, codemappo.Name, codemappo.SortNo, codemappo.Enable).From(codemappo.Table).
+	g.SQL.
+		Select(
+			codemappo.ID,
+			codemappo.Type,
+			codemappo.Code,
+			codemappo.Name,
+			codemappo.SortNo,
+			codemappo.Enable,
+		).
+		From(codemappo.Table).
 		Join("").Lp().
 		/**/ Select(codemappo.PK).
 		/**/ From(codemappo.Table).
@@ -97,7 +117,14 @@ func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 	rowMapper := func(rows *sql.Rows) error {
 		for rows.Next() {
 			var record ListResVo
-			err := rows.Scan(&record.ID, &record.Type, &record.Code, &record.Name, &record.SortNo, &record.Enable)
+			err := rows.Scan(
+				&record.ID,
+				&record.Type,
+				&record.Code,
+				&record.Name,
+				&record.SortNo,
+				&record.Enable,
+			)
 			if err != nil {
 				return err
 			}
@@ -107,20 +134,20 @@ func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 
 	}
 
-	if err := dao.gooq.Query(g.SQL.GetSQL(), rowMapper, g.Args...); err != nil {
+	if err := g.Query(rowMapper); err != nil {
 		return list, err
 	}
 
-	var count mysql.Gooq
-	count.SQL.Select(f.Count("*")).From(codemappo.Table)
+	var countG mysql.Gooq
+	countG.SQL.Select(f.Count("*")).From(codemappo.Table)
 	if listReqVo.Enable == "true" {
-		count.SQL.Where(c(codemappo.Enable).Eq(true))
+		countG.SQL.Where(c(codemappo.Enable).Eq(true))
 	}
 	countRowMapper := func(row *sql.Row) error {
 		return row.Scan(&(list.Total))
 	}
 
-	if err := dao.gooq.QueryRow(count.SQL.GetSQL(), countRowMapper); err != nil {
+	if err := countG.QueryRow(countRowMapper); err != nil {
 		return list, err
 	}
 

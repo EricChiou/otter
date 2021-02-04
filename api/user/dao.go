@@ -16,9 +16,7 @@ import (
 )
 
 // Dao user dao
-type Dao struct {
-	gooq mysql.Gooq
-}
+type Dao struct{}
 
 // SignUp dao
 func (dao *Dao) SignUp(signUp SignUpReqVo) error {
@@ -32,7 +30,7 @@ func (dao *Dao) SignUp(signUp SignUpReqVo) error {
 			Values("?", "?", "?")
 		g.AddValues(signUp.Acc, encryptPwd, signUp.Name)
 
-		if _, err := dao.gooq.Exec(g.SQL.GetSQL(), g.Args...); err != nil {
+		if _, err := g.Exec(); err != nil {
 			return err
 		}
 
@@ -47,21 +45,37 @@ func (dao *Dao) SignIn(signInReqVo SignInReqVo) (userbo.SignInBo, error) {
 	var g mysql.Gooq
 	var signInBo userbo.SignInBo
 
-	g.SQL.Select(userpo.Table+"."+userpo.ID, userpo.Acc, userpo.Pwd, userpo.Table+"."+userpo.Name, userpo.RoleCode, userpo.Status, rolepo.Table+"."+rolepo.Name).
+	g.SQL.Select(
+		userpo.Table+"."+userpo.ID,
+		userpo.Acc,
+		userpo.Pwd,
+		userpo.Table+"."+userpo.Name,
+		userpo.RoleCode,
+		userpo.Status,
+		rolepo.Table+"."+rolepo.Name,
+	).
 		From(userpo.Table).
 		Join(rolepo.Table).On(c(userpo.RoleCode).Eq(rolepo.Code)).
 		Where(c(userpo.Acc).Eq("?"))
 	g.AddValues(signInReqVo.Acc)
 
 	rowMapper := func(row *sql.Row) error {
-		if err := row.Scan(&signInBo.ID, &signInBo.Acc, &signInBo.Pwd, &signInBo.Name, &signInBo.RoleCode, &signInBo.Status, &signInBo.RoleName); err != nil {
+		if err := row.Scan(
+			&signInBo.ID,
+			&signInBo.Acc,
+			&signInBo.Pwd,
+			&signInBo.Name,
+			&signInBo.RoleCode,
+			&signInBo.Status,
+			&signInBo.RoleName,
+		); err != nil {
 			return err
 		}
 		return nil
 	}
 
 	// check account existing
-	if err := dao.gooq.QueryRow(g.SQL.GetSQL(), rowMapper, g.Args...); err != nil {
+	if err := g.QueryRow(rowMapper); err != nil {
 		return signInBo, err
 	}
 
@@ -85,7 +99,7 @@ func (dao *Dao) Update(updateData UpdateReqVo) error {
 	g.SQL.Update(userpo.Table).Set(conditions...).Where(c(userpo.ID).Eq("?"))
 	g.AddValues(updateData.ID)
 
-	if _, err := dao.gooq.Exec(g.SQL.GetSQL(), g.Args...); err != nil {
+	if _, err := g.Exec(); err != nil {
 		return err
 	}
 
@@ -98,7 +112,8 @@ func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 
 	var g mysql.Gooq
 	g.SQL.
-		Select(userpo.ID, userpo.Acc, userpo.Name, userpo.RoleCode, userpo.Status).From(userpo.Table).
+		Select(userpo.ID, userpo.Acc, userpo.Name, userpo.RoleCode, userpo.Status).
+		From(userpo.Table).
 		Join("").Lp().
 		/**/ Select(userpo.PK).From(userpo.Table).
 		/**/ OrderBy(userpo.ID).
@@ -129,7 +144,7 @@ func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 		return nil
 	}
 
-	if err := dao.gooq.Query(g.SQL.GetSQL(), rowMapper, g.Args...); err != nil {
+	if err := g.Query(rowMapper); err != nil {
 		return list, err
 	}
 
@@ -144,7 +159,7 @@ func (dao *Dao) List(listReqVo ListReqVo) (common.PageRespVo, error) {
 		return row.Scan(&(list.Total))
 	}
 
-	if err := dao.gooq.QueryRow(countG.SQL.GetSQL(), countRowMapper, countG.Args...); err != nil {
+	if err := countG.QueryRow(countRowMapper); err != nil {
 		return list, err
 	}
 
